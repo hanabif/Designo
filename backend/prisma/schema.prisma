@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  FREE
+  PRO
+  ENTERPRISE
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ExperienceLevel {
+  STUDENT
+  JUNIOR
+  MID_LEVEL
+  SENIOR
+  STAFF
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  STAFF
+}
+
+enum CompanyTrack {
+  GOOGLE
+  AMAZON
+  META
+  NETFLIX
+  GENERAL
+}
+
+enum InterviewStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum InterviewStage {
+  REQUIREMENTS_GATHERING
+  NON_FUNCTIONAL_REQUIREMENTS
+  CAPACITY_ESTIMATION
+  HIGH_LEVEL_DESIGN
+  DETAILED_DESIGN
+  SCALABILITY
+  RELIABILITY
+  TRADEOFFS
+  FINAL_ASSESSMENT
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum EvaluationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id                  String           @id @default(cuid())
+  fullName            String
+  email               String           @unique
+  passwordHash        String
+  role                Role             @default(FREE)
+  profilePicture      String?
+  experienceLevel     ExperienceLevel?
+  currentPosition     String?
+  yearsOfExperience   Int?
+  targetCompany       String?
+  targetLevel         String?
+  preferredDifficulty Difficulty?
+  emailVerified       Boolean          @default(false)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  refreshTokens RefreshToken[]
+  interviews    Interview[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Question {
+  id                  String     @id @default(cuid())
+  title               String
+  difficulty          Difficulty
+  description         String
+  expectedComponents  String[]
+  tags                String[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  interviews Interview[]
+
+  @@map("questions")
+}
+
+model Interview {
+  id           String          @id @default(cuid())
+  userId       String
+  questionId   String
+  difficulty   Difficulty
+  companyTrack CompanyTrack    @default(GENERAL)
+  currentStage InterviewStage  @default(REQUIREMENTS_GATHERING)
+  status       InterviewStatus @default(IN_PROGRESS)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question           @relation(fields: [questionId], references: [id])
+  messages InterviewMessage[]
+  evaluation EvaluationReport?
+
+  @@index([userId, status])
+  @@map("interviews")
+}
+
+model EvaluationReport {
+  id                      String           @id @default(cuid())
+  interviewId             String           @unique
+  status                  EvaluationStatus @default(PENDING)
+  overallScore            Int?
+  requirementsScore       Int?
+  architectureScore       Int?
+  scalabilityScore        Int?
+  databaseDesignScore     Int?
+  reliabilityScore        Int?
+  securityScore           Int?
+  costAwarenessScore      Int?
+  strengths               String[]         @default([])
+  weaknesses              String[]         @default([])
+  recommendations         String[]         @default([])
+  failureReason           String?
+  generatedAt             DateTime?
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@map("evaluation_reports")
+}
+
+model InterviewMessage {
+  id          String         @id @default(cuid())
+  interviewId String
+  role        MessageRole
+  content     String
+  stage       InterviewStage
+  createdAt   DateTime       @default(now())
+
+  interview Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+  @@map("interview_messages")
+}
