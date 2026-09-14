@@ -1,0 +1,277 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  /* Brand & Canvas Colors */
+  --color-canvas: #f7f7f4;
+  --color-canvas-soft: #fafaf7;
+  --color-surface-card: #ffffff;
+  --color-surface-strong: #e6e5e0;
+  
+  --color-primary: #f54e00;
+  --color-primary-active: #d04200;
+  
+  --color-ink: #26251e;
+  --color-body: #5a5852;
+  --color-muted: #807d72;
+  --color-muted-soft: #a09c92;
+  
+  --color-hairline: #e6e5e0;
+  --color-hairline-soft: #efeee8;
+  --color-hairline-strong: #cfcdc4;
+
+  /* AI Timeline Signature Palette */
+  --timeline-thinking: #dfa88f;
+  --timeline-grep: #9fc9a2;
+  --timeline-read: #9fbbe0;
+  --timeline-edit: #c0a8dd;
+  --timeline-done: #c08532;
+
+  /* Typography */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Radius */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.5;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Base Typography Classes */
+h1, h2, h3, h4, .display-mega, .display-lg, .display-md {
+  font-weight: 400; /* Magazine voice - display stays at 400 */
+  color: var(--color-ink);
+}
+
+.display-mega {
+  font-size: 56px;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+@media (min-width: 1024px) {
+  .display-mega {
+    font-size: 72px;
+    letter-spacing: -0.05em;
+  }
+}
+
+.display-lg {
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+
+.display-md {
+  font-size: 24px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+/* UI Components */
+
+/* Top Navigation */
+.top-nav {
+  height: 64px;
+  background-color: var(--color-canvas);
+  border-bottom: 1px solid var(--color-hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand-wordmark {
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.brand-wordmark .accent {
+  color: var(--color-primary);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-active);
+}
+
+.btn-secondary {
+  background-color: var(--color-surface-card);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 9px 17px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-canvas-soft);
+  border-color: var(--color-ink);
+}
+
+.btn-download {
+  background-color: var(--color-ink);
+  color: var(--color-canvas);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Cards & Surface (Hairline depth - no drop shadows) */
+.card-surface {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.ide-pane {
+  background-color: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-body);
+}
+
+/* Signature AI Timeline Pills */
+.timeline-pill {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pill-thinking {
+  background-color: var(--timeline-thinking);
+  color: var(--color-ink);
+}
+
+.pill-grep {
+  background-color: var(--timeline-grep);
+  color: var(--color-ink);
+}
+
+.pill-read {
+  background-color: var(--timeline-read);
+  color: var(--color-ink);
+}
+
+.pill-edit {
+  background-color: var(--timeline-edit);
+  color: var(--color-ink);
+}
+
+.pill-done {
+  background-color: var(--timeline-done);
+  color: #ffffff;
+}
+
+.badge-pill {
+  background-color: var(--color-surface-strong);
+  color: var(--color-ink);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+}
+
+/* Form Controls */
+.text-input {
+  background-color: var(--color-surface-card);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--color-ink);
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.text-input:focus {
+  border-color: var(--color-primary);
+}
+
+/* Layout Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section-rhythm {
+  padding: 80px 0;
+}

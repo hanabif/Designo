@@ -69,6 +69,20 @@ enum EvaluationStatus {
   FAILED
 }
 
+enum DiagramFormat {
+  MERMAID
+  SVG
+  PNG
+  DRAW_IO
+}
+
+enum NotificationType {
+  INTERVIEW_COMPLETED
+  SCORE_GENERATED
+  LEARNING_REMINDER
+  SUBSCRIPTION_EXPIRING
+}
+
 model User {
   id                  String           @id @default(cuid())
   fullName            String
@@ -88,6 +102,8 @@ model User {
 
   refreshTokens RefreshToken[]
   interviews    Interview[]
+  diagrams      Diagram[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -136,6 +152,7 @@ model Interview {
   question Question           @relation(fields: [questionId], references: [id])
   messages InterviewMessage[]
   evaluation EvaluationReport?
+  diagrams   Diagram[]
 
   @@index([userId, status])
   @@map("interviews")
@@ -179,4 +196,55 @@ model InterviewMessage {
 
   @@index([interviewId])
   @@map("interview_messages")
+}
+
+model Diagram {
+  id          String        @id @default(cuid())
+  userId      String
+  interviewId String?
+  title       String
+  prompt      String
+  format      DiagramFormat @default(MERMAID)
+  diagramCode String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interview Interview?      @relation(fields: [interviewId], references: [id], onDelete: SetNull)
+  reviews   DiagramReview[]
+
+  @@index([userId])
+  @@map("diagrams")
+}
+
+model DiagramReview {
+  id                String   @id @default(cuid())
+  diagramId         String
+  completenessScore Int
+  spofRisks         String[] @default([])
+  securityRisks     String[] @default([])
+  scalabilityRisks  String[] @default([])
+  reliabilityRisks  String[] @default([])
+  summary           String
+  createdAt         DateTime @default(now())
+
+  diagram Diagram @relation(fields: [diagramId], references: [id], onDelete: Cascade)
+
+  @@index([diagramId])
+  @@map("diagram_reviews")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
 }

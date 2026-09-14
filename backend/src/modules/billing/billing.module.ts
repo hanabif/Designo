@@ -1,4 +1,12 @@
 import { Module } from '@nestjs/common';
+import { DatabaseModule } from '../../database/database.module.js';
+import { BillingController } from './billing.controller.js';
+import { BillingService } from './billing.service.js';
 
-@Module({})
+@Module({
+  imports: [DatabaseModule],
+  controllers: [BillingController],
+  providers: [BillingService],
+  exports: [BillingService],
+})
 export class BillingModule {}
