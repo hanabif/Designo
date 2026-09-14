@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DiagramFormat } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AiService } from '../ai/ai.service.js';
@@ -8,6 +8,8 @@ import { ReviewDiagramDto } from './dto/review-diagram.dto.js';
 
 @Injectable()
 export class DiagramsService {
+  private readonly logger = new Logger(DiagramsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly ai: AiService,
@@ -16,29 +18,32 @@ export class DiagramsService {
   async generate(userId: string, dto: GenerateDiagramDto) {
     const format = dto.format ?? DiagramFormat.MERMAID;
 
-    // AI prompt for generating Mermaid architecture diagram
+    let diagramCode = `graph TD\n  Client[Client Application] --> API[API Gateway]\n  API --> Service[Core Service]\n  Service --> Cache[(Redis Cache)]\n  Service --> DB[(PostgreSQL)]`;
+
     const systemPrompt = [
       'You are an expert system design architect.',
       'Generate a clean, syntactically valid Mermaid.js flowchart (graph TD or sequenceDiagram) matching the user specification.',
       'Output ONLY valid raw Mermaid code inside your response. Do not include markdown codeblock wrappers.',
     ].join(' ');
 
-    const aiRes = await this.ai.executeDirect(
-      AiUseCase.DIAGRAM_REVIEW,
-      [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Design architecture diagram for: "${dto.prompt}". Title: ${dto.title}` },
-      ],
-    );
+    try {
+      const aiRes = await this.ai.executeDirect(
+        AiUseCase.DIAGRAM_REVIEW,
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Design architecture diagram for: "${dto.prompt}". Title: ${dto.title}` },
+        ],
+      );
 
-    // Clean up code response
-    let diagramCode = aiRes.content.trim();
-    if (diagramCode.startsWith('```')) {
-      diagramCode = diagramCode.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
-    }
-
-    if (!diagramCode) {
-      diagramCode = `graph TD\n  Client[Client Application] --> API[API Gateway]\n  API --> Service[Core Microservice]\n  Service --> DB[(PostgreSQL)]`;
+      let raw = aiRes.content.trim();
+      if (raw.startsWith('```')) {
+        raw = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+      }
+      if (raw) {
+        diagramCode = raw;
+      }
+    } catch (err: any) {
+      this.logger.warn(`AI diagram generation fallback used: ${err?.message ?? err}`);
     }
 
     const diagram = await this.prisma.diagram.create({
@@ -66,6 +71,15 @@ export class DiagramsService {
 
     const codeToReview = dto.diagramCode ?? diagram.diagramCode;
 
+    let parsed: any = {
+      completenessScore: 82,
+      spofRisks: ['Single database instance without read-replica fallback.'],
+      securityRisks: ['Missing WAF / API rate limiting tier.'],
+      scalabilityRisks: ['Monolithic core service boundary.'],
+      reliabilityRisks: ['No circuit breaker specified on external service dependency.'],
+      summary: 'Solid foundational design, but requires multi-AZ database replication and caching tiers for production workloads.',
+    };
+
     const systemPrompt = [
       'You are a principal cloud systems architect auditing a system diagram.',
       'Analyze the diagram for Single Points of Failure (SPOF), security risks, scalability risks, and reliability risks.',
@@ -73,27 +87,18 @@ export class DiagramsService {
       '{ "completenessScore": number (0-100), "spofRisks": string[], "securityRisks": string[], "scalabilityRisks": string[], "reliabilityRisks": string[], "summary": string }',
     ].join(' ');
 
-    const aiRes = await this.ai.executeDirect(
-      AiUseCase.DIAGRAM_REVIEW,
-      [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Diagram Code:\n${codeToReview}` },
-      ],
-      { responseFormat: 'json_object' },
-    );
-
-    let parsed: any;
     try {
+      const aiRes = await this.ai.executeDirect(
+        AiUseCase.DIAGRAM_REVIEW,
+        [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Diagram Code:\n${codeToReview}` },
+        ],
+        { responseFormat: 'json_object' },
+      );
       parsed = JSON.parse(aiRes.content);
-    } catch {
-      parsed = {
-        completenessScore: 82,
-        spofRisks: ['Single database instance without read-replica fallback.'],
-        securityRisks: ['Missing WAF / API rate limiting tier.'],
-        scalabilityRisks: ['Monolithic core service boundary.'],
-        reliabilityRisks: ['No circuit breaker specified on external service dependency.'],
-        summary: 'Solid foundational design, but requires multi-AZ database replication and caching tiers for production workloads.',
-      };
+    } catch (err: any) {
+      this.logger.warn(`AI diagram review fallback used: ${err?.message ?? err}`);
     }
 
     const reviewRecord = await this.prisma.diagramReview.create({

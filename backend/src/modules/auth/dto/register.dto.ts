@@ -1,6 +1,10 @@
+import { Difficulty, ExperienceLevel } from '@prisma/client';
 import {
   IsEmail,
+  IsEnum,
+  IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MinLength,
@@ -20,4 +24,28 @@ export class RegisterDto {
     message: 'Password must contain at least one uppercase letter and one number',
   })
   password!: string;
+
+  @IsOptional()
+  @IsString()
+  targetCompany?: string;
+
+  @IsOptional()
+  @IsString()
+  targetLevel?: string;
+
+  @IsOptional()
+  @IsEnum(ExperienceLevel)
+  experienceLevel?: ExperienceLevel;
+
+  @IsOptional()
+  @IsString()
+  currentPosition?: string;
+
+  @IsOptional()
+  @IsInt()
+  yearsOfExperience?: number;
+
+  @IsOptional()
+  @IsEnum(Difficulty)
+  preferredDifficulty?: Difficulty;
 }

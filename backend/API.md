@@ -1,27 +1,88 @@
-# Designo API — Phase 2
+# Designo API Documentation
 
-All endpoints below require a JWT bearer token.
+All endpoints (except `/auth/register` and `/auth/login`) require a JWT Bearer Token in the `Authorization` header: `Authorization: Bearer <token>`.
 
-## Evaluation
+---
+
+## Auth
+
+`POST /auth/register`
+- **Body:** `{ "email": "candidate@example.com", "password": "Password123", "fullName": "Alex Rivera", "targetCompany": "Google", "targetLevel": "L5" }`
+- **Response:** `{ "user": {...}, "accessToken": "...", "refreshToken": "..." }`
+
+`POST /auth/login`
+- **Body:** `{ "email": "candidate@example.com", "password": "Password123" }`
+- **Response:** `{ "user": {...}, "accessToken": "...", "refreshToken": "..." }`
+
+---
+
+## Users
+
+`GET /users/me`
+`PATCH /users/me`
+
+---
+
+## Questions
+
+`GET /questions`
+`POST /questions`
+`GET /questions/:id`
+
+---
+
+## Mock Interviews
+
+`POST /interviews/start`
+- **Body:** `{ "questionId": "...", "difficulty": "INTERMEDIATE", "companyTrack": "GOOGLE" }`
+
+`POST /interviews/:id/message`
+- **Body:** `{ "content": "..." }`
+- **Response:** Candidate turn + real-time AI interviewer turn + updated stage.
+
+`POST /interviews/:id/finish`
+- Completes interview session and enqueues evaluation report.
+
+`GET /interviews/:id`
+`GET /interviews/history`
+
+---
+
+## Evaluations
 
 `POST /evaluations/generate`
+- **Body:** `{ "interviewId": "..." }`
 
-```json
-{ "interviewId": "cm..." }
-```
+`GET /evaluations/:id`
+- Returns weighted scores across 7 pillars: Requirements (15%), Architecture (25%), Scalability (20%), Database (10%), Reliability (15%), Security (10%), Cost (5%).
 
-Only completed interviews can be evaluated. The response is an evaluation report with a `PENDING`, `PROCESSING`, `COMPLETED`, or `FAILED` status. Repeating the request for a completed report returns the existing report.
+---
 
-`GET /evaluations/:id` returns an evaluation report owned by the authenticated user.
+## Diagrams Studio
 
-## Analytics
+`POST /diagrams/generate`
+- **Body:** `{ "title": "...", "prompt": "...", "format": "MERMAID" }`
 
-`GET /analytics/dashboard` returns interview totals, score summaries, category averages, and weak/strong areas.
+`POST /diagrams/review`
+- **Body:** `{ "diagramId": "..." }`
+- **Response:** Performs SPOF detection, security, scalability, and reliability risk analysis.
 
-`GET /analytics/progress` returns score history by completed, evaluated interview.
+`GET /diagrams`
+`GET /diagrams/:id`
 
-## Running Phase 2 locally
+---
 
-1. Start PostgreSQL and Redis with `docker compose up -d` from the repository root.
-2. Apply migrations with `npx prisma migrate dev` from `backend`.
-3. Set `OPENAI_API_KEY` to receive model-based reports. Without it, the worker produces a clearly marked deterministic development report.
+## Recommendations & Analytics
+
+`GET /recommendations` — AI Mentor learning roadmap.
+`GET /analytics/dashboard` — Platform statistics & score averages.
+`GET /analytics/progress` — Score progression over time.
+
+---
+
+## Notifications & Billing
+
+`GET /notifications`
+`PATCH /notifications/read`
+`POST /billing/checkout`
+`GET /billing/history`

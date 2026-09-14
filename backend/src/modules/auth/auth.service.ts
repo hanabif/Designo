@@ -53,6 +53,12 @@ export class AuthService {
         fullName: dto.fullName,
         email: dto.email.toLowerCase(),
         passwordHash,
+        targetCompany: dto.targetCompany,
+        targetLevel: dto.targetLevel,
+        experienceLevel: dto.experienceLevel,
+        currentPosition: dto.currentPosition,
+        yearsOfExperience: dto.yearsOfExperience,
+        preferredDifficulty: dto.preferredDifficulty,
       },
     });
 

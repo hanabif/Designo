@@ -1,4 +1,11 @@
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 export class ReviewDiagramDto {
-  diagramId: string;
+  @IsString()
+  @IsNotEmpty()
+  diagramId!: string;
+
+  @IsOptional()
+  @IsString()
   diagramCode?: string;
 }

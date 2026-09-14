@@ -12,7 +12,7 @@ export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Roles(Role.FREE, Role.PRO, Role.ENTERPRISE, Role.ADMIN, Role.SUPER_ADMIN)
   @Post()
   create(@Body() createQuestionDto: CreateQuestionDto) {
     return this.questionsService.create(createQuestionDto);
