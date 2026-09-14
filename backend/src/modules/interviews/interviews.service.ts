@@ -1,14 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service.js';
 import { StartInterviewDto } from './dto/start-interview.dto.js';
 import { InterviewMessageDto } from './dto/interview-message.dto.js';
 import { InterviewStage, InterviewStatus, MessageRole } from '@prisma/client';
+import { EvaluationsService } from '../evaluations/evaluations.service.js';
 
 @Injectable()
 export class InterviewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService, private readonly evaluations: EvaluationsService) {}
 
   async start(userId: string, dto: StartInterviewDto) {
+    const question = await this.prisma.question.findUnique({ where: { id: dto.questionId } });
+    if (!question) throw new NotFoundException('Question not found');
+    if (question.difficulty !== dto.difficulty) throw new BadRequestException('Selected difficulty does not match the question');
     const interview = await this.prisma.interview.create({
       data: {
         userId,
@@ -45,6 +49,7 @@ export class InterviewsService {
     if (!interview) {
       throw new NotFoundException('Interview not found');
     }
+    if (interview.status !== InterviewStatus.IN_PROGRESS) throw new BadRequestException('Only in-progress interviews accept messages');
 
     return interview;
   }
@@ -102,9 +107,13 @@ export class InterviewsService {
       throw new NotFoundException('Interview not found');
     }
 
-    return this.prisma.interview.update({
+    if (interview.status === InterviewStatus.COMPLETED) return interview;
+    if (interview.status !== InterviewStatus.IN_PROGRESS) throw new BadRequestException('Only in-progress interviews can be finished');
+    const completed = await this.prisma.interview.update({
       where: { id: interview.id },
       data: { status: InterviewStatus.COMPLETED },
     });
+    await this.evaluations.requestForCompletedInterview(userId, interviewId);
+    return completed;
   }
 }

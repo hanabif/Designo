@@ -16,6 +16,8 @@ import { QuestionsModule } from './modules/questions/questions.module.js';
 import { RecommendationsModule } from './modules/recommendations/recommendations.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
+import { AiModule } from './modules/ai/ai.module.js';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +26,7 @@ import { UsersModule } from './modules/users/users.module.js';
     }),
     DatabaseModule,
     JobsModule,
+    AiModule,
     AuthModule,
     UsersModule,
     QuestionsModule,

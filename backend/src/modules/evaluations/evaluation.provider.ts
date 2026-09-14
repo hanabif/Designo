@@ -20,51 +20,39 @@ export class EvaluationProvider {
   constructor(private readonly config: ConfigService) {}
 
   async evaluate(context: EvaluationContext): Promise<EvaluationResult> {
-    const apiKey = this.config.get<string>('openai.apiKey');
+    const apiKey = this.config.get<string>('ai.apiKey') ?? this.config.get<string>('openai.apiKey');
     if (!apiKey) {
-      this.logger.warn('OPENAI_API_KEY is not configured; using a deterministic development evaluation.');
+      this.logger.warn('Neither GEMINI_API_KEY nor OPENAI_API_KEY is configured; using a deterministic development evaluation.');
       return this.developmentResult(context);
     }
 
-    const client = new OpenAI({ apiKey });
-    const response = await client.responses.create({
-      model: this.config.get<string>('openai.model') ?? 'gpt-5.6-mini',
-      store: false,
-      instructions: [
-        'You are an objective system-design interview evaluator.',
-        'Score every category from 0 to 100 using only evidence in the transcript.',
-        'The overall score must equal the weighted score: requirements 15%, architecture 25%, scalability 20%, database 10%, reliability 15%, security 10%, cost 5%.',
-        'Give concise, actionable feedback. Never invent user statements.',
-      ].join(' '),
-      input: JSON.stringify(context),
-      text: {
-        format: {
-          type: 'json_schema',
-          name: 'system_design_evaluation',
-          strict: true,
-          schema: {
-            type: 'object',
-            additionalProperties: false,
-            required: [...scoreFields, 'strengths', 'weaknesses', 'recommendations'],
-            properties: {
-              overallScore: { type: 'integer', minimum: 0, maximum: 100 },
-              requirementsScore: { type: 'integer', minimum: 0, maximum: 100 },
-              architectureScore: { type: 'integer', minimum: 0, maximum: 100 },
-              scalabilityScore: { type: 'integer', minimum: 0, maximum: 100 },
-              databaseDesignScore: { type: 'integer', minimum: 0, maximum: 100 },
-              reliabilityScore: { type: 'integer', minimum: 0, maximum: 100 },
-              securityScore: { type: 'integer', minimum: 0, maximum: 100 },
-              costAwarenessScore: { type: 'integer', minimum: 0, maximum: 100 },
-              strengths: { type: 'array', items: { type: 'string' }, maxItems: 5 },
-              weaknesses: { type: 'array', items: { type: 'string' }, maxItems: 5 },
-              recommendations: { type: 'array', items: { type: 'string' }, maxItems: 5 },
-            },
-          },
-        },
-      },
-    } as any);
+    const baseURL = this.config.get<string>('ai.baseUrl');
+    const client = new OpenAI({ apiKey, baseURL: baseURL || undefined });
+    const model = this.config.get<string>('ai.model') ?? 'gemini-2.5-flash';
 
-    return this.validate(JSON.parse(response.output_text));
+    const response = await client.chat.completions.create({
+      model,
+      messages: [
+        {
+          role: 'system',
+          content: [
+            'You are an objective system-design interview evaluator.',
+            'Score every category from 0 to 100 using only evidence in the transcript.',
+            'The overall score must equal the weighted score: requirements 15%, architecture 25%, scalability 20%, database 10%, reliability 15%, security 10%, cost 5%.',
+            'Respond with valid JSON containing: overallScore, requirementsScore, architectureScore, scalabilityScore, databaseDesignScore, reliabilityScore, securityScore, costAwarenessScore, strengths (array of strings), weaknesses (array of strings), recommendations (array of strings).',
+          ].join(' '),
+        },
+        {
+          role: 'user',
+          content: JSON.stringify(context),
+        },
+      ],
+      response_format: { type: 'json_object' },
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) throw new Error('AI provider returned an empty response');
+    return this.validate(JSON.parse(content));
   }
 
   private validate(value: unknown): EvaluationResult {

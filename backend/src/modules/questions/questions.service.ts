@@ -35,7 +35,7 @@ export class QuestionsService {
         where: { id },
         data: dto,
       });
-    } catch (e) {
+    } catch {
       throw new NotFoundException('Question not found');
     }
   }
@@ -46,7 +46,7 @@ export class QuestionsService {
         where: { id },
       });
       return { message: 'Question deleted successfully' };
-    } catch (e) {
+    } catch {
       throw new NotFoundException('Question not found');
     }
   }

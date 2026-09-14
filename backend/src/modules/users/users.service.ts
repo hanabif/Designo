@@ -15,7 +15,7 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
-    const { passwordHash, ...profile } = user;
+    const { passwordHash: _passwordHash, ...profile } = user;
     return profile;
   }
 
@@ -25,7 +25,7 @@ export class UsersService {
       data: dto,
     });
 
-    const { passwordHash, ...profile } = updatedUser;
+    const { passwordHash: _passwordHash, ...profile } = updatedUser;
     return profile;
   }
 
