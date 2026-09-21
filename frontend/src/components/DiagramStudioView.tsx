@@ -1,223 +1,262 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Cpu, Play, ShieldAlert, CheckCircle2, RefreshCw, AlertTriangle, Code } from 'lucide-react';
-import mermaid from 'mermaid';
-import { api } from '../services/api';
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'neutral',
-  securityLevel: 'loose',
-});
+import React, { useState } from 'react';
+import { Sparkles, Upload, Download, Share2, ZoomIn, ZoomOut, History } from 'lucide-react';
 
 export const DiagramStudioView: React.FC = () => {
-  const [prompt, setPrompt] = useState('Design distributed CDN with origin shield & edge POPs');
-  const [title, setTitle] = useState('Global CDN Architecture');
-  const [diagram, setDiagram] = useState<any>(null);
-  const [review, setReview] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [reviewing, setReviewing] = useState(false);
-  const mermaidRef = useRef<HTMLDivElement>(null);
+  const [mode, setMode] = useState<'generator' | 'review'>('generator');
 
-  const defaultMermaidCode = `graph TD
-  Client[Client Browser / Mobile] --> Edge[Edge POP Geo-DNS]
-  Edge --> Cache{Edge LRU Cache}
-  Cache -- Hit --> Delivery[Deliver Content]
-  Cache -- Miss --> Shield[Origin Shield POP]
-  Shield --> Storage[(AWS S3 / R2 Bucket)]`;
+  // Generator State
+  const [prompt, setPrompt] = useState('Design WhatsApp real-time messaging system with WebSockets, Cassandra message store, and Redis online status cache.');
+  const [selectedFormat, setSelectedFormat] = useState('Mermaid');
+  const [history] = useState([
+    { title: 'WhatsApp Chat System', date: 'Sep 19', format: 'Mermaid' },
+    { title: 'Uber Driver Matching', date: 'Sep 17', format: 'SVG' },
+    { title: 'TinyURL Key Generation', date: 'Sep 12', format: 'Draw.io' },
+  ]);
 
-  useEffect(() => {
-    renderMermaid(diagram?.diagramCode || defaultMermaidCode);
-  }, [diagram]);
-
-  const renderMermaid = async (code: string) => {
-    if (!mermaidRef.current) return;
-    try {
-      mermaidRef.current.innerHTML = '';
-      const { svg } = await mermaid.render(`mermaid-svg-${Date.now()}`, code);
-      if (mermaidRef.current) {
-        mermaidRef.current.innerHTML = svg;
-      }
-    } catch {
-      if (mermaidRef.current) {
-        mermaidRef.current.innerHTML = `<pre class="font-mono" style="padding:16px; background:#fff; border-radius:8px;">${code}</pre>`;
-      }
-    }
-  };
-
-  const handleGenerate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setReview(null);
-
-    try {
-      const data = await api.generateDiagram({ title, prompt });
-      setDiagram(data);
-    } catch (err) {
-      // Fallback local synthesis
-      setDiagram({
-        id: 'diag-dev-1',
-        title,
-        prompt,
-        diagramCode: `graph TD\n  Client[Mobile Client] --> GW[API Gateway]\n  GW --> Service[Core Microservice]\n  Service --> Cache[(Redis Cache)]\n  Service --> DB[(PostgreSQL)]`,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleReview = async () => {
-    setReviewing(true);
-    try {
-      if (diagram?.id && !diagram.id.startsWith('diag-dev')) {
-        const res = await api.reviewDiagram({ diagramId: diagram.id });
-        setReview(res);
-      } else {
-        setTimeout(() => {
-          setReview({
-            completenessScore: 85,
-            spofRisks: ['Single core microservice boundary without redundant replica scaling.'],
-            securityRisks: ['Missing WAF and API token validation gateway.'],
-            scalabilityRisks: ['Redis cache lacks clustering partition configuration.'],
-            reliabilityRisks: ['No dead-letter queue configured on asynchronous DB worker.'],
-            summary: 'Good structural baseline. Implement multi-AZ database replication and rate-limiting gateways for production stability.',
-          });
-          setReviewing(false);
-        }, 1200);
-      }
-    } catch {
-      setReviewing(false);
-    }
-  };
+  const annotations = [
+    {
+      id: 'a1',
+      type: 'Single Point of Failure',
+      severity: 'High',
+      color: '#dc2626',
+      explanation: 'The primary MySQL master database has no standby replica. A hardware failure here crashes the entire write path.',
+    },
+    {
+      id: 'a2',
+      type: 'Scalability Risk',
+      severity: 'Medium',
+      color: '#d97706',
+      explanation: 'The Timeline Push worker is synchronous. High-volume celebrity accounts will cause worker queue backups.',
+    },
+    {
+      id: 'a3',
+      type: 'Optimization Suggestion',
+      severity: 'Low',
+      color: '#2563eb',
+      explanation: 'Introduce an Edge CDN Origin Shield to absorb static media requests before hitting origin S3 buckets.',
+    },
+  ];
 
   return (
-    <div className="container section-rhythm">
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <Cpu size={20} color="#f54e00" />
-          <h2 className="display-lg">AI Diagram Generator & Architect Reviewer</h2>
+    <div className="container section-padding">
+      {/* Tab Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+        <div>
+          <span className="badge-accent" style={{ marginBottom: '6px' }}>
+            <Sparkles size={12} /> Architecture Studio
+          </span>
+          <h1 style={{ fontSize: '32px', fontWeight: 400 }}>
+            {mode === 'generator' ? 'Diagram Generator' : 'Diagram Review & SPOF Audit'}
+          </h1>
         </div>
-        <p style={{ color: 'var(--color-body)', fontSize: '16px' }}>
-          Synthesize architecture flowcharts from natural language and run automated Single Point of Failure (SPOF) and risk audits.
-        </p>
-      </div>
 
-      {/* Generator Form */}
-      <form onSubmit={handleGenerate} className="card-surface" style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 160px', gap: '16px', alignItems: 'flex-end' }}>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Diagram Title</label>
-            <input
-              type="text"
-              className="text-input"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>Architecture Specification Prompt</label>
-            <input
-              type="text"
-              className="text-input"
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="e.g. Design Uber real-time driver location tracking with WebSocket gateway & Redis geospatial index"
-              required
-            />
-          </div>
-
-          <button type="submit" className="btn-primary" disabled={loading} style={{ height: '44px' }}>
-            {loading ? 'Synthesizing...' : 'Generate Diagram'}
-          </button>
-        </div>
-      </form>
-
-      {/* Main Diagram & Review Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px' }}>
-        {/* Rendered Mermaid Canvas */}
-        <div className="card-surface" style={{ minHeight: '480px', display: 'flex', flexDirection: 'column' }}>
-          <div
+        {/* Mode Selector Tabs */}
+        <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-secondary)', padding: '4px', borderRadius: 'var(--radius-button)' }}>
+          <button
+            onClick={() => setMode('generator')}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'space-between',
-              marginBottom: '20px',
-              paddingBottom: '12px',
-              borderBottom: '1px solid var(--color-hairline)',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-button)',
+              border: 'none',
+              backgroundColor: mode === 'generator' ? 'var(--color-card-solid)' : 'transparent',
+              fontWeight: 500,
+              fontSize: '14px',
+              color: 'var(--color-text)',
+              cursor: 'pointer',
             }}
           >
-            <h3 style={{ fontSize: '18px', fontWeight: 600 }}>{diagram?.title || title}</h3>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <span className="badge-pill">MERMAID.JS</span>
-              <button onClick={handleReview} className="btn-secondary" disabled={reviewing} style={{ padding: '4px 12px', fontSize: '12px' }}>
-                <ShieldAlert size={14} />
-                {reviewing ? 'Auditing...' : 'Run AI Diagram Review'}
-              </button>
-            </div>
-          </div>
-
-          {/* SVG Container */}
-          <div
-            ref={mermaidRef}
+            Diagram Generator
+          </button>
+          <button
+            onClick={() => setMode('review')}
             style={{
-              flex: 1,
-              backgroundColor: 'var(--color-canvas-soft)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--color-hairline)',
-              padding: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'center',
-              overflow: 'auto',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-button)',
+              border: 'none',
+              backgroundColor: mode === 'review' ? 'var(--color-card-solid)' : 'transparent',
+              fontWeight: 500,
+              fontSize: '14px',
+              color: 'var(--color-text)',
+              cursor: 'pointer',
             }}
-          />
-        </div>
-
-        {/* AI Diagram Review Report Panel */}
-        <div className="card-surface" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 600 }}>Architectural Audit Report</h3>
-            {review && <span className="badge-pill" style={{ backgroundColor: 'var(--color-ink)', color: '#fff' }}>Score: {review.completenessScore}/100</span>}
-          </div>
-
-          {!review ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--color-muted)' }}>
-              <ShieldAlert size={40} color="var(--color-hairline-strong)" style={{ marginBottom: '12px' }} />
-              <p style={{ fontSize: '14px' }}>Click "Run AI Diagram Review" to perform SPOF detection, security, and scalability risk analysis.</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ fontSize: '13px', color: 'var(--color-body)', lineHeight: 1.5 }}>{review.summary}</div>
-
-              {/* SPOF Risks */}
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#cf2d56', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  <AlertTriangle size={14} />
-                  Single Points of Failure (SPOF)
-                </div>
-                {review.spofRisks?.map((risk: string, i: number) => (
-                  <div key={i} className="ide-pane" style={{ fontSize: '12px', padding: '8px 12px', marginBottom: '4px', backgroundColor: '#fff' }}>
-                    • {risk}
-                  </div>
-                ))}
-              </div>
-
-              {/* Security Risks */}
-              <div>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-ink)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                  Security & Scalability Risks
-                </div>
-                {review.securityRisks?.concat(review.scalabilityRisks || []).map((risk: string, i: number) => (
-                  <div key={i} className="ide-pane" style={{ fontSize: '12px', padding: '8px 12px', marginBottom: '4px', backgroundColor: 'var(--color-canvas-soft)' }}>
-                    • {risk}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          >
+            Diagram Review (Audit)
+          </button>
         </div>
       </div>
+
+      {/* SCREEN 9: Diagram Generator */}
+      {mode === 'generator' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px', minHeight: '520px' }}>
+          {/* Left Panel: Controls & History */}
+          <div className="card-solid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
+                System Architecture Prompt
+              </label>
+              <textarea
+                className="input-cofounder"
+                style={{ height: '110px', resize: 'none', marginBottom: '16px' }}
+                placeholder="Describe the system you want to design... e.g. Design WhatsApp"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+
+              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
+                Output Format
+              </label>
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                {['Mermaid', 'SVG', 'PNG', 'Draw.io'].map((fmt) => (
+                  <button
+                    key={fmt}
+                    onClick={() => setSelectedFormat(fmt)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 'var(--radius-pill)',
+                      border: selectedFormat === fmt ? '1px solid var(--color-text)' : '1px solid var(--color-border-subtle)',
+                      backgroundColor: selectedFormat === fmt ? 'var(--color-primary)' : 'var(--color-bg)',
+                      fontSize: '12px',
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {fmt}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                className="btn-dark"
+                style={{ width: '100%', justifyContent: 'center', marginBottom: '28px' }}
+              >
+                <Sparkles size={16} color="var(--color-primary)" /> Generate Diagram
+              </button>
+
+              {/* History List */}
+              <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
+                <History size={12} style={{ display: 'inline', marginRight: '4px' }} /> Previously Generated
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {history.map((h, i) => (
+                  <div key={i} style={{ padding: '8px 12px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-button)', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ fontWeight: 500 }}>{h.title}</span>
+                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{h.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel: Canvas & Floating Toolbar */}
+          <div className="card-cofounder" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '440px' }}>
+            {/* Floating Toolbar */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                backgroundColor: 'var(--color-card-solid)',
+                border: '1px solid var(--color-border-subtle)',
+                borderRadius: 'var(--radius-button)',
+                padding: '4px 8px',
+                display: 'flex',
+                gap: '8px',
+                boxShadow: 'var(--shadow-low)',
+              }}
+            >
+              <button className="btn-ghost" style={{ padding: '4px' }} title="Zoom In"><ZoomIn size={16} /></button>
+              <button className="btn-ghost" style={{ padding: '4px' }} title="Zoom Out"><ZoomOut size={16} /></button>
+              <button className="btn-ghost" style={{ padding: '4px' }} title="Export"><Download size={16} /></button>
+              <button className="btn-ghost" style={{ padding: '4px' }} title="Share"><Share2 size={16} /></button>
+            </div>
+
+            {/* Generated Node Graph Canvas */}
+            <div style={{ width: '100%', maxWidth: '540px', backgroundColor: '#ffffff', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-card)', padding: '24px', boxShadow: 'var(--shadow-low)' }}>
+              <div style={{ fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+                graph TD // WhatsApp Architecture ({selectedFormat})
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
+                <div style={{ padding: '10px 20px', border: '2px solid var(--color-text)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-primary)', fontWeight: 600, fontSize: '14px' }}>
+                  📱 WebSocket Mobile Gateway
+                </div>
+                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>↓ TCP / TLS Persistent Session</div>
+                <div style={{ display: 'flex', gap: '16px' }}>
+                  <div style={{ padding: '10px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-bg)', fontSize: '13px', fontWeight: 500 }}>
+                    ⚡ Session Store (Redis Cluster)
+                  </div>
+                  <div style={{ padding: '10px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-bg)', fontSize: '13px', fontWeight: 500 }}>
+                    📦 Message DB (Cassandra)
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCREEN 10: Diagram Review & SPOF Audit */}
+      {mode === 'review' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+          {/* Upload Zone */}
+          <div
+            className="card-solid"
+            style={{
+              border: '2px dashed var(--color-border-strong)',
+              textAlign: 'center',
+              padding: '36px',
+              backgroundColor: 'var(--color-bg-secondary)',
+              cursor: 'pointer',
+            }}
+          >
+            <Upload size={32} color="var(--color-text-secondary)" style={{ marginBottom: '10px' }} />
+            <h3 style={{ fontSize: '18px', fontWeight: 500 }}>Drag and drop your architecture diagram, or click to upload</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>Accepts PNG, SVG, Draw.io files up to 25MB</p>
+          </div>
+
+          {/* Two Column Results */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '24px' }}>
+            {/* Left: Diagram Visual with Annotated Markers */}
+            <div className="card-solid" style={{ position: 'relative', minHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
+                  Uploaded Diagram: system_architecture_sketch.png
+                </div>
+
+                {/* Annotated Diagram Node Graph */}
+                <div style={{ padding: '24px', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-card)', backgroundColor: '#ffffff', display: 'inline-block', position: 'relative' }}>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <div style={{ padding: '12px', border: '1px solid #171717', borderRadius: '8px' }}>Load Balancer</div>
+                    <span>──►</span>
+                    {/* SPOF Red Marker */}
+                    <div style={{ position: 'relative', padding: '12px', border: '2px solid #dc2626', borderRadius: '8px', backgroundColor: '#fee2e2' }}>
+                      Primary MySQL DB
+                      <span style={{ position: 'absolute', top: '-8px', right: '-8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '10px', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>!</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Review Report Cards */}
+            <div>
+              <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '16px' }}>Review Audit Report</h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {annotations.map((ann) => (
+                  <div key={ann.id} className="card-solid" style={{ borderLeft: `4px solid ${ann.color}` }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 600, color: ann.color }}>{ann.type}</span>
+                      <span className="badge-subtle" style={{ fontSize: '11px' }}>{ann.severity} Severity</span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{ann.explanation}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

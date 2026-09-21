@@ -1,290 +1,303 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Terminal, Send, CheckCircle2, Clock, AlertTriangle, ArrowRight, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Pause, Save, CheckCircle2, Clock, Send, Paperclip, Code2 } from 'lucide-react';
 import { api } from '../services/api';
 
 interface InterviewRunnerViewProps {
-  interviewId: string | null;
+  interviewId: string;
   onFinish: (interviewId: string) => void;
 }
 
-const STAGES = [
-  'REQUIREMENTS_GATHERING',
-  'NON_FUNCTIONAL_REQUIREMENTS',
-  'CAPACITY_ESTIMATION',
-  'HIGH_LEVEL_DESIGN',
-  'DETAILED_DESIGN',
-  'SCALABILITY',
-  'RELIABILITY',
-  'TRADEOFFS',
-  'FINAL_ASSESSMENT',
-];
+export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({ interviewId, onFinish }) => {
+  const [currentStageIndex, setCurrentStageIndex] = useState<number>(3);
+  const [messages, setMessages] = useState<any[]>([
+    {
+      id: 'm1',
+      sender: 'ai',
+      stage: 'Requirements Gathering',
+      content: 'Welcome to your system design interview. We will design a Global Real-Time Ride Hashing & Dispatch System (like Uber). Let’s begin by defining core functional requirements.',
+      timestamp: '10:00 AM',
+    },
+    {
+      id: 'm2',
+      sender: 'user',
+      content: '1. Riders can request a ride and get matched with nearby drivers in real-time.\n2. Drivers can accept/reject rides.\n3. Real-time location tracking for active rides.',
+      timestamp: '10:02 AM',
+    },
+    {
+      id: 'm3',
+      sender: 'ai',
+      stage: 'High-Level Design',
+      content: 'Great. Let’s move to High-Level Design. How would you handle driver location updates (100k active drivers emitting location every 4 seconds) without overloading the primary database?',
+      timestamp: '10:05 AM',
+    },
+  ]);
+  const [inputMessage, setInputMessage] = useState<string>('');
+  const [notes, setNotes] = useState<string>('• Drivers send lat/lng every 4s over WebSockets\n• Spatial Indexing using H3 or GeoHash in Redis\n• Kafka topic partitioned by Geohash region cell ID');
+  const [activeTab, setActiveTab] = useState<'notes' | 'whiteboard'>('notes');
+  const [timerSeconds, setTimerSeconds] = useState<number>(1680);
 
-const STAGE_LABELS: Record<string, string> = {
-  REQUIREMENTS_GATHERING: '1. Requirements Gathering',
-  NON_FUNCTIONAL_REQUIREMENTS: '2. Non-Functional Requirements',
-  CAPACITY_ESTIMATION: '3. Capacity Estimation',
-  HIGH_LEVEL_DESIGN: '4. High-Level Design',
-  DETAILED_DESIGN: '5. Detailed Design',
-  SCALABILITY: '6. Scalability & Partitioning',
-  RELIABILITY: '7. Reliability & Fault Tolerance',
-  TRADEOFFS: '8. Trade-offs & Alternatives',
-  FINAL_ASSESSMENT: '9. Final Assessment',
-};
-
-export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
-  interviewId,
-  onFinish,
-}) => {
-  const [interview, setInterview] = useState<any>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [inputContent, setInputContent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [aiStatus, setAiStatus] = useState<'idle' | 'thinking' | 'editing' | 'done'>('idle');
-  const chatEndRef = useRef<HTMLDivElement>(null);
+  const stages = [
+    'Requirements Gathering',
+    'Non-Functional Req.',
+    'Capacity Estimation',
+    'High-Level Design',
+    'Detailed Design',
+    'Scalability',
+    'Reliability',
+    'Tradeoffs',
+    'Final Assessment',
+  ];
 
   useEffect(() => {
-    if (interviewId) {
-      loadInterview(interviewId);
-    }
-  }, [interviewId]);
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, aiStatus]);
-
-  const loadInterview = async (id: string) => {
-    try {
-      const data = await api.getInterview(id);
-      setInterview(data);
-      setMessages(data.messages || []);
-    } catch {
-      // Create local mock interview if offline
-      setInterview({
-        id,
-        currentStage: 'REQUIREMENTS_GATHERING',
-        difficulty: 'INTERMEDIATE',
-        companyTrack: 'GOOGLE',
-        question: { title: 'Design Twitter Feed System' },
-        status: 'IN_PROGRESS',
-      });
-      setMessages([
-        {
-          id: 'm1',
-          role: 'ASSISTANT',
-          content: 'Hello! Welcome to your System Design Mock Interview for "Design Twitter Feed System" on the Google Track. Let us begin with Stage 1: Requirements Gathering. What core functional features should our system support?',
-          stage: 'REQUIREMENTS_GATHERING',
-        },
-      ]);
-    }
+  const formatTimer = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputContent.trim() || loading || !interviewId) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
 
-    const userText = inputContent;
-    setInputContent('');
-    setLoading(true);
-    setAiStatus('thinking');
-
-    // Optimistic user turn update
-    const tempUserMsg = {
-      id: Date.now().toString(),
-      role: 'USER',
-      content: userText,
-      stage: interview?.currentStage || 'REQUIREMENTS_GATHERING',
+    const userMsg = {
+      id: `u-${Date.now()}`,
+      sender: 'user',
+      content: inputMessage,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
-    setMessages((prev) => [...prev, tempUserMsg]);
+
+    setMessages((prev) => [...prev, userMsg]);
+    const currentInput = inputMessage;
+    setInputMessage('');
 
     try {
-      setAiStatus('editing');
-      const res = await api.sendInterviewMessage(interviewId, userText);
-      setMessages((prev) => [...prev, res.assistantMessage]);
-      if (res.currentStage) {
-        setInterview((prev: any) => ({ ...prev, currentStage: res.currentStage }));
+      const res = await api.sendInterviewMessage(interviewId, currentInput);
+      if (res && res.message) {
+        setMessages((prev) => [...prev, { ...res.message, sender: 'ai' }]);
       }
-      setAiStatus('done');
-    } catch (err: any) {
-      // Development fallback mock response
-      setTimeout(() => {
-        const nextIndex = (STAGES.indexOf(interview?.currentStage || 'REQUIREMENTS_GATHERING') + 1) % STAGES.length;
-        const nextStage = STAGES[nextIndex];
-        const mockAssistantMsg = {
-          id: (Date.now() + 1).toString(),
-          role: 'ASSISTANT',
-          content: `Thank you. I have recorded your proposal regarding "${userText.slice(0, 40)}...". Let's now move forward to Stage: ${STAGE_LABELS[nextStage]}. What are your estimates for daily throughput and storage requirements?`,
-          stage: nextStage,
-        };
-        setMessages((prev) => [...prev, mockAssistantMsg]);
-        setInterview((prev: any) => ({ ...prev, currentStage: nextStage }));
-        setAiStatus('done');
-      }, 1000);
-    } finally {
-      setLoading(false);
-      setTimeout(() => setAiStatus('idle'), 2000);
-    }
-  };
-
-  const handleFinishSession = async () => {
-    if (!interviewId) return;
-    try {
-      await api.finishInterview(interviewId);
     } catch {
-      // ignore
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `ai-${Date.now()}`,
+            sender: 'ai',
+            stage: stages[currentStageIndex],
+            content: `That's a solid architectural decision. Let's analyze fault tolerance: What happens if your Redis Geospatial cluster loses a primary master node during peak surge hours?`,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        ]);
+      }, 1000);
     }
-    onFinish(interviewId);
   };
-
-  const currentStageIndex = STAGES.indexOf(interview?.currentStage || 'REQUIREMENTS_GATHERING');
 
   return (
-    <div className="container section-rhythm">
-      {/* Header bar */}
+    <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg)' }}>
+      {/* Top Bar: Progress Rail (1-9) + Timer + Pause/Save */}
       <div
-        className="card-surface"
         style={{
-          marginBottom: '24px',
+          height: '56px',
+          backgroundColor: 'var(--color-bg-secondary)',
+          borderBottom: '1px solid var(--color-border-subtle)',
+          padding: '0 24px',
           display: 'flex',
           alignItems: 'center',
           justify: 'space-between',
         }}
       >
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-            <span className="badge-pill">{interview?.companyTrack || 'GOOGLE'} TRACK</span>
-            <span style={{ fontSize: '13px', color: 'var(--color-muted)' }}>Difficulty: {interview?.difficulty || 'INTERMEDIATE'}</span>
-          </div>
-          <h2 className="display-md" style={{ fontSize: '22px' }}>
-            {interview?.question?.title || 'System Design Interview'}
-          </h2>
+        {/* Stage Progress Rail */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflowX: 'auto', flex: 1, marginRight: '24px' }}>
+          {stages.map((stg, i) => (
+            <div
+              key={stg}
+              onClick={() => setCurrentStageIndex(i)}
+              style={{
+                fontSize: '12px',
+                fontWeight: i === currentStageIndex ? 600 : 400,
+                padding: '4px 10px',
+                borderRadius: 'var(--radius-pill)',
+                backgroundColor: i === currentStageIndex ? 'var(--color-text)' : i < currentStageIndex ? 'var(--color-primary)' : 'var(--color-bg)',
+                color: i === currentStageIndex ? '#ffffff' : 'var(--color-text)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              <span>{i + 1}. {stg}</span>
+              {i < currentStageIndex && <CheckCircle2 size={12} color="#1f8a65" />}
+            </div>
+          ))}
         </div>
 
-        <button onClick={handleFinishSession} className="btn-primary" style={{ backgroundColor: 'var(--color-ink)' }}>
-          <ShieldCheck size={16} />
-          Complete & Generate Evaluation
-        </button>
+        {/* Right Timer & Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
+            <Clock size={16} /> {formatTimer(timerSeconds)}
+          </div>
+
+          <button className="btn-filled" style={{ padding: '6px 12px', fontSize: '13px' }}>
+            <Pause size={14} /> Pause
+          </button>
+
+          <button onClick={() => onFinish(interviewId)} className="btn-accent" style={{ padding: '6px 14px', fontSize: '13px' }}>
+            <Save size={14} /> Complete & Evaluate
+          </button>
+        </div>
       </div>
 
-      {/* Main Grid split */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px' }}>
-        {/* Left Sidebar: 9 Stages Timeline */}
-        <div className="card-surface" style={{ padding: '20px' }}>
-          <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted)', marginBottom: '16px' }}>
-            Interview Stage Roadmap
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {STAGES.map((stg, idx) => {
-              const isCurrent = interview?.currentStage === stg;
-              const isPassed = idx < currentStageIndex;
-
-              return (
+      {/* Main Body Split: Chat Thread (Left) vs Right Collapsible Panel */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', overflow: 'hidden' }}>
+        {/* Chat Thread Area */}
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: 'var(--color-bg)' }}>
+          {/* Messages Scroll Container */}
+          <div style={{ flex: 1, padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {messages.map((m) => (
+              <div
+                key={m.id}
+                style={{
+                  display: 'flex',
+                  justify: m.sender === 'user' ? 'flex-end' : 'flex-start',
+                }}
+              >
                 <div
-                  key={stg}
                   style={{
-                    padding: '10px 12px',
-                    borderRadius: 'var(--radius-md)',
-                    border: isCurrent ? '1px solid var(--color-primary)' : '1px solid var(--color-hairline)',
-                    backgroundColor: isCurrent ? 'var(--color-surface-card)' : isPassed ? 'var(--color-canvas-soft)' : 'transparent',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justify: 'space-between',
-                    fontSize: '13px',
-                    fontWeight: isCurrent ? 600 : 400,
-                    color: isCurrent ? 'var(--color-primary)' : 'var(--color-ink)',
+                    maxWidth: '75%',
+                    backgroundColor: m.sender === 'user' ? 'var(--color-dark-btn)' : 'var(--color-card-solid)',
+                    color: m.sender === 'user' ? '#ffffff' : 'var(--color-text)',
+                    borderRadius: 'var(--radius-card)',
+                    padding: '16px 20px',
+                    border: m.sender === 'user' ? 'none' : '1px solid var(--color-border-subtle)',
+                    boxShadow: 'var(--shadow-low)',
                   }}
                 >
-                  <span>{STAGE_LABELS[stg]}</span>
-                  {isPassed && <CheckCircle2 size={14} color="#1f8a65" />}
-                  {isCurrent && <span className="timeline-pill pill-thinking" style={{ fontSize: '9px', padding: '2px 6px' }}>ACTIVE</span>}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '12px', opacity: 0.8 }}>
+                    <span style={{ fontWeight: 600 }}>{m.sender === 'user' ? 'Candidate' : `AI Interviewer (${m.stage || 'Live Evaluation'})`}</span>
+                    <span>{m.timestamp}</span>
+                  </div>
+                  <p style={{ fontSize: '15px', lineHeight: 1.5, whitespace: 'pre-wrap' }}>{m.content}</p>
                 </div>
-              );
-            })}
+              </div>
+            ))}
+          </div>
+
+          {/* Input Bar */}
+          <div style={{ padding: '16px 24px', borderTop: '1px solid var(--color-border-subtle)', backgroundColor: 'var(--color-card-solid)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <button title="Attach Diagram Sketch" className="btn-filled" style={{ padding: '10px' }}>
+                <Paperclip size={18} />
+              </button>
+              <input
+                type="text"
+                className="input-cofounder"
+                placeholder="Propose your architecture, data schema, or fault-tolerance strategy..."
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+              />
+              <button onClick={handleSendMessage} className="btn-accent" style={{ padding: '10px 20px' }}>
+                <Send size={16} /> Send
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Right Chat & Interaction Pane */}
-        <div className="card-surface" style={{ display: 'flex', flexDirection: 'column', height: '620px', padding: '0', overflow: 'hidden' }}>
-          {/* Action Bar status indicator */}
-          <div
-            style={{
-              height: '44px',
-              backgroundColor: 'var(--color-canvas-soft)',
-              borderBottom: '1px solid var(--color-hairline)',
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'space-between',
-              padding: '0 20px',
-            }}
-          >
-            <span style={{ fontSize: '13px', fontWeight: 500, color: 'var(--color-body)' }}>
-              Current Stage: <strong style={{ color: 'var(--color-ink)' }}>{STAGE_LABELS[interview?.currentStage || 'REQUIREMENTS_GATHERING']}</strong>
-            </span>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {aiStatus === 'thinking' && <span className="timeline-pill pill-thinking">AI Thinking...</span>}
-              {aiStatus === 'editing' && <span className="timeline-pill pill-edit">AI Synthesizing Turn...</span>}
-              {aiStatus === 'done' && <span className="timeline-pill pill-done">Turn Complete</span>}
-            </div>
-          </div>
-
-          {/* Chat Transcript Area */}
-          <div style={{ flex: 1, padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {messages.map((msg, i) => {
-              const isAssistant = msg.role === 'ASSISTANT';
-              return (
-                <div
-                  key={msg.id || i}
-                  style={{
-                    alignSelf: isAssistant ? 'flex-start' : 'flex-end',
-                    maxWidth: '82%',
-                  }}
-                >
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                    {isAssistant ? 'AI Interviewer' : 'Candidate'} • Stage: {msg.stage}
-                  </div>
-                  <div
-                    className="ide-pane"
-                    style={{
-                      backgroundColor: isAssistant ? '#ffffff' : 'var(--color-canvas-soft)',
-                      borderColor: isAssistant ? 'var(--color-hairline-strong)' : 'var(--color-hairline)',
-                      color: 'var(--color-ink)',
-                      lineHeight: 1.6,
-                      fontSize: '14px',
-                    }}
-                  >
-                    {msg.content}
-                  </div>
-                </div>
-              );
-            })}
-            <div ref={chatEndRef} />
-          </div>
-
-          {/* Candidate Response Composer */}
-          <form
-            onSubmit={handleSendMessage}
-            style={{
-              padding: '16px 20px',
-              backgroundColor: 'var(--color-canvas)',
-              borderTop: '1px solid var(--color-hairline)',
-              display: 'flex',
-              gap: '12px',
-            }}
-          >
-            <input
-              type="text"
-              className="text-input"
-              placeholder="Type your architecture response or design proposal..."
-              value={inputContent}
-              onChange={(e) => setInputContent(e.target.value)}
-              disabled={loading}
-            />
-            <button type="submit" className="btn-primary" disabled={loading || !inputContent.trim()}>
-              <Send size={16} />
-              Submit Response
+        {/* Right Collapsible Panel: Scratchpad / Notes */}
+        <div
+          style={{
+            backgroundColor: 'var(--color-bg-secondary)',
+            borderLeft: '1px solid var(--color-border-subtle)',
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+          }}
+        >
+          {/* Panel Tabs */}
+          <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border-subtle)' }}>
+            <button
+              onClick={() => setActiveTab('notes')}
+              style={{
+                flex: 1,
+                padding: '12px',
+                background: activeTab === 'notes' ? 'var(--color-card-solid)' : 'transparent',
+                border: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                color: 'var(--color-text)',
+                cursor: 'pointer',
+              }}
+            >
+              📝 Running Notes
             </button>
-          </form>
+            <button
+              onClick={() => setActiveTab('whiteboard')}
+              style={{
+                flex: 1,
+                padding: '12px',
+                background: activeTab === 'whiteboard' ? 'var(--color-card-solid)' : 'transparent',
+                border: 'none',
+                fontWeight: 600,
+                fontSize: '14px',
+                color: 'var(--color-text)',
+                cursor: 'pointer',
+              }}
+            >
+              🎨 Scratchpad
+            </button>
+          </div>
+
+          {/* Content Area */}
+          <div style={{ flex: 1, padding: '16px', overflowY: 'auto' }}>
+            {activeTab === 'notes' ? (
+              <textarea
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  minHeight: '320px',
+                  backgroundColor: 'var(--color-card-solid)',
+                  border: '1px solid var(--color-border-subtle)',
+                  borderRadius: 'var(--radius-button)',
+                  padding: '14px',
+                  fontSize: '14px',
+                  fontFamily: 'var(--font-mono)',
+                  color: 'var(--color-text)',
+                  outline: 'none',
+                  resize: 'none',
+                }}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Keep scratchpad notes, capacity calculations, or SQL query draft..."
+              />
+            ) : (
+              <div
+                style={{
+                  backgroundColor: 'var(--color-card-solid)',
+                  border: '1px dashed var(--color-border-strong)',
+                  borderRadius: 'var(--radius-button)',
+                  height: '100%',
+                  minHeight: '320px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justify: 'center',
+                  padding: '24px',
+                  textAlign: 'center',
+                }}
+              >
+                <Code2 size={32} color="var(--color-text-muted)" style={{ marginBottom: '12px' }} />
+                <p style={{ fontSize: '14px', fontWeight: 500 }}>Mermaid Quick Sketch</p>
+                <p style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                  Generate or sketch your component diagram in the Diagram Studio.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

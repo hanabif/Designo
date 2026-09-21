@@ -1,174 +1,128 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart3, Award, TrendingUp, CheckCircle, AlertTriangle, Lightbulb, Clock } from 'lucide-react';
-import { api } from '../services/api';
+import React from 'react';
+import { TrendingUp, BarChart3 } from 'lucide-react';
 
 export const AnalyticsDashboardView: React.FC = () => {
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [history, setHistory] = useState<any[]>([]);
+  const kpis = [
+    { title: 'Total Interviews', value: '24', trend: '+12% this month', isUp: true },
+    { title: 'Average Score', value: '78', trend: '+6 pts vs last week', isUp: true },
+    { title: 'Best Score', value: '92', trend: 'Achieved on Google Track', isUp: true },
+    { title: 'Practice Hours', value: '16.5h', trend: '+3.2h this week', isUp: true },
+  ];
 
-  useEffect(() => {
-    api
-      .getAnalyticsDashboard()
-      .then((data) => setDashboard(data))
-      .catch(() => {
-        setDashboard({
-          interviewMetrics: { totalInterviews: 8, interviewsThisMonth: 4, practiceHours: 12.5 },
-          performanceMetrics: { averageScore: 82, bestScore: 92, worstScore: 72 },
-          categoryMetrics: [
-            { category: 'Requirements Gathering', weight: '15%', score: 88 },
-            { category: 'Architecture & System Boundaries', weight: '25%', score: 84 },
-            { category: 'Scalability & Fan-out', weight: '20%', score: 82 },
-            { category: 'Database & Caching Design', weight: '10%', score: 78 },
-            { category: 'Reliability & Fault Tolerance', weight: '15%', score: 80 },
-            { category: 'Security & Auth Gateways', weight: '10%', score: 85 },
-            { category: 'Cost & Operational Awareness', weight: '5%', score: 75 },
-          ],
-        });
-      });
-
-    api
-      .getInterviewHistory()
-      .then((data) => setHistory(data))
-      .catch(() => {
-        setHistory([
-          { id: '1', question: { title: 'Design Twitter Feed System' }, difficulty: 'INTERMEDIATE', companyTrack: 'GOOGLE', status: 'COMPLETED', createdAt: new Date() },
-          { id: '2', question: { title: 'Design WhatsApp Real-time Chat' }, difficulty: 'ADVANCED', companyTrack: 'META', status: 'COMPLETED', createdAt: new Date() },
-        ]);
-      });
-  }, []);
-
-  const categories = dashboard?.categoryMetrics || [];
+  const radarCategories = [
+    { name: 'Scalability', score: 88, status: 'Strong' },
+    { name: 'Security', score: 80, status: 'Good' },
+    { name: 'Database Design', score: 62, status: 'Weakest' },
+    { name: 'Reliability', score: 78, status: 'Good' },
+    { name: 'Architecture', score: 85, status: 'Strong' },
+    { name: 'Requirements Gathering', score: 92, status: 'Strongest' },
+    { name: 'Cost Awareness', score: 90, status: 'Strong' },
+  ];
 
   return (
-    <div className="container section-rhythm">
+    <div className="container section-padding">
+      {/* Title */}
       <div style={{ marginBottom: '32px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <BarChart3 size={20} color="#f54e00" />
-          <h2 className="display-lg">Candidate Performance & Evaluation Dashboard</h2>
-        </div>
-        <p style={{ color: 'var(--color-body)', fontSize: '16px' }}>
-          Objective analysis across weighted evaluation pillars and historical practice sessions.
+        <span className="badge-accent" style={{ marginBottom: '6px' }}>
+          <BarChart3 size={12} /> Performance Intelligence
+        </span>
+        <h1 style={{ fontSize: '32px', fontWeight: 400 }}>Analytics Dashboard</h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '16px', marginTop: '4px' }}>
+          Track score improvements, category performance radar, and weak-point insights over time.
         </p>
       </div>
 
-      {/* Metric KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-        <div className="card-surface">
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '8px' }}>Average Score</div>
-          <div className="display-lg" style={{ color: 'var(--color-primary)' }}>
-            {dashboard?.performanceMetrics?.averageScore || 82}/100
+      {/* KPI Row (4 Cards with Sparkline indicator) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '36px' }}>
+        {kpis.map((kpi) => (
+          <div key={kpi.title} className="card-solid">
+            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>{kpi.title}</div>
+            <div style={{ fontSize: '32px', fontWeight: 600, marginBottom: '4px' }}>{kpi.value}</div>
+            <div style={{ fontSize: '12px', color: '#1f8a65', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <TrendingUp size={12} /> {kpi.trend}
+            </div>
           </div>
-        </div>
-
-        <div className="card-surface">
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '8px' }}>Total Mock Sessions</div>
-          <div className="display-lg">{dashboard?.interviewMetrics?.totalInterviews || 8}</div>
-        </div>
-
-        <div className="card-surface">
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '8px' }}>Practice Hours</div>
-          <div className="display-lg">{dashboard?.interviewMetrics?.practiceHours || 12.5} hrs</div>
-        </div>
-
-        <div className="card-surface">
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-muted)', marginBottom: '8px' }}>Best Score</div>
-          <div className="display-lg" style={{ color: '#1f8a65' }}>
-            {dashboard?.performanceMetrics?.bestScore || 92}/100
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Category Breakdown & Evaluation Summary */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '32px' }}>
-        {/* Category Weighted Breakdown */}
-        <div className="card-surface">
-          <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '20px' }}>Weighted Pillar Breakdown</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {categories.map((cat: any) => (
-              <div key={cat.category}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '6px' }}>
-                  <span>
-                    <strong style={{ fontWeight: 600 }}>{cat.category}</strong>{' '}
-                    <span style={{ fontSize: '11px', color: 'var(--color-muted)' }}>({cat.weight})</span>
-                  </span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{cat.score}/100</span>
+      {/* Charts Grid: Score Trend Chart (Left) & Radar Category Chart (Right) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', marginBottom: '36px' }}>
+        {/* Score Trend Area Visual */}
+        <div className="card-solid">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: 500 }}>Score Trend Over Time</h3>
+            <span className="badge-subtle">Last 30 Days</span>
+          </div>
+
+          {/* SVG Area Chart Graphic */}
+          <div style={{ width: '100%', height: '220px', position: 'relative' }}>
+            <svg width="100%" height="100%" viewBox="0 0 500 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#dae9fb" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#dae9fb" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M0,160 Q80,140 160,110 T320,70 T500,40 L500,200 L0,200 Z"
+                fill="url(#scoreGrad)"
+              />
+              <path
+                d="M0,160 Q80,140 160,110 T320,70 T500,40"
+                fill="none"
+                stroke="#171717"
+                strokeWidth="3"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Category Performance Radar */}
+        <div className="card-solid">
+          <h3 style={{ fontSize: '18px', fontWeight: 500, marginBottom: '20px' }}>Category Radar</h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {radarCategories.map((c) => (
+              <div key={c.name}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
+                  <span style={{ fontWeight: 500 }}>{c.name}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{c.score}/100</span>
                 </div>
-                <div style={{ height: '8px', backgroundColor: 'var(--color-hairline)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${cat.score}%`, backgroundColor: 'var(--color-primary)' }} />
+                <div style={{ height: '6px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${c.score}%`,
+                      backgroundColor: c.score < 70 ? '#dc2626' : c.score > 90 ? '#1f8a65' : 'var(--color-text)',
+                    }}
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
-
-        {/* Strengths & Weaknesses Panel */}
-        <div className="card-surface" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600 }}>AI Feedback & Observations</h3>
-
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#1f8a65', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <CheckCircle size={16} />
-              Demonstrated Strengths
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div className="ide-pane" style={{ backgroundColor: '#ffffff', fontSize: '13px', padding: '10px 14px' }}>
-                • Strong identification of push vs pull fan-out trade-offs in high-scale feed feeds.
-              </div>
-              <div className="ide-pane" style={{ backgroundColor: '#ffffff', fontSize: '13px', padding: '10px 14px' }}>
-                • Accurate API gateway rate-limiting and JWT token verification structure.
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#cf2d56', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <AlertTriangle size={16} />
-              Key Areas for Improvement
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div className="ide-pane" style={{ backgroundColor: 'var(--color-canvas-soft)', fontSize: '13px', padding: '10px 14px' }}>
-                • Database sharding key selection requires explicit hotspot handling for celebrity keys.
-              </div>
-              <div className="ide-pane" style={{ backgroundColor: 'var(--color-canvas-soft)', fontSize: '13px', padding: '10px 14px' }}>
-                • Quantitative back-of-the-envelope estimations should precede component sizing.
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* History Table */}
-      <div className="card-surface">
-        <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '16px' }}>Interview History Log</h3>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid var(--color-hairline-strong)', color: 'var(--color-muted)' }}>
-                <th style={{ padding: '12px' }}>Question</th>
-                <th style={{ padding: '12px' }}>Track</th>
-                <th style={{ padding: '12px' }}>Difficulty</th>
-                <th style={{ padding: '12px' }}>Status</th>
-                <th style={{ padding: '12px' }}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((item) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid var(--color-hairline)' }}>
-                  <td style={{ padding: '12px', fontWeight: 600 }}>{item.question?.title || 'System Design Interview'}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span className="badge-pill">{item.companyTrack || 'GENERAL'}</span>
-                  </td>
-                  <td style={{ padding: '12px' }}>{item.difficulty || 'INTERMEDIATE'}</td>
-                  <td style={{ padding: '12px' }}>
-                    <span className="timeline-pill pill-done">{item.status}</span>
-                  </td>
-                  <td style={{ padding: '12px', color: 'var(--color-muted)', fontFamily: 'var(--font-mono)' }}>
-                    {new Date(item.createdAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Weak vs Strong Horizontal Bars List */}
+      <div className="card-solid">
+        <h3 style={{ fontSize: '18px', fontWeight: 500, marginBottom: '16px' }}>Weak vs. Strong Area Summary</h3>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+          <div style={{ padding: '16px', backgroundColor: '#fee2e2', borderRadius: 'var(--radius-card)', border: '1px solid #fca5a5' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', textTransform: 'uppercase' }}>Weakest Category</div>
+            <div style={{ fontSize: '18px', fontWeight: 600, color: '#171717', marginTop: '4px' }}>Database Design & Sharding (62%)</div>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+              Recommend reviewing partition keys and read-replica replication lag.
+            </p>
+          </div>
+
+          <div style={{ padding: '16px', backgroundColor: '#e6f4ef', borderRadius: 'var(--radius-card)', border: '1px solid #a7f3d0' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: '#1f8a65', textTransform: 'uppercase' }}>Strongest Category</div>
+            <div style={{ fontSize: '18px', fontWeight: 600, color: '#171717', marginTop: '4px' }}>Requirements Gathering (92%)</div>
+            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+              Consistently specifies QPS, write ratios, and SLA constraints accurately.
+            </p>
+          </div>
         </div>
       </div>
     </div>
