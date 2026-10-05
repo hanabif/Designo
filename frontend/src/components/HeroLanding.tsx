@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowRight, Play, Check, Sparkles } from 'lucide-react';
+import { ArrowRight, Play, Check, Sparkles, Cpu, Zap, Activity, Layers, Award } from 'lucide-react';
+import { Button, Card, Badge } from './ui';
 
 interface HeroLandingProps {
   onStartInterview: () => void;
@@ -10,277 +11,319 @@ interface HeroLandingProps {
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartInterview,
   onExploreQuestions,
-  onSelectPricing,
+  onSelectPricing: _onSelectPricing,
 }) => {
   return (
-    <div style={{ backgroundColor: 'var(--color-bg)', paddingBottom: '64px' }}>
+    <div className="bg-[#faf9fe] text-[#0a0a0f] pb-24 relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#ede9fe]/80 via-[#f4f1fb]/40 to-transparent blur-[120px] -z-10 rounded-full" />
+      <div className="pointer-events-none absolute top-48 right-[-140px] w-[500px] h-[500px] rounded-full border-[50px] border-[#ede9fe]/70 blur-[40px] -z-10" />
+
       {/* Hero Section */}
-      <section className="section-padding" style={{ textAlign: 'center', paddingTop: '72px', paddingBottom: '48px' }}>
-        <div className="container">
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-            <span className="badge-accent">
-              <Sparkles size={12} /> Designo AI Platform v1.0
+      <section className="max-w-7xl mx-auto px-6 md:px-12 pt-12 md:pt-16 pb-16">
+        {/* Top Protocol Row */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e5e1ea] pb-5 mb-12">
+          <div className="flex items-center gap-3 font-mono text-[11px] text-[#5e5e6e] uppercase tracking-widest">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10b981]" />
             </span>
-            <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
-              Structured mock interviews & architecture diagram feedback
-            </span>
+            <span>Zero-Latency First Principles Simulator</span>
+            <span className="text-neutral-300">•</span>
+            <span className="text-[#6b38d4] font-semibold">Model 4.2 Calibrated</span>
           </div>
-
-          <h1 className="display-mega" style={{ maxWidth: '920px', margin: '0 auto 20px auto' }}>
-            Master the System Design Interview — with an AI that never gets tired
-          </h1>
-
-          <p style={{ fontSize: '18px', color: 'var(--color-text-secondary)', maxWidth: '720px', margin: '0 auto 36px auto', lineHeight: 1.6 }}>
-            Practice realistic mock interviews, get objective scores, and close your knowledge gaps — on your schedule.
-          </p>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <button onClick={onStartInterview} className="btn-accent" style={{ padding: '12px 24px', fontSize: '16px' }}>
-              Get Started Free <ArrowRight size={16} />
-            </button>
-
-            <button onClick={onExploreQuestions} className="btn-filled" style={{ padding: '12px 24px', fontSize: '16px' }}>
-              <Play size={16} /> Watch Demo
-            </button>
+          <div className="flex items-center gap-6 font-mono text-[11px] text-[#5e5e6e]">
+            <span>FAANG+ BENCHMARKS</span>
+            <span>// 42MS EVALUATION</span>
           </div>
         </div>
-      </section>
 
-      {/* Floating Mock UI Visual */}
-      <section className="container" style={{ marginBottom: '64px' }}>
-        <div className="card-cofounder" style={{ padding: 0, overflow: 'hidden' }}>
+        {/* Editorial Headline Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-16">
+          <div className="lg:col-span-8">
+            <Badge variant="primary" icon={<Sparkles size={13} />} className="mb-6">
+              AUTONOMOUS ARCHITECTURE LOOPS
+            </Badge>
+            <h1 className="font-display font-extrabold text-[44px] sm:text-[68px] lg:text-[80px] leading-[0.96] tracking-[-0.035em] text-[#0a0a0f]">
+              SYSTEMS <br />
+              <span className="italic font-light text-[#6b38d4]">ARCHITECTED</span> <br />
+              AT SCALE.
+            </h1>
+          </div>
+
+          <div className="lg:col-span-4 flex flex-col justify-end space-y-6 pb-2">
+            <p className="font-sans text-base md:text-lg text-[#5e5e6e] leading-relaxed">
+              Practice unsparing mock technical loops with an AI calibrated by Staff and Principal engineers.
+              Objectively scored on mathematical rigor, data contracts, and fault tolerance.
+            </p>
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <Button
+                variant="dark"
+                size="lg"
+                iconRight={<ArrowRight size={16} />}
+                onClick={onStartInterview}
+              >
+                Start Free Practice
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                iconLeft={<Play size={16} className="text-[#6b38d4]" fill="currentColor" />}
+                onClick={onExploreQuestions}
+              >
+                Explore Library
+              </Button>
+            </div>
+            <div className="flex items-center gap-3 text-xs font-mono text-[#8e8ea0] pt-2">
+              <span>CALIBRATED FOR:</span>
+              <span className="text-[#0a0a0f] font-semibold">GOOGLE</span>
+              <span>•</span>
+              <span className="text-[#0a0a0f] font-semibold">META</span>
+              <span>•</span>
+              <span className="text-[#0a0a0f] font-semibold">AMAZON</span>
+              <span>•</span>
+              <span className="text-[#0a0a0f] font-semibold">STRIPE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Architecture Terminal Card */}
+        <div className="relative w-full rounded-2xl md:rounded-[2rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.14)] border border-[#e5e1ea]">
           {/* Header Bar */}
-          <div
-            style={{
-              height: '40px',
-              backgroundColor: 'var(--color-bg-secondary)',
-              borderBottom: '1px solid var(--color-border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '0 16px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ff5f56' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ffbd2e' }} />
-              <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#27c93f' }} />
-              <span style={{ fontSize: '12px', color: 'var(--color-text-secondary)', fontFamily: 'var(--font-mono)', marginLeft: '12px' }}>
-                designo-live // session-481 // google-scale-track
+          <div className="flex flex-wrap items-center justify-between px-4 py-3 rounded-xl bg-[#f7f5fa] border border-[#e5e1ea] mb-3">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-full bg-red-400 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-amber-400 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+              </div>
+              <span className="font-mono text-xs text-[#0a0a0f] font-medium pl-2 border-l border-[#dcd7e5]">
+                SESSION #DES-9104 // Distributed Cache Invalidation &amp; Fan-out
               </span>
             </div>
-
-            <div style={{ display: 'flex', gap: '6px' }}>
-              <span className="badge-accent" style={{ fontSize: '11px', padding: '2px 8px' }}>Step 4: High-Level Design</span>
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Badge variant="success" icon={<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}>
+                EVALUATOR ACTIVE
+              </Badge>
+              <Badge variant="primary">
+                STAGE 4 OF 9
+              </Badge>
             </div>
           </div>
 
-          {/* Split Content Visual: Live Chat Snippet + Architecture Fragment */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '380px' }}>
-            {/* Left: Chat Snippet */}
-            <div style={{ padding: '24px', borderRight: '1px solid var(--color-border-subtle)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: 600 }}>
+          {/* 2-Column Live Interactive Simulation */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[440px]">
+            {/* Left: AI & Candidate Chat */}
+            <div className="lg:col-span-5 p-5 rounded-xl bg-[#faf9fe] border border-[#e5e1ea] flex flex-col justify-between">
+              <div className="space-y-4">
+                {/* AI Question */}
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#ede9fe] border border-[#8b5cf6]/30 flex items-center justify-center shrink-0 text-[#6b38d4] font-bold text-xs">
                     AI
                   </div>
-                  <div style={{ backgroundColor: 'var(--color-card-solid)', border: '1px solid var(--color-border-subtle)', padding: '12px 16px', borderRadius: 'var(--radius-card)', fontSize: '14px', flex: 1 }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '4px' }}>AI INTERVIEWER</div>
-                    How will your fan-out engine deliver feed items to 10M active users when a top celebrity posts?
+                  <div className="rounded-2xl rounded-tl-sm p-4 bg-white border border-[#e5e1ea] shadow-xs">
+                    <div className="flex items-center justify-between mb-1.5 font-mono text-[10px] text-[#6b38d4] font-semibold tracking-wider">
+                      <span>ARCHITECT AI</span>
+                      <span className="text-[#8e8ea0] font-normal">14:02:18</span>
+                    </div>
+                    <p className="font-sans text-xs md:text-[13px] leading-relaxed text-[#0a0a0f]">
+                      "Under a sudden spike of 250k write QPS, your cache-aside strategy risks severe thundering herd if keys expire concurrently. How do you redesign invalidation without introducing write tail-latency?"
+                    </p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', alignSelf: 'flex-end', maxWidth: '85%' }}>
-                  <div style={{ backgroundColor: 'var(--color-dark-btn)', color: '#ffffff', padding: '12px 16px', borderRadius: 'var(--radius-card)', fontSize: '14px' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 600, opacity: 0.8, marginBottom: '4px' }}>YOU (CANDIDATE)</div>
-                    We implement a hybrid fan-out model: Push for regular users to Redis Timeline lists, Pull-on-read for accounts with {'>'}100k followers to avoid write amplification.
+                {/* Candidate Answer */}
+                <div className="flex items-start gap-3 justify-end">
+                  <div className="rounded-2xl rounded-tr-sm p-4 bg-[#f3f0ff] border border-[#8b5cf6]/20 shadow-xs max-w-[92%]">
+                    <div className="flex items-center justify-between mb-1.5 font-mono text-[10px] gap-4">
+                      <span className="text-[#5e5e6e] font-medium">YOU (L6 TRACK)</span>
+                      <span className="text-emerald-600 font-semibold">+18pts Score Impact</span>
+                    </div>
+                    <p className="font-sans text-xs md:text-[13px] leading-relaxed text-[#0a0a0f]">
+                      "Shift to an asynchronous CDC pipeline using Debezium over Postgres WAL into Kafka, paired with distributed Redis probabilistic leases (XFetch algorithm). This bounds p99 write latency strictly to database commit (~3.8ms)."
+                    </p>
+                    <div className="mt-3 pt-2 border-t border-[#8b5cf6]/20 flex items-center justify-between font-mono text-[11px] text-[#5e5e6e]">
+                      <span>WAL Latency: ~3.8ms</span>
+                      <span className="text-[#6b38d4] font-medium">Stampede Risk: &lt;0.02%</span>
+                    </div>
                   </div>
+                  <div className="w-8 h-8 rounded-full bg-white border border-[#e5e1ea] flex items-center justify-center shrink-0 font-bold text-xs text-[#0a0a0f]">
+                    ME
+                  </div>
+                </div>
+
+                {/* Live Metric */}
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Check size={16} className="text-emerald-600" />
+                    <span className="text-xs text-[#0a0a0f]">
+                      <strong>Vector:</strong> Fault Tolerance &amp; Concurrency
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs font-semibold text-emerald-700">STRONG HIRE (94%)</span>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
-                <input className="input-cofounder" placeholder="Type your architecture response..." readOnly value="Adding Kafka message partitioning by User ID..." />
-                <button className="btn-dark" onClick={onStartInterview}>Send</button>
+              {/* Status footer */}
+              <div className="mt-4 pt-3 border-t border-[#e5e1ea] flex items-center gap-2 font-mono text-xs text-[#5e5e6e]">
+                <span className="text-[#6b38d4] font-bold">&gt;</span>
+                <span>Synthesizing fallback queue strategy...</span>
+                <span className="w-2 h-4 bg-[#6b38d4] animate-pulse ml-auto" />
               </div>
             </div>
 
-            {/* Right: Architecture Diagram Fragment */}
-            <div style={{ backgroundColor: 'var(--color-bg-secondary)', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-              <div style={{ width: '100%', maxWidth: '360px', backgroundColor: 'var(--color-card-solid)', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-card)', padding: '20px', boxShadow: 'var(--shadow-low)' }}>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '12px', fontFamily: 'var(--font-mono)' }}>
-                  Architecture Blueprint (Mermaid Fragment)
+            {/* Right: Architecture Diagram Mock */}
+            <div className="lg:col-span-7 p-5 rounded-xl bg-[#faf9fe] border border-[#e5e1ea] flex flex-col justify-between relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4 border-b border-[#e5e1ea] pb-3">
+                <div className="flex items-center gap-2">
+                  <Cpu size={16} className="text-[#6b38d4]" />
+                  <span className="font-mono text-xs font-semibold text-[#0a0a0f]">
+                    LIVE TOPOLOGY GRAPH // CDC &amp; REDIS CLUSTER
+                  </span>
+                </div>
+                <Badge variant="success">
+                  HEALTH: 99.999%
+                </Badge>
+              </div>
+
+              {/* Diagram Flow Visual */}
+              <div className="grid grid-cols-3 gap-3 my-auto py-4">
+                <div className="p-4 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
+                  <div className="font-mono text-[10px] text-[#8e8ea0] uppercase">Ingestion</div>
+                  <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Postgres 16</div>
+                  <div className="font-mono text-[11px] text-[#6b38d4] mt-2">Write Ahead Log</div>
+                  <div className="mt-2 text-[10px] bg-[#f4f1fb] text-[#5e5e6e] py-0.5 rounded">p99 ~3.8ms</div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', fontFamily: 'var(--font-mono)' }}>
-                  <div style={{ border: '1px border var(--color-border-strong)', padding: '8px', borderRadius: '6px', backgroundColor: 'var(--color-primary)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Client / Gateway</span>
-                    <span>[GeoDNS]</span>
-                  </div>
-                  <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>↓</div>
-                  <div style={{ border: '1px border var(--color-border-strong)', padding: '8px', borderRadius: '6px', backgroundColor: '#e6f4ef', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Fanout Workers</span>
-                    <span>[Kafka Cluster]</span>
-                  </div>
-                  <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>↓</div>
-                  <div style={{ border: '1px border var(--color-border-strong)', padding: '8px', borderRadius: '6px', backgroundColor: 'var(--color-bg)', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Timeline Cache</span>
-                    <span>[Redis Cluster]</span>
-                  </div>
+                <div className="p-4 rounded-xl bg-[#ede9fe]/40 border border-[#8b5cf6]/30 shadow-xs text-center relative">
+                  <div className="font-mono text-[10px] text-[#6b38d4] uppercase font-semibold">Streaming</div>
+                  <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Kafka Cluster</div>
+                  <div className="font-mono text-[11px] text-[#5e5e6e] mt-2">Debezium CDC</div>
+                  <div className="mt-2 text-[10px] bg-emerald-50 text-emerald-700 py-0.5 rounded font-medium">Zero Drop</div>
                 </div>
+
+                <div className="p-4 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
+                  <div className="font-mono text-[10px] text-[#8e8ea0] uppercase">Cache Layer</div>
+                  <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Redis Clustered</div>
+                  <div className="font-mono text-[11px] text-[#6b38d4] mt-2">XFetch Leases</div>
+                  <div className="mt-2 text-[10px] bg-[#f4f1fb] text-[#5e5e6e] py-0.5 rounded">Hit Rate 98.6%</div>
+                </div>
+              </div>
+
+              {/* Bottom Metrics Bar */}
+              <div className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
+                <span>Throughput: <strong>250,000 QPS</strong></span>
+                <span>Active Shards: <strong>32</strong></span>
+                <span>Tail Latency: <strong className="text-emerald-600">4.1ms</strong></span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How it Works (3 Columns) */}
-      <section className="container" style={{ marginBottom: '64px' }}>
-        <h2 style={{ fontSize: '28px', textAlign: 'center', marginBottom: '36px' }}>How Designo Works</h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-          <div className="card-cofounder">
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '18px', marginBottom: '16px' }}>
-              1
-            </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>Interview</h3>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px' }}>
-              Practice a structured, 9-stage mock interview with an AI interviewer tuned to real Tier-1 company standards.
-            </p>
-          </div>
-
-          <div className="card-cofounder">
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '18px', marginBottom: '16px' }}>
-              2
-            </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>Evaluate</h3>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px' }}>
-              Get an objective score across 7 weighted categories, pinpointing SPOF risks and architectural weak spots.
-            </p>
-          </div>
-
-          <div className="card-cofounder">
-            <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '18px', marginBottom: '16px' }}>
-              3
-            </div>
-            <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>Learn</h3>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '15px' }}>
-              Follow a personalized study roadmap built dynamically from your weakest performance categories.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Company-Track Strip */}
-      <section style={{ backgroundColor: 'var(--color-bg-secondary)', padding: '40px 0', marginBottom: '64px', borderTop: '1px solid var(--color-border-subtle)', borderBottom: '1px solid var(--color-border-subtle)' }}>
-        <div className="container" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '13px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
-            Targeted Interview Focus Tracks
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '24px' }}>
-            {[
-              { name: 'Google', focus: 'Scalability & Algorithms' },
-              { name: 'Amazon', focus: 'Tradeoffs & Operations' },
-              { name: 'Meta', focus: 'Massive Scale & Storage' },
-              { name: 'Netflix', focus: 'High Reliability & Resiliency' },
-            ].map((c) => (
-              <div key={c.name} className="card-solid" style={{ padding: '16px 24px', minWidth: '200px' }}>
-                <div style={{ fontWeight: 600, fontSize: '18px', marginBottom: '2px' }}>{c.name}</div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)' }}>Focus: {c.focus}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Preview (3 Cards) */}
-      <section className="container" style={{ marginBottom: '64px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <h2 style={{ fontSize: '32px', fontWeight: 400, marginBottom: '8px' }}>Flexible Plans for Every Engineer</h2>
-          <p style={{ color: 'var(--color-text-secondary)' }}>Start free, upgrade when you need unlimited mock interviews.</p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-          {/* Free Card */}
-          <div className="card-solid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>Free</h3>
-              <div style={{ fontSize: '32px', fontWeight: 600, marginBottom: '16px' }}>$0 <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)' }}>/ month</span></div>
-
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '24px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="#1f8a65" /> 3 mock interviews per month</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="#1f8a65" /> Basic category score reports</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="#1f8a65" /> Access to standard question bank</li>
-              </ul>
-            </div>
-            <button onClick={onStartInterview} className="btn-filled" style={{ width: '100%', justifyContent: 'center' }}>Get Started Free</button>
-          </div>
-
-          {/* Pro Card (Highlighted Most Popular) */}
-          <div className="card-solid" style={{ border: '2px solid var(--color-text)', backgroundColor: 'var(--color-primary)', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div style={{ position: 'absolute', top: '-12px', right: '20px', backgroundColor: 'var(--color-dark-btn)', color: '#ffffff', fontSize: '11px', fontWeight: 600, padding: '2px 10px', borderRadius: 'var(--radius-pill)' }}>
-              Most Popular
-            </div>
-
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '8px' }}>Pro</h3>
-              <div style={{ fontSize: '32px', fontWeight: 600, marginBottom: '16px' }}>$29 <span style={{ fontSize: '14px', fontWeight: 400, color: 'var(--color-text-secondary)' }}>/ month</span></div>
-
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: 'var(--color-text)', marginBottom: '24px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--color-text)" /> Unlimited mock interviews</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--color-text)" /> Advanced 7-category evaluation reports</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="var(--color-text)" /> Diagram Studio & SPOF risk auditor</li>
-              </ul>
-            </div>
-            <button onClick={onStartInterview} className="btn-dark" style={{ width: '100%', justifyContent: 'center' }}>Upgrade to Pro</button>
-          </div>
-
-          {/* Enterprise Card */}
-          <div className="card-solid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '8px' }}>Enterprise</h3>
-              <div style={{ fontSize: '32px', fontWeight: 600, marginBottom: '16px' }}>Custom</div>
-
-              <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px', color: 'var(--color-text-secondary)', marginBottom: '24px' }}>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="#1f8a65" /> Team seats & organizational analytics</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="#1f8a65" /> Custom company question tracks</li>
-                <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Check size={16} color="#1f8a65" /> Admin management panel</li>
-              </ul>
-            </div>
-            <button onClick={onSelectPricing} className="btn-filled" style={{ width: '100%', justifyContent: 'center' }}>Contact Sales</button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ borderTop: '1px solid var(--color-border-subtle)', paddingTop: '40px', fontSize: '14px', color: 'var(--color-text-secondary)' }}>
-        <div className="container" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '24px' }}>
+      {/* Numerical Benchmark Strip */}
+      <section className="border-y border-[#e5e1ea] bg-white py-10 mb-20">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>
-            <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: '6px' }}>Designo AI — System Design Interview Coach</div>
-            <p style={{ fontSize: '13px' }}>Helping software engineers master architecture mock interviews.</p>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]">42ms</div>
+            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Evaluation Latency</div>
           </div>
-
-          <div style={{ display: 'flex', gap: '40px' }}>
-            <div>
-              <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: '8px' }}>Product</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
-                <span>Question Library</span>
-                <span>Diagram Studio</span>
-                <span>Learning Roadmap</span>
-              </div>
-            </div>
-
-            <div>
-              <div style={{ fontWeight: 600, color: 'var(--color-text)', marginBottom: '8px' }}>Company</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px' }}>
-                <span>About Us</span>
-                <span>Careers</span>
-                <span>Privacy & Terms</span>
-              </div>
-            </div>
+          <div>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#6b38d4]">98.4%</div>
+            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Staff+ Calibration</div>
+          </div>
+          <div>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]">1,200+</div>
+            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Architecture Components</div>
+          </div>
+          <div>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#10b981]">14,800+</div>
+            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Simulations Completed</div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      {/* 4 Pillars Section */}
+      <section className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <Badge variant="primary" className="mb-4">
+            CORE PLATFORM CAPABILITIES
+          </Badge>
+          <h2 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
+            Engineered for High-Stakes Technical Loops
+          </h2>
+          <p className="font-sans text-[#5e5e6e] mt-3">
+            Traditional interview prep gives you generic flashcards. Designo subjects your architecture to real-time stress testing.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card padding="md" hover>
+            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
+              <Zap size={20} />
+            </div>
+            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">AI Interviewer</h3>
+            <p className="text-xs text-[#5e5e6e] leading-relaxed">
+              Dynamically probes requirements, asks challenging trade-off questions, and tests failure scenarios.
+            </p>
+          </Card>
+
+          <Card padding="md" hover>
+            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
+              <Layers size={20} />
+            </div>
+            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">Diagram Evaluator</h3>
+            <p className="text-xs text-[#5e5e6e] leading-relaxed">
+              Analyzes Mermaid &amp; SVG architecture diagrams, flagging Single Points of Failure and concurrency bottlenecks.
+            </p>
+          </Card>
+
+          <Card padding="md" hover>
+            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
+              <Activity size={20} />
+            </div>
+            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">Objective Scoring</h3>
+            <p className="text-xs text-[#5e5e6e] leading-relaxed">
+              Multi-dimensional scoring across Scope, High-Level Design, Bottlenecks, and Fault Tolerance with actionable feedback.
+            </p>
+          </Card>
+
+          <Card padding="md" hover>
+            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
+              <Award size={20} />
+            </div>
+            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">Adaptive Roadmap</h3>
+            <p className="text-xs text-[#5e5e6e] leading-relaxed">
+              Creates a tailored learning path targeting your specific gaps (e.g. Raft consensus, DB partitioning, or rate limiters).
+            </p>
+          </Card>
+        </div>
+      </section>
+
+      {/* CTA Banner */}
+      <section className="max-w-7xl mx-auto px-6 md:px-12 mt-16">
+        <div className="rounded-3xl bg-gradient-to-r from-[#0a0a0f] via-[#1a1528] to-[#0a0a0f] text-white p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
+          <div className="max-w-xl">
+            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white mb-3">
+              Ready to crush your next System Design loop?
+            </h2>
+            <p className="font-sans text-sm md:text-base text-neutral-300">
+              Start a realistic mock interview right now. No credit card required.
+            </p>
+          </div>
+          <div className="flex items-center gap-4 shrink-0">
+            <Button
+              variant="primary"
+              size="lg"
+              className="shadow-lg"
+              iconRight={<ArrowRight size={16} />}
+              onClick={onStartInterview}
+            >
+              Launch Mock Interview
+            </Button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

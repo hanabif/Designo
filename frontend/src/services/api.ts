@@ -1,3 +1,13 @@
+import type {
+  User,
+  AuthResponse,
+  Question,
+  InterviewSession,
+  InterviewMessage,
+  EvaluationReport,
+  Diagram,
+} from '../types';
+
 const API_BASE = 'http://localhost:3001';
 
 export function getAuthToken(): string | null {
@@ -38,36 +48,38 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
 export const api = {
   // Auth
-  register: (data: any) => request<any>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
-  login: (data: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
-  getMe: () => request<any>('/users/me'),
+  register: (data: { email: string; password?: string; fullName?: string; name?: string }) =>
+    request<AuthResponse>('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+  login: (data: { email: string; password?: string }) =>
+    request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
+  getMe: () => request<User>('/users/me'),
 
   // Questions
-  getQuestions: () => request<any[]>('/questions'),
+  getQuestions: () => request<Question[]>('/questions'),
 
   // Interviews
   startInterview: (data: { questionId: string; difficulty: string; companyTrack: string }) =>
-    request<any>('/interviews/start', { method: 'POST', body: JSON.stringify(data) }),
-  getInterview: (id: string) => request<any>(`/interviews/${id}`),
-  getInterviewHistory: () => request<any[]>('/interviews/history'),
+    request<InterviewSession>('/interviews/start', { method: 'POST', body: JSON.stringify(data) }),
+  getInterview: (id: string) => request<InterviewSession>(`/interviews/${id}`),
+  getInterviewHistory: () => request<InterviewSession[]>('/interviews/history'),
   sendInterviewMessage: (id: string, content: string) =>
-    request<any>(`/interviews/${id}/message`, { method: 'POST', body: JSON.stringify({ content }) }),
+    request<InterviewMessage>(`/interviews/${id}/message`, { method: 'POST', body: JSON.stringify({ content }) }),
   finishInterview: (id: string) =>
-    request<any>(`/interviews/${id}/finish`, { method: 'POST' }),
+    request<{ success: boolean; evaluationId?: string }>(`/interviews/${id}/finish`, { method: 'POST' }),
 
   // Evaluations & Analytics
   generateEvaluation: (interviewId: string) =>
-    request<any>('/evaluations/generate', { method: 'POST', body: JSON.stringify({ interviewId }) }),
-  getEvaluation: (id: string) => request<any>(`/evaluations/${id}`),
+    request<EvaluationReport>('/evaluations/generate', { method: 'POST', body: JSON.stringify({ interviewId }) }),
+  getEvaluation: (id: string) => request<EvaluationReport>(`/evaluations/${id}`),
   getAnalyticsDashboard: () => request<any>('/analytics/dashboard'),
   getAnalyticsProgress: () => request<any>('/analytics/progress'),
   getRecommendations: () => request<any>('/recommendations'),
 
   // Diagrams
   generateDiagram: (data: { title: string; prompt: string; format?: string; interviewId?: string }) =>
-    request<any>('/diagrams/generate', { method: 'POST', body: JSON.stringify(data) }),
+    request<Diagram>('/diagrams/generate', { method: 'POST', body: JSON.stringify(data) }),
   reviewDiagram: (data: { diagramId: string; diagramCode?: string }) =>
     request<any>('/diagrams/review', { method: 'POST', body: JSON.stringify(data) }),
-  getDiagrams: () => request<any[]>('/diagrams'),
-  getDiagram: (id: string) => request<any>(`/diagrams/${id}`),
+  getDiagrams: () => request<Diagram[]>('/diagrams'),
+  getDiagram: (id: string) => request<Diagram>(`/diagrams/${id}`),
 };

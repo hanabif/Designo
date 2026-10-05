@@ -1,130 +1,229 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CreditCard, Check, Download, ExternalLink } from 'lucide-react';
+import type { User } from '../types';
+import { Button, Card, Badge } from './ui';
 
 interface BillingViewProps {
-  user?: any;
+  user?: User | null;
 }
 
 export const BillingView: React.FC<BillingViewProps> = ({ user }) => {
-  const currentPlan = user?.role === 'PRO' || user?.plan === 'PRO' ? 'Pro' : 'Free';
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
   const history = [
-    { date: 'Sep 01, 2026', desc: 'Designo Pro Monthly Subscription', amount: '$29.00', status: 'Paid' },
-    { date: 'Aug 01, 2026', desc: 'Designo Pro Monthly Subscription', amount: '$29.00', status: 'Paid' },
-    { date: 'Jul 01, 2026', desc: 'Designo Pro Monthly Subscription', amount: '$29.00', status: 'Paid' },
+    { date: 'Oct 01, 2026', invoice: 'INV-2026-003', desc: 'Designo Pro Candidate — Monthly', amount: '$39.00', status: 'Paid' },
+    { date: 'Sep 01, 2026', invoice: 'INV-2026-002', desc: 'Designo Pro Candidate — Monthly', amount: '$39.00', status: 'Paid' },
+    { date: 'Aug 01, 2026', invoice: 'INV-2026-001', desc: 'Designo Pro Candidate — Monthly', amount: '$39.00', status: 'Paid' },
+  ];
+
+  const plans = [
+    {
+      id: 'starter',
+      name: 'Starter',
+      price: '$0',
+      period: 'forever free',
+      desc: 'Essential first-principles practice for students & junior engineers.',
+      features: [
+        '3 mock interview sessions / month',
+        'Basic rubric breakdown (Score / 100)',
+        'Access to 10 foundational questions',
+        'Standard evaluation latency',
+      ],
+      cta: 'Current Plan',
+      isCurrent: !user,
+      isPopular: false,
+    },
+    {
+      id: 'pro',
+      name: 'Pro Candidate',
+      price: billingCycle === 'annual' ? '$29' : '$39',
+      period: billingCycle === 'annual' ? '/mo (billed annually)' : '/month',
+      desc: 'Complete autonomous coaching loop for Senior (L5) interviews.',
+      features: [
+        'Unlimited mock interview loops',
+        'Real-time AI diagram auditor & SPOF detector',
+        'Calibrated company tracks (Google, Meta, Amazon)',
+        'Turn-by-turn score delta analysis (+/- pts)',
+        'Custom knowledge gap learning roadmap',
+      ],
+      cta: 'Manage Subscription',
+      isCurrent: true,
+      isPopular: true,
+    },
+    {
+      id: 'staff',
+      name: 'Staff & Principal',
+      price: billingCycle === 'annual' ? '$79' : '$99',
+      period: billingCycle === 'annual' ? '/mo (billed annually)' : '/month',
+      desc: 'High-stakes calibration for L6+ Bar Raiser & Principal loops.',
+      features: [
+        'Everything in Pro Candidate',
+        'Ruthless Staff Bar Raiser AI persona',
+        'Production failover & chaos simulation scenarios',
+        'Mermaid & SVG full architectural exports',
+        '1-on-1 human Staff Architect session critique',
+      ],
+      cta: 'Upgrade to Staff',
+      isCurrent: false,
+      isPopular: false,
+    },
   ];
 
   return (
-    <div className="container section-padding" style={{ maxWidth: '960px', margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <span className="badge-accent" style={{ marginBottom: '6px' }}>
-          <CreditCard size={12} /> Subscription Management
-        </span>
-        <h1 style={{ fontSize: '32px', fontWeight: 400 }}>Billing & Subscriptions</h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '16px', marginTop: '4px' }}>
-          Manage your subscription tier, billing preferences, and invoice records.
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Title */}
+      <div className="mb-8 pb-6 border-b border-[#e5e1ea]">
+        <Badge variant="primary" icon={<CreditCard size={13} />} className="mb-2">
+          SUBSCRIPTION &amp; BILLING
+        </Badge>
+        <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
+          Plans &amp; Membership
+        </h1>
+        <p className="text-sm text-[#5e5e6e] mt-1">
+          Invest in realistic mock interview simulations designed to land Staff and Principal engineering offers.
         </p>
       </div>
 
-      {/* Current Plan Card */}
-      <div className="card-solid" style={{ backgroundColor: 'var(--color-primary)', marginBottom: '36px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      {/* Active Subscription Banner */}
+      <div className="p-6 rounded-2xl bg-gradient-to-r from-[#f3f0ff] via-white to-[#faf9fe] border border-[#8b5cf6]/30 mb-10 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div>
-          <span className="badge-subtle" style={{ backgroundColor: '#ffffff', marginBottom: '6px' }}>Current Plan</span>
-          <h2 style={{ fontSize: '24px', fontWeight: 600 }}>Designo {currentPlan} Tier</h2>
-          <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-            Renews automatically on Oct 01, 2026 via Visa ending in 4242.
+          <Badge variant="primary">
+            Active Subscription
+          </Badge>
+          <h2 className="font-display font-bold text-2xl text-[#0a0a0f] mt-2">
+            Designo Pro Candidate Plan
+          </h2>
+          <p className="text-xs text-[#5e5e6e] mt-1 font-mono">
+            Renews automatically on Nov 01, 2026 ($39.00/mo) via Visa ending in 4242.
           </p>
         </div>
 
-        <button className="btn-filled" style={{ backgroundColor: '#ffffff' }}>
-          Manage Payment Method <ExternalLink size={14} />
+        <Button
+          variant="outline"
+          size="sm"
+          iconRight={<ExternalLink size={13} />}
+        >
+          Manage Card Details
+        </Button>
+      </div>
+
+      {/* Billing Cycle Toggle */}
+      <div className="flex items-center justify-center gap-3 mb-10">
+        <span className={`text-xs font-semibold ${billingCycle === 'monthly' ? 'text-[#0a0a0f]' : 'text-[#8e8ea0]'}`}>
+          Monthly Billing
+        </span>
+        <button
+          onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
+          className="w-12 h-6 bg-[#0a0a0f] rounded-full p-1 transition-colors relative cursor-pointer"
+          aria-label="Toggle annual or monthly billing"
+        >
+          <div
+            className={`w-4 h-4 bg-white rounded-full transition-transform ${
+              billingCycle === 'annual' ? 'translate-x-6' : 'translate-x-0'
+            }`}
+          />
         </button>
-      </div>
-
-      {/* 3 Pricing Plan Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '20px', marginBottom: '48px' }}>
-        {/* Free */}
-        <div className="card-solid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px' }}>Free</h3>
-            <div style={{ fontSize: '28px', fontWeight: 600, marginBottom: '16px' }}>$0 <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--color-text-muted)' }}>/ mo</span></div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="#1f8a65" /> 3 interviews / month</li>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="#1f8a65" /> Basic category scores</li>
-            </ul>
-          </div>
-          <button className="btn-filled" style={{ width: '100%', justifyContent: 'center' }} disabled={currentPlan === 'Free'}>
-            {currentPlan === 'Free' ? 'Current Plan' : 'Downgrade to Free'}
-          </button>
-        </div>
-
-        {/* Pro */}
-        <div className="card-solid" style={{ border: '2px solid var(--color-text)', position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ position: 'absolute', top: '-10px', right: '16px', backgroundColor: 'var(--color-dark-btn)', color: '#fff', fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--radius-pill)' }}>
-            Most Popular
-          </div>
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px' }}>Pro</h3>
-            <div style={{ fontSize: '28px', fontWeight: 600, marginBottom: '16px' }}>$29 <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--color-text-muted)' }}>/ mo</span></div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--color-text)', marginBottom: '20px' }}>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="var(--color-text)" /> Unlimited mock interviews</li>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="var(--color-text)" /> Advanced SPOF diagram auditor</li>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="var(--color-text)" /> Company tracks (Google/Meta/Amazon)</li>
-            </ul>
-          </div>
-          <button className="btn-dark" style={{ width: '100%', justifyContent: 'center' }}>
-            {currentPlan === 'Pro' ? 'Current Plan' : 'Upgrade to Pro'}
-          </button>
-        </div>
-
-        {/* Enterprise */}
-        <div className="card-solid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '4px' }}>Enterprise</h3>
-            <div style={{ fontSize: '28px', fontWeight: 600, marginBottom: '16px' }}>Custom</div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="#1f8a65" /> Team management & shared stats</li>
-              <li style={{ display: 'flex', gap: '6px' }}><Check size={14} color="#1f8a65" /> Organization admin dashboard</li>
-            </ul>
-          </div>
-          <button className="btn-filled" style={{ width: '100%', justifyContent: 'center' }}>Contact Sales</button>
+        <div className="flex items-center gap-1.5">
+          <span className={`text-xs font-semibold ${billingCycle === 'annual' ? 'text-[#0a0a0f]' : 'text-[#8e8ea0]'}`}>
+            Annual Billing
+          </span>
+          <Badge variant="primary">
+            SAVE 20%
+          </Badge>
         </div>
       </div>
 
-      {/* Billing History Table */}
-      <div className="card-solid">
-        <h3 style={{ fontSize: '18px', fontWeight: 500, marginBottom: '16px' }}>Billing History & Invoices</h3>
+      {/* 3 Tier Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {plans.map((p) => (
+          <div
+            key={p.id}
+            className={`rounded-3xl p-6 sm:p-8 flex flex-col justify-between transition-all relative ${
+              p.isPopular
+                ? 'bg-white border-2 border-[#6b38d4] shadow-lg ring-4 ring-[#6b38d4]/5'
+                : 'bg-white border border-[#e5e1ea] shadow-xs'
+            }`}
+          >
+            {p.isPopular && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#6b38d4] text-white font-mono text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-xs">
+                MOST POPULAR
+              </span>
+            )}
 
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--color-border-subtle)', color: 'var(--color-text-secondary)' }}>
-              <th style={{ padding: '10px 0' }}>Date</th>
-              <th style={{ padding: '10px 0' }}>Description</th>
-              <th style={{ padding: '10px 0' }}>Amount</th>
-              <th style={{ padding: '10px 0' }}>Status</th>
-              <th style={{ padding: '10px 0', textAlign: 'right' }}>Invoice</th>
-            </tr>
-          </thead>
-          <tbody>
-            {history.map((row, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                <td style={{ padding: '12px 0' }}>{row.date}</td>
-                <td style={{ padding: '12px 0', fontWeight: 500 }}>{row.desc}</td>
-                <td style={{ padding: '12px 0', fontFamily: 'var(--font-mono)' }}>{row.amount}</td>
-                <td style={{ padding: '12px 0' }}>
-                  <span className="badge-subtle" style={{ backgroundColor: '#e6f4ef', color: '#1f8a65' }}>{row.status}</span>
-                </td>
-                <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                  <button className="btn-ghost" style={{ padding: '4px' }} title="Download Invoice">
-                    <Download size={16} />
-                  </button>
-                </td>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-display font-bold text-xl text-[#0a0a0f]">{p.name}</h3>
+              </div>
+              <p className="text-xs text-[#5e5e6e] mb-6 leading-relaxed">{p.desc}</p>
+
+              <div className="flex items-baseline gap-1 mb-6">
+                <span className="font-display font-black text-4xl text-[#0a0a0f]">{p.price}</span>
+                <span className="font-mono text-xs text-[#8e8ea0]">{p.period}</span>
+              </div>
+
+              {/* Features list */}
+              <div className="space-y-3 mb-8">
+                {p.features.map((feat, i) => (
+                  <div key={i} className="flex items-start gap-2.5 text-xs text-[#0a0a0f]">
+                    <Check size={14} className="text-[#6b38d4] shrink-0 mt-0.5" />
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              variant={p.isPopular ? 'dark' : 'outline'}
+              size="md"
+              fullWidth
+            >
+              {p.cta}
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* Invoice History Table */}
+      <Card padding="lg">
+        <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-4">
+          Invoice History &amp; Receipts
+        </h3>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs font-mono">
+            <thead>
+              <tr className="border-b border-[#e5e1ea] text-[#8e8ea0] uppercase">
+                <th className="py-3 px-2">Invoice</th>
+                <th className="py-3 px-2">Date</th>
+                <th className="py-3 px-2">Description</th>
+                <th className="py-3 px-2">Amount</th>
+                <th className="py-3 px-2">Status</th>
+                <th className="py-3 px-2 text-right">Download</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-[#e5e1ea]">
+              {history.map((inv, idx) => (
+                <tr key={idx} className="hover:bg-[#faf9fc] transition-colors">
+                  <td className="py-3.5 px-2 font-semibold text-[#0a0a0f]">{inv.invoice}</td>
+                  <td className="py-3.5 px-2 text-[#5e5e6e]">{inv.date}</td>
+                  <td className="py-3.5 px-2 text-[#0a0a0f] font-sans">{inv.desc}</td>
+                  <td className="py-3.5 px-2 font-bold text-[#0a0a0f]">{inv.amount}</td>
+                  <td className="py-3.5 px-2">
+                    <Badge variant="success">
+                      {inv.status}
+                    </Badge>
+                  </td>
+                  <td className="py-3.5 px-2 text-right">
+                    <button className="text-[#6b38d4] hover:underline inline-flex items-center gap-1 font-sans font-semibold cursor-pointer">
+                      <Download size={12} /> PDF
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
     </div>
   );
 };

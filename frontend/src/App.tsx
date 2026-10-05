@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
 import { NotificationsModal } from './components/NotificationsModal';
@@ -15,13 +15,14 @@ import { LearningRoadmapView } from './components/LearningRoadmapView';
 import { BillingView } from './components/BillingView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { api, removeAuthToken } from './services/api';
+import type { User, Question, UserProfile } from './types';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<string>('landing');
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [activeInterviewId, setActiveInterviewId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -43,22 +44,22 @@ export function App() {
       setActiveInterviewId(interview.id);
       setActiveTab('interview');
     } catch {
-      // Fallback mock launch
+      // Fallback mock launch for instant interactive demo
       const mockId = `session-${Date.now()}`;
       setActiveInterviewId(mockId);
       setActiveTab('interview');
     }
   };
 
-  const sampleQuestions = [
-    { id: 'q1', title: 'Design URL Shortener (TinyURL)', difficulty: 'Beginner' },
-    { id: 'q2', title: 'Design Twitter / X News Feed', difficulty: 'Intermediate' },
-    { id: 'q3', title: 'Design Uber / Real-Time Dispatch System', difficulty: 'Advanced' },
-    { id: 'q4', title: 'Design Global CDN & Distributed Cache', difficulty: 'Staff' },
+  const sampleQuestions: Question[] = [
+    { id: 'q1', title: 'Design URL Shortener (TinyURL)', difficulty: 'Beginner', companyTrack: 'Google', category: 'Core Distributed' },
+    { id: 'q2', title: 'Design Twitter / X News Feed', difficulty: 'Intermediate', companyTrack: 'Meta', category: 'High QPS & Social' },
+    { id: 'q3', title: 'Design Uber / Real-Time Dispatch System', difficulty: 'Advanced', companyTrack: 'Uber', category: 'Geo & Real-Time' },
+    { id: 'q4', title: 'Design Global CDN & Distributed Cache', difficulty: 'Staff', companyTrack: 'Netflix', category: 'Infra & Edge' },
   ];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--color-bg)' }}>
+    <div className="min-h-screen flex flex-col bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4]">
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -69,7 +70,7 @@ export function App() {
         onLogout={handleLogout}
       />
 
-      <main style={{ flex: 1 }}>
+      <main className="flex-1">
         {activeTab === 'landing' && (
           <HeroLanding
             onStartInterview={() => {
@@ -83,8 +84,8 @@ export function App() {
 
         {activeTab === 'onboarding' && (
           <OnboardingView
-            onComplete={(profile) => {
-              setUser((prev: any) => ({ ...prev, profile }));
+            onComplete={(profile: UserProfile) => {
+              setUser((prev) => (prev ? { ...prev, profile } : { email: 'candidate@designo.ai', profile }));
               setActiveTab('dashboard');
             }}
             onSkip={() => setActiveTab('dashboard')}

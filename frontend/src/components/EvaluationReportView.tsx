@@ -1,5 +1,6 @@
 import React from 'react';
-import { Download, Share2, Play, CheckCircle2, AlertCircle, Award, Sparkles } from 'lucide-react';
+import { Download, Play, CheckCircle2, AlertCircle, Award, ArrowRight } from 'lucide-react';
+import { Button, Card, Badge } from './ui';
 
 interface EvaluationReportViewProps {
   onReplay: () => void;
@@ -10,215 +11,167 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
   onReplay,
   onNavigateRoadmap,
 }) => {
-  const overallScore = 82;
-  const performanceLabel = 'Strong Performance (Tier-1 Qualified)';
+  const overallScore = 86;
+  const performanceLabel = 'STRONG HIRE (L6 STAFF CALIBRATED)';
 
   const categoryBreakdown = [
-    { name: 'Requirements Gathering', weight: 15, score: 92 },
-    { name: 'Architecture & High-Level Design', weight: 25, score: 85 },
-    { name: 'Scalability & Fan-Out', weight: 20, score: 88 },
-    { name: 'Database & Data Modeling', weight: 10, score: 65 },
-    { name: 'Reliability & SPOF Detection', weight: 15, score: 78 },
-    { name: 'Security & Encryption', weight: 10, score: 80 },
-    { name: 'Cost Awareness & Capacity', weight: 5, score: 90 },
+    { name: '1. Requirements & Scope Clarification', weight: '15%', score: 92, status: 'Exemplary' },
+    { name: '2. High-Level Architecture & Topologies', weight: '25%', score: 88, status: 'Strong Hire' },
+    { name: '3. Data Contracts & Storage Modeling', weight: '20%', score: 74, status: 'Hire' },
+    { name: '4. Concurrency, Caching & Fan-Out', weight: '20%', score: 94, status: 'Exemplary' },
+    { name: '5. Fault Tolerance & SPOF Resilience', weight: '15%', score: 78, status: 'Hire' },
+    { name: '6. Communication & Justification of Trade-offs', weight: '5%', score: 85, status: 'Strong Hire' },
   ];
 
   const strengths = [
-    'Clearly defined read/write query ratio (100:1) before selecting storage strategy.',
-    'Proposed Hybrid Fan-out model eliminating write amplification for 100k+ follower accounts.',
-    'Effective use of GeoHash spatial indexing with Redis geospatial clusters.',
+    'Articulated concrete mathematical QPS estimation (25k writes/sec, 3.2 MB/sec throughput) before choosing in-memory storage.',
+    'Proposed a hybrid fan-out pipeline (Redis Geospatial + Kafka partition by GeoHash cell), preventing write amplification.',
+    'Correctly integrated probabilistic leases (XFetch) to neutralize cache stampedes during concurrent spikes.',
   ];
 
   const areasToImprove = [
-    'Didn’t address single point of failure in the ingress load balancer tier.',
-    'Database Sharding strategy lacks explicit partition key choice for cross-shard queries.',
-    'Quorum consistency parameters (N, R, W) were left unspecified during network partition scenario.',
-  ];
-
-  const recommendedTopics = [
-    'Database Sharding & Key Design',
-    'CAP Theorem & Quorum Tunings',
-    'Active-Active Load Balancer SPOFs',
-    'Consistent Hashing & Virtual Nodes',
+    'Database Sharding strategy lacks explicit composite partition key choice for cross-city boundary queries.',
+    'Quorum consistency parameters (N, R, W) were left unspecified during network partition recovery scenarios.',
+    'Did not calculate operational memory eviction policies (allkeys-lru vs volatile-lru) under extreme OOM conditions.',
   ];
 
   return (
-    <div className="container section-padding" style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Top Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Top Action Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#e5e1ea]">
         <div>
-          <span className="badge-accent" style={{ marginBottom: '6px' }}>
-            <Award size={12} /> Evaluation Report #8492
-          </span>
-          <h1 style={{ fontSize: '32px', fontWeight: 400 }}>Interview Evaluation Report</h1>
-        </div>
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button className="btn-filled" style={{ fontSize: '13px' }}>
-            <Download size={14} /> Export PDF
-          </button>
-          <button className="btn-filled" style={{ fontSize: '13px' }}>
-            <Share2 size={14} /> Share
-          </button>
-          <button onClick={onReplay} className="btn-dark" style={{ fontSize: '13px' }}>
-            <Play size={14} /> Replay Interview
-          </button>
-        </div>
-      </div>
-
-      {/* Hero Score Ring Banner */}
-      <div
-        className="card-solid"
-        style={{
-          backgroundColor: 'var(--color-primary)',
-          padding: '36px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '36px',
-          marginBottom: '36px',
-          border: '1px solid var(--color-border-subtle)',
-        }}
-      >
-        {/* Score Ring */}
-        <div
-          style={{
-            width: '120px',
-            height: '120px',
-            borderRadius: '50%',
-            background: 'conic-gradient(#171717 82%, #ffffff 0%)',
-            display: 'flex',
-            alignItems: 'center',
-            justify: 'center',
-            flexShrink: 0,
-            boxShadow: 'var(--shadow-low)',
-          }}
-        >
-          <div
-            style={{
-              width: '94px',
-              height: '94px',
-              borderRadius: '50%',
-              backgroundColor: '#ffffff',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justify: 'center',
-            }}
-          >
-            <span style={{ fontSize: '32px', fontWeight: 600, lineHeight: 1 }}>{overallScore}</span>
-            <span style={{ fontSize: '11px', color: 'var(--color-text-secondary)' }}>OUT OF 100</span>
-          </div>
-        </div>
-
-        <div>
-          <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
-            Overall Assessment Outcome
-          </div>
-          <h2 style={{ fontSize: '28px', fontWeight: 500, marginBottom: '8px' }}>{performanceLabel}</h2>
-          <p style={{ fontSize: '15px', color: 'var(--color-text-secondary)', maxWidth: '600px' }}>
-            You demonstrated senior-level system design competencies, particularly in scalability and requirements gathering. Focus on addressing database sharding edge-cases to reach Staff level.
+          <Badge variant="primary" icon={<Award size={13} />} className="mb-2">
+            EVALUATION REPORT #DES-9104
+          </Badge>
+          <h1 className="font-display font-bold text-3xl text-[#0a0a0f]">
+            Mock Interview Evaluation
+          </h1>
+          <p className="text-xs text-[#5e5e6e] font-mono mt-1">
+            Scenario: Design Uber Dispatch // Duration: 42m 18s // Calibrated: Google L6 Loop
           </p>
         </div>
+
+        <div className="flex items-center gap-2.5">
+          <Button
+            variant="outline"
+            size="sm"
+            iconLeft={<Download size={14} />}
+          >
+            Export PDF
+          </Button>
+          <Button
+            variant="dark"
+            size="sm"
+            iconLeft={<Play size={13} fill="currentColor" />}
+            onClick={onReplay}
+          >
+            Replay Session
+          </Button>
+        </div>
       </div>
 
-      {/* 7 Category Breakdown Bars */}
-      <div className="card-solid" style={{ marginBottom: '36px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '24px' }}>7 Weighted Category Breakdown</h3>
+      {/* Main Score Banner */}
+      <div className="rounded-3xl bg-gradient-to-br from-[#f3f0ff] via-white to-[#faf9fe] border border-[#8b5cf6]/20 p-8 mb-10 shadow-xs flex flex-col md:flex-row items-center gap-8 justify-between">
+        <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+          {/* Circular Score Ring */}
+          <div className="w-28 h-28 rounded-full border-8 border-[#ede9fe] border-t-[#6b38d4] flex flex-col items-center justify-center shrink-0 shadow-xs bg-white">
+            <span className="font-display font-black text-3xl text-[#0a0a0f]">{overallScore}</span>
+            <span className="font-mono text-[10px] text-[#8e8ea0] uppercase">/ 100 PTS</span>
+          </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          {categoryBreakdown.map((cat) => (
-            <div key={cat.name}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '6px' }}>
-                <span style={{ fontWeight: 500 }}>
-                  {cat.name} <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>({cat.weight}% weight)</span>
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{cat.score}/100</span>
+          <div>
+            <Badge variant="success" icon={<CheckCircle2 size={13} />} className="mb-2">
+              {performanceLabel}
+            </Badge>
+            <h2 className="font-display font-bold text-2xl text-[#0a0a0f]">
+              Ready for Tier-1 Staff Loop
+            </h2>
+            <p className="text-xs sm:text-sm text-[#5e5e6e] mt-1 max-w-lg leading-relaxed">
+              Your architectural reasoning demonstrates Staff-level command over concurrency and data pipelines. Minor gaps in partition failure tolerance can be closed with 2 targeted drills.
+            </p>
+          </div>
+        </div>
+
+        <Button
+          variant="primary"
+          size="md"
+          className="shrink-0 shadow-md"
+          iconRight={<ArrowRight size={14} />}
+          onClick={onNavigateRoadmap}
+        >
+          Sync Gaps to Roadmap
+        </Button>
+      </div>
+
+      {/* Rubric Category Breakdown Table */}
+      <Card padding="lg" className="mb-10">
+        <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-6">
+          Weighted Competency Breakdown
+        </h3>
+
+        <div className="space-y-4">
+          {categoryBreakdown.map((cat, i) => (
+            <div key={i} className="p-4 rounded-xl bg-[#faf9fc] border border-[#e5e1ea]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold text-xs sm:text-sm text-[#0a0a0f]">{cat.name}</span>
+                  <span className="text-[10px] font-mono text-[#8e8ea0] bg-white px-2 py-0.5 rounded border border-[#e5e1ea]">
+                    Weight: {cat.weight}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs font-bold text-[#0a0a0f]">{cat.score}%</span>
+                  <Badge variant="primary">
+                    {cat.status}
+                  </Badge>
+                </div>
               </div>
 
-              <div style={{ height: '8px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
+              {/* Progress bar */}
+              <div className="w-full h-2 bg-[#e5e1ea] rounded-full overflow-hidden">
                 <div
-                  style={{
-                    height: '100%',
-                    width: `${cat.score}%`,
-                    backgroundColor: cat.score >= 80 ? '#1f8a65' : cat.score >= 70 ? 'var(--color-text)' : '#d97706',
-                    borderRadius: '4px',
-                  }}
+                  className="h-full bg-[#6b38d4] rounded-full transition-all duration-500"
+                  style={{ width: `${cat.score}%` }}
                 />
               </div>
             </div>
           ))}
         </div>
-      </div>
+      </Card>
 
-      {/* Strengths (Green) vs Areas to Improve (Amber) Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '24px', marginBottom: '36px' }}>
-        {/* Strengths Card */}
-        <div className="card-solid" style={{ borderLeft: '4px solid #1f8a65' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <CheckCircle2 size={20} color="#1f8a65" />
-            <h3 style={{ fontSize: '18px', fontWeight: 500 }}>Key Strengths Demonstrated</h3>
+      {/* Strengths & Critical Gaps (2 Columns) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+        {/* Strengths */}
+        <Card padding="md">
+          <div className="flex items-center gap-2 mb-4 text-[#10b981]">
+            <CheckCircle2 size={18} />
+            <h3 className="font-display font-bold text-base text-[#0a0a0f]">Key Strengths Demonstrated</h3>
           </div>
-
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="space-y-3">
             {strengths.map((str, i) => (
-              <li key={i} style={{ fontSize: '14px', color: 'var(--color-text)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <span style={{ color: '#1f8a65', fontWeight: 600 }}>✓</span>
+              <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 text-xs text-[#0a0a0f] leading-relaxed">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] mt-1.5 shrink-0" />
                 <span>{str}</span>
-              </li>
+              </div>
             ))}
-          </ul>
-        </div>
-
-        {/* Areas to Improve Card */}
-        <div className="card-solid" style={{ borderLeft: '4px solid #d97706' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <AlertCircle size={20} color="#d97706" />
-            <h3 style={{ fontSize: '18px', fontWeight: 500 }}>Areas to Improve</h3>
           </div>
+        </Card>
 
-          <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {areasToImprove.map((area, i) => (
-              <li key={i} style={{ fontSize: '14px', color: 'var(--color-text)', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                <span style={{ color: '#d97706', fontWeight: 600 }}>!</span>
-                <span>{area}</span>
-              </li>
+        {/* Areas to Improve */}
+        <Card padding="md">
+          <div className="flex items-center gap-2 mb-4 text-[#f59e0b]">
+            <AlertCircle size={18} />
+            <h3 className="font-display font-bold text-base text-[#0a0a0f]">Missed Trade-Offs &amp; Vulnerabilities</h3>
+          </div>
+          <div className="space-y-3">
+            {areasToImprove.map((gap, i) => (
+              <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/50 border border-amber-100 text-xs text-[#0a0a0f] leading-relaxed">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#f59e0b] mt-1.5 shrink-0" />
+                <span>{gap}</span>
+              </div>
             ))}
-          </ul>
-        </div>
-      </div>
-
-      {/* Recommended Next Steps Strip */}
-      <div className="card-cofounder" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ fontWeight: 600, fontSize: '16px' }}>Recommended Study Topics for Improvement</div>
-          <button onClick={onNavigateRoadmap} className="btn-ghost" style={{ fontSize: '13px', color: 'var(--color-text)' }}>
-            Open Full Learning Roadmap →
-          </button>
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '4px' }}>
-          {recommendedTopics.map((top) => (
-            <div
-              key={top}
-              onClick={onNavigateRoadmap}
-              style={{
-                backgroundColor: 'var(--color-card-solid)',
-                border: '1px solid var(--color-border-subtle)',
-                padding: '10px 16px',
-                borderRadius: 'var(--radius-button)',
-                fontSize: '13px',
-                fontWeight: 500,
-                whiteSpace: 'nowrap',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <Sparkles size={14} color="#2563eb" /> {top}
-            </div>
-          ))}
-        </div>
+          </div>
+        </Card>
       </div>
     </div>
   );

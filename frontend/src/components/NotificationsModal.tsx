@@ -1,5 +1,7 @@
 import React from 'react';
-import { X, CheckCircle2, Sparkles, Bell, AlertTriangle, BarChart3, Check } from 'lucide-react';
+import { CheckCircle2, Sparkles, Bell, BarChart3 } from 'lucide-react';
+import { Modal, Badge } from './ui';
+import type { NotificationItem } from '../types';
 
 interface NotificationsModalProps {
   isOpen: boolean;
@@ -7,158 +9,95 @@ interface NotificationsModalProps {
 }
 
 export const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  const notifications = [
+  const notifications: (NotificationItem & { icon: React.ElementType; iconColor: string })[] = [
     {
       id: '1',
       unread: true,
       icon: CheckCircle2,
-      iconColor: '#1f8a65',
-      title: 'Interview Completed',
-      desc: 'Your mock interview on "Design Uber / Real-Time Dispatch" is complete.',
-      time: '10 mins ago',
+      iconColor: 'text-[#10b981]',
+      title: 'Mock Interview Evaluated',
+      desc: 'Your session on "Design Uber / Real-Time Dispatch" scored 86/100 (Strong Hire).',
+      time: '12 mins ago',
     },
     {
       id: '2',
       unread: true,
       icon: Sparkles,
-      iconColor: '#2563eb',
-      title: 'Score & Report Generated',
-      desc: 'Your overall evaluation report is ready — you scored 82/100 (Strong Performance).',
+      iconColor: 'text-[#6b38d4]',
+      title: 'Roadmap Milestone Unlocked',
+      desc: 'Based on your recent performance, Module 2 (Distributed Consensus) is now ready.',
       time: '1 hour ago',
     },
     {
       id: '3',
       unread: false,
       icon: Bell,
-      iconColor: '#8b5cf6',
-      title: 'Learning Roadmap Reminder',
-      desc: "You haven't practiced Database Sharding concepts in 5 days.",
+      iconColor: 'text-[#5e5e6e]',
+      title: 'Practice Streak Reminder',
+      desc: "You're on a 5-day active streak. Practice 1 drill today to maintain your multiplier.",
       time: 'Yesterday',
     },
     {
       id: '4',
       unread: false,
-      icon: AlertTriangle,
-      iconColor: '#d97706',
-      title: 'Subscription Expiring Soon',
-      desc: 'Your Pro plan auto-renews in 3 days. Manage payment preferences in settings.',
-      time: '2 days ago',
-    },
-    {
-      id: '5',
-      unread: false,
       icon: BarChart3,
-      iconColor: '#171717',
-      title: 'Weekly Progress Summary',
-      desc: 'Your week in review: 3 interviews completed, +6 average score increase.',
-      time: '4 days ago',
+      iconColor: 'text-[#0a0a0f]',
+      title: 'Weekly Analytics Digest',
+      desc: 'Your average score jumped +8.2 points over the last 7 days across Google L6 tracks.',
+      time: '3 days ago',
     },
   ];
 
+  const modalTitle = (
+    <div className="flex items-center gap-2">
+      <Bell size={18} className="text-[#6b38d4]" />
+      <h2 className="font-display font-bold text-lg text-[#0a0a0f]">Notifications</h2>
+      <Badge variant="primary" className="ml-1">
+        2 NEW
+      </Badge>
+    </div>
+  );
+
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(23, 23, 23, 0.4)',
-        backdropFilter: 'blur(4px)',
-        zIndex: 1000,
-        display: 'flex',
-        alignItems: 'center',
-        justify: 'center',
-        padding: '16px',
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="card-solid"
-        style={{
-          width: '100%',
-          maxWidth: '520px',
-          padding: '24px',
-          boxShadow: 'var(--shadow-dropdown)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={20} />
-            <h3 style={{ fontSize: '20px', fontWeight: 500 }}>Notifications</h3>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <button className="btn-ghost" style={{ fontSize: '13px', padding: '4px 8px' }}>
-              <Check size={14} /> Mark all as read
-            </button>
-            <button onClick={onClose} className="btn-ghost" style={{ padding: '4px' }}>
-              <X size={18} />
-            </button>
-          </div>
-        </div>
-
-        {/* List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '420px', overflowY: 'auto' }}>
-          {notifications.map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.id}
-                style={{
-                  position: 'relative',
-                  backgroundColor: item.unread ? 'var(--color-primary)' : 'var(--color-bg)',
-                  border: '1px solid var(--color-border-subtle)',
-                  borderRadius: 'var(--radius-button)',
-                  padding: '12px 16px 12px 20px',
-                  display: 'flex',
-                  gap: '14px',
-                  alignItems: 'flex-start',
-                }}
-              >
-                {/* Left Edge Glow Indicator for Unread */}
-                {item.unread && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '12px',
-                      bottom: '12px',
-                      width: '4px',
-                      borderRadius: '0 4px 4px 0',
-                      backgroundColor: '#2563eb',
-                    }}
-                  />
-                )}
-
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    marginTop: '2px',
-                  }}
-                >
-                  <Icon size={16} color={item.iconColor} />
+    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} maxWidth="md">
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+        {notifications.map((n) => {
+          const Icon = n.icon;
+          return (
+            <div
+              key={n.id}
+              className={`p-3.5 rounded-2xl border transition-all ${
+                n.unread ? 'bg-[#f4f1fb]/60 border-[#8b5cf6]/20' : 'bg-[#faf9fc] border-[#e5e1ea]'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 shrink-0 ${n.iconColor}`}>
+                  <Icon size={16} />
                 </div>
-
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                    <span style={{ fontWeight: 500, fontSize: '14px', color: 'var(--color-text)' }}>{item.title}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{item.time}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-xs text-[#0a0a0f]">{n.title}</span>
+                    <span className="text-[10px] font-mono text-[#8e8ea0]">{n.time}</span>
                   </div>
-                  <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{item.desc}</p>
+                  <p className="text-xs text-[#5e5e6e] mt-1 leading-relaxed">{n.desc}</p>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
-    </div>
+
+      <div className="mt-5 pt-4 border-t border-[#e5e1ea] flex justify-between items-center text-xs">
+        <button className="text-[#6b38d4] font-semibold hover:underline cursor-pointer">
+          Mark all as read
+        </button>
+        <button
+          onClick={onClose}
+          className="text-[#5e5e6e] hover:text-[#0a0a0f] cursor-pointer"
+        >
+          Close
+        </button>
+      </div>
+    </Modal>
   );
 };

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Users, FileQuestion, CreditCard, Shield, Sliders, Search, UserPlus, Edit2 } from 'lucide-react';
+import { Users, FileQuestion, CreditCard, Shield, Sliders, Search, UserPlus } from 'lucide-react';
+import type { User } from '../types';
+import { Button, Card, Badge } from './ui';
 
 interface AdminPanelViewProps {
-  user?: any;
+  user?: User | null;
 }
 
 export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) => {
@@ -17,187 +19,184 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
   ];
 
   const auditLogs = [
-    { timestamp: '2026-09-18 14:32', action: 'user.role_changed', detail: 'Promoted jane@company.com to Pro tier', category: '#2563eb' },
-    { timestamp: '2026-09-18 11:15', action: 'question.created', detail: 'Added "Design Global CDN" to question bank', category: '#1f8a65' },
-    { timestamp: '2026-09-17 09:40', action: 'ai.prompt_updated', detail: 'Updated System Design Evaluation Prompt template v2.4', category: '#d97706' },
+    { timestamp: '2026-09-18 14:32', action: 'user.role_changed', detail: 'Promoted jane@company.com to Pro tier' },
+    { timestamp: '2026-09-18 11:15', action: 'question.created', detail: 'Added "Design Global CDN" to question bank' },
+    { timestamp: '2026-09-17 09:40', action: 'ai.prompt_updated', detail: 'Updated System Design Evaluation Prompt template v2.4' },
   ];
 
   return (
-    <div className="container section-padding">
-      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: '28px', minHeight: '560px' }}>
-        {/* Admin Sidebar Nav */}
-        <div className="card-solid" style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '8px', paddingLeft: '8px' }}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 min-h-[560px]">
+        {/* Admin Sidebar Nav (3 cols) */}
+        <Card padding="md" className="md:col-span-3 flex flex-col justify-between">
+          <div className="space-y-1.5">
+            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8e8ea0] mb-3 px-2">
               Admin Operations
             </div>
 
             <button
               onClick={() => setActiveTab('users')}
-              className="btn-ghost"
-              style={{
-                justifyContent: 'flex-start',
-                backgroundColor: activeTab === 'users' ? 'var(--color-primary)' : 'transparent',
-                fontWeight: activeTab === 'users' ? 600 : 400,
-              }}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'users'
+                  ? 'bg-[#ede9fe] text-[#6b38d4]'
+                  : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+              }`}
             >
-              <Users size={16} /> Users Management
+              <Users size={16} /> Users Directory
             </button>
 
             <button
               onClick={() => setActiveTab('questions')}
-              className="btn-ghost"
-              style={{
-                justifyContent: 'flex-start',
-                backgroundColor: activeTab === 'questions' ? 'var(--color-primary)' : 'transparent',
-                fontWeight: activeTab === 'questions' ? 600 : 400,
-              }}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'questions'
+                  ? 'bg-[#ede9fe] text-[#6b38d4]'
+                  : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+              }`}
             >
               <FileQuestion size={16} /> Question Bank
             </button>
 
             <button
               onClick={() => setActiveTab('subscriptions')}
-              className="btn-ghost"
-              style={{
-                justifyContent: 'flex-start',
-                backgroundColor: activeTab === 'subscriptions' ? 'var(--color-primary)' : 'transparent',
-                fontWeight: activeTab === 'subscriptions' ? 600 : 400,
-              }}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'subscriptions'
+                  ? 'bg-[#ede9fe] text-[#6b38d4]'
+                  : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+              }`}
             >
               <CreditCard size={16} /> Subscriptions
             </button>
 
             <button
               onClick={() => setActiveTab('audit')}
-              className="btn-ghost"
-              style={{
-                justifyContent: 'flex-start',
-                backgroundColor: activeTab === 'audit' ? 'var(--color-primary)' : 'transparent',
-                fontWeight: activeTab === 'audit' ? 600 : 400,
-              }}
+              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                activeTab === 'audit'
+                  ? 'bg-[#ede9fe] text-[#6b38d4]'
+                  : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+              }`}
             >
-              <Shield size={16} /> Audit Logs
+              <Shield size={16} /> Audit Trail
             </button>
 
-            {/* Super Admin Section */}
             {isSuperAdmin && (
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--color-border-subtle)' }}>
-                <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#d97706', marginBottom: '8px', paddingLeft: '8px' }}>
-                  Super Admin Tools
+              <div className="pt-4 mt-4 border-t border-[#e5e1ea]">
+                <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-600 mb-2 px-2">
+                  Super Admin
                 </div>
-
                 <button
                   onClick={() => setActiveTab('ai_config')}
-                  className="btn-ghost"
-                  style={{
-                    justifyContent: 'flex-start',
-                    backgroundColor: activeTab === 'ai_config' ? 'var(--color-primary)' : 'transparent',
-                    fontWeight: activeTab === 'ai_config' ? 600 : 400,
-                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                    activeTab === 'ai_config'
+                      ? 'bg-amber-50 text-amber-700'
+                      : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+                  }`}
                 >
-                  <Sliders size={16} color="#d97706" /> AI Configuration
+                  <Sliders size={16} className="text-amber-600" /> AI Calibrations
                 </button>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
-        {/* Main Admin View Content */}
-        <div>
-          {/* Top Bar Search & Actions */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, maxWidth: '360px' }}>
-              <Search size={16} color="var(--color-text-muted)" />
-              <input className="input-cofounder" placeholder="Search users or logs..." />
+        {/* Main Content (9 cols) */}
+        <div className="md:col-span-9 space-y-6">
+          {/* Top Bar */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8e8ea0]" />
+              <input
+                placeholder="Search users or operations..."
+                className="w-full pl-10 pr-4 py-2 bg-white border border-[#e5e1ea] rounded-xl text-xs text-[#0a0a0f] focus:outline-hidden focus:border-[#6b38d4]"
+              />
             </div>
 
-            <button className="btn-accent">
-              <UserPlus size={16} /> Invite Admin
-            </button>
+            <Button
+              variant="dark"
+              size="sm"
+              iconLeft={<UserPlus size={14} />}
+            >
+              Invite Admin
+            </Button>
           </div>
 
-          {/* Tab 1: Users Table */}
+          {/* Users Table */}
           {activeTab === 'users' && (
-            <div className="card-solid">
-              <h2 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '16px' }}>User Management Table</h2>
-
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '14px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid var(--color-border-subtle)', color: 'var(--color-text-secondary)' }}>
-                    <th style={{ padding: '10px 0' }}>User</th>
-                    <th style={{ padding: '10px 0' }}>Email</th>
-                    <th style={{ padding: '10px 0' }}>Role</th>
-                    <th style={{ padding: '10px 0' }}>Status</th>
-                    <th style={{ padding: '10px 0', textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {usersList.map((u) => (
-                    <tr key={u.id} style={{ borderBottom: '1px solid var(--color-border-subtle)' }}>
-                      <td style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>{u.avatar}</span>
-                        <span style={{ fontWeight: 500 }}>{u.name}</span>
-                      </td>
-                      <td style={{ padding: '12px 0', color: 'var(--color-text-secondary)' }}>{u.email}</td>
-                      <td style={{ padding: '12px 0' }}>
-                        <span className="badge-accent" style={{ fontSize: '11px' }}>{u.role}</span>
-                      </td>
-                      <td style={{ padding: '12px 0' }}>
-                        <span className="badge-subtle" style={{ backgroundColor: '#e6f4ef', color: '#1f8a65' }}>{u.status}</span>
-                      </td>
-                      <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                        <button className="btn-ghost" style={{ padding: '4px' }} title="Edit User"><Edit2 size={15} /></button>
-                      </td>
+            <Card padding="lg">
+              <h2 className="font-display font-bold text-lg text-[#0a0a0f] mb-4">User Management</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead>
+                    <tr className="border-b border-[#e5e1ea] text-[#8e8ea0] uppercase">
+                      <th className="py-3 px-2">Engineer</th>
+                      <th className="py-3 px-2">Email</th>
+                      <th className="py-3 px-2">Role</th>
+                      <th className="py-3 px-2">Status</th>
+                      <th className="py-3 px-2 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[#e5e1ea]">
+                    {usersList.map((u) => (
+                      <tr key={u.id} className="hover:bg-[#faf9fc]">
+                        <td className="py-3 px-2 font-sans font-semibold text-[#0a0a0f] flex items-center gap-2">
+                          <span>{u.avatar}</span>
+                          <span>{u.name}</span>
+                        </td>
+                        <td className="py-3 px-2 text-[#5e5e6e]">{u.email}</td>
+                        <td className="py-3 px-2">
+                          <Badge variant="primary">
+                            {u.role}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2">
+                          <Badge variant="success">
+                            {u.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <button className="text-[#6b38d4] hover:underline font-sans font-semibold cursor-pointer">
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
           )}
 
-          {/* Tab 4: Audit Logs Tab */}
+          {/* Audit Logs */}
           {activeTab === 'audit' && (
-            <div className="card-solid">
-              <h2 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '16px' }}>System Audit Logs</h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {auditLogs.map((log, i) => (
-                  <div key={i} style={{ padding: '12px 16px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-button)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '13px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: log.category }} />
-                      <span>{log.timestamp}</span>
-                      <strong style={{ color: 'var(--color-text)' }}>· {log.action} ·</strong>
-                      <span style={{ color: 'var(--color-text-secondary)' }}>{log.detail}</span>
+            <Card padding="lg">
+              <h2 className="font-display font-bold text-lg text-[#0a0a0f] mb-4">Audit Trail Logs</h2>
+              <div className="space-y-3">
+                {auditLogs.map((log, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-[#faf9fc] border border-[#e5e1ea] text-xs font-mono flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-[#0a0a0f]">{log.action}</span>
+                      <p className="text-[#5e5e6e] font-sans mt-0.5">{log.detail}</p>
                     </div>
+                    <span className="text-[#8e8ea0]">{log.timestamp}</span>
                   </div>
                 ))}
               </div>
-            </div>
+            </Card>
           )}
 
-          {/* Tab 5: AI Config (Super Admin Only) */}
+          {/* AI Config */}
           {activeTab === 'ai_config' && (
-            <div className="card-solid">
-              <h2 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '16px' }}>Super Admin: AI Engine Configuration</h2>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                    System Evaluation Prompt Template
-                  </label>
-                  <textarea
-                    className="input-cofounder font-mono"
-                    style={{ height: '140px', fontSize: '13px' }}
-                    defaultValue="You are Designo AI, a senior software architect interviewer evaluating system design answers across 7 weighted categories. Return JSON format with category scores, SPOFs, and recommendations."
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                  <button className="btn-dark">Save AI Configuration</button>
-                </div>
-              </div>
-            </div>
+            <Card padding="lg" className="space-y-4">
+              <h2 className="font-display font-bold text-lg text-[#0a0a0f]">AI Evaluator Prompt Calibration</h2>
+              <p className="text-xs text-[#5e5e6e]">Model: Gemini 1.5 Pro / GPT-4o Multi-Turn Architecture Rubric</p>
+              <textarea
+                rows={5}
+                defaultValue="You are an uncompromising Principal / Staff Engineer conducting a system design interview. Probe for SPOFs, concurrency locks, data contracts, and fault tolerance."
+                className="w-full p-3 bg-[#faf9fc] border border-[#e5e1ea] rounded-xl font-mono text-xs text-[#0a0a0f] focus:outline-hidden focus:border-[#6b38d4]"
+              />
+              <Button variant="dark" size="sm">
+                Save &amp; Deploy Prompt v2.5
+              </Button>
+            </Card>
           )}
         </div>
       </div>

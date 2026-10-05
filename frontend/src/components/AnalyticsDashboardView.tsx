@@ -1,130 +1,152 @@
 import React from 'react';
 import { TrendingUp, BarChart3 } from 'lucide-react';
+import { Card, Badge } from './ui';
 
 export const AnalyticsDashboardView: React.FC = () => {
   const kpis = [
-    { title: 'Total Interviews', value: '24', trend: '+12% this month', isUp: true },
-    { title: 'Average Score', value: '78', trend: '+6 pts vs last week', isUp: true },
-    { title: 'Best Score', value: '92', trend: 'Achieved on Google Track', isUp: true },
-    { title: 'Practice Hours', value: '16.5h', trend: '+3.2h this week', isUp: true },
+    { title: 'Total Interviews Completed', value: '24', trend: '+4 this week', isPositive: true },
+    { title: 'Mean Loop Score', value: '81.4', trend: '+8.2 pts vs last month', isPositive: true },
+    { title: 'Staff+ Benchmark Delta', value: '+6.2%', trend: 'Top 12th percentile', isPositive: true },
+    { title: 'Prep Hours Logged', value: '18.5h', trend: '5-day streak active', isPositive: true },
   ];
 
   const radarCategories = [
-    { name: 'Scalability', score: 88, status: 'Strong' },
-    { name: 'Security', score: 80, status: 'Good' },
-    { name: 'Database Design', score: 62, status: 'Weakest' },
-    { name: 'Reliability', score: 78, status: 'Good' },
-    { name: 'Architecture', score: 85, status: 'Strong' },
-    { name: 'Requirements Gathering', score: 92, status: 'Strongest' },
-    { name: 'Cost Awareness', score: 90, status: 'Strong' },
+    { name: 'Requirements & Scope Clarification', score: 92, status: 'Exemplary' },
+    { name: 'Concurrency & In-Memory Caching', score: 94, status: 'Exemplary' },
+    { name: 'High-Level Topologies & Microservices', score: 86, status: 'Strong Hire' },
+    { name: 'Communication & Trade-off Articulation', score: 85, status: 'Strong Hire' },
+    { name: 'Fault Tolerance & SPOF Resilience', score: 78, status: 'Hire' },
+    { name: 'Distributed Storage & Sharding Keys', score: 68, status: 'Needs Practice' },
+  ];
+
+  const companyReadiness = [
+    { name: 'Google L6 Staff Track', score: 86, readiness: 'Ready' },
+    { name: 'Meta E5/E6 Production Track', score: 82, readiness: 'Ready' },
+    { name: 'Amazon Principal Architect Track', score: 79, readiness: 'Borderline' },
+    { name: 'Stripe Core Infrastructure Track', score: 76, readiness: 'Borderline' },
   ];
 
   return (
-    <div className="container section-padding">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Title */}
-      <div style={{ marginBottom: '32px' }}>
-        <span className="badge-accent" style={{ marginBottom: '6px' }}>
-          <BarChart3 size={12} /> Performance Intelligence
-        </span>
-        <h1 style={{ fontSize: '32px', fontWeight: 400 }}>Analytics Dashboard</h1>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: '16px', marginTop: '4px' }}>
-          Track score improvements, category performance radar, and weak-point insights over time.
+      <div className="mb-8 pb-6 border-b border-[#e5e1ea]">
+        <Badge variant="primary" icon={<BarChart3 size={13} />} className="mb-2">
+          PERFORMANCE INTELLIGENCE &amp; RADAR
+        </Badge>
+        <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
+          Readiness &amp; Score Analytics
+        </h1>
+        <p className="text-sm text-[#5e5e6e] mt-1">
+          Longitudinal progress tracking calibrated against actual FAANG+ Staff &amp; Principal interview evaluations.
         </p>
       </div>
 
-      {/* KPI Row (4 Cards with Sparkline indicator) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-        {kpis.map((kpi) => (
-          <div key={kpi.title} className="card-solid">
-            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>{kpi.title}</div>
-            <div style={{ fontSize: '32px', fontWeight: 600, marginBottom: '4px' }}>{kpi.value}</div>
-            <div style={{ fontSize: '12px', color: '#1f8a65', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <TrendingUp size={12} /> {kpi.trend}
+      {/* KPI Cards Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        {kpis.map((kpi, idx) => (
+          <Card key={idx} padding="md">
+            <div className="text-xs text-[#5e5e6e] font-mono uppercase mb-2">{kpi.title}</div>
+            <div className="font-display font-black text-3xl text-[#0a0a0f] mb-2">{kpi.value}</div>
+            <div className="flex items-center gap-1 text-xs text-[#10b981] font-medium">
+              <TrendingUp size={14} />
+              <span>{kpi.trend}</span>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
-      {/* Charts Grid: Score Trend Chart (Left) & Radar Category Chart (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '24px', marginBottom: '36px' }}>
-        {/* Score Trend Area Visual */}
-        <div className="card-solid">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: 500 }}>Score Trend Over Time</h3>
-            <span className="badge-subtle">Last 30 Days</span>
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+        {/* Score Progression (7 cols) */}
+        <Card padding="lg" className="lg:col-span-7">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="font-display font-bold text-lg text-[#0a0a0f]">Score Trajectory (Last 30 Days)</h3>
+              <p className="text-xs text-[#5e5e6e]">Progression across 24 simulated mock loops</p>
+            </div>
+            <Badge variant="primary">
+              +14% Growth
+            </Badge>
           </div>
 
-          {/* SVG Area Chart Graphic */}
-          <div style={{ width: '100%', height: '220px', position: 'relative' }}>
-            <svg width="100%" height="100%" viewBox="0 0 500 200" preserveAspectRatio="none">
+          {/* SVG Score Progression Graphic */}
+          <div className="h-56 relative w-full pt-4">
+            <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none">
               <defs>
-                <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#dae9fb" stopOpacity="0.8" />
-                  <stop offset="100%" stopColor="#dae9fb" stopOpacity="0.0" />
+                <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#ede9fe" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
               <path
-                d="M0,160 Q80,140 160,110 T320,70 T500,40 L500,200 L0,200 Z"
-                fill="url(#scoreGrad)"
+                d="M0,140 Q80,120 160,95 T320,60 T500,25 L500,180 L0,180 Z"
+                fill="url(#purpleGrad)"
               />
               <path
-                d="M0,160 Q80,140 160,110 T320,70 T500,40"
+                d="M0,140 Q80,120 160,95 T320,60 T500,25"
                 fill="none"
-                stroke="#171717"
-                strokeWidth="3"
+                stroke="#6b38d4"
+                strokeWidth="3.5"
               />
+              {/* Highlight points */}
+              <circle cx="160" cy="95" r="4.5" fill="#6b38d4" />
+              <circle cx="320" cy="60" r="4.5" fill="#6b38d4" />
+              <circle cx="500" cy="25" r="5" fill="#10b981" />
             </svg>
+            <div className="flex justify-between text-[11px] font-mono text-[#8e8ea0] mt-2">
+              <span>Day 1 (Score: 68)</span>
+              <span>Day 15 (Score: 78)</span>
+              <span className="text-[#10b981] font-bold">Latest (Score: 86)</span>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* Category Performance Radar */}
-        <div className="card-solid">
-          <h3 style={{ fontSize: '18px', fontWeight: 500, marginBottom: '20px' }}>Category Radar</h3>
+        {/* Competency Radar Breakdown (5 cols) */}
+        <Card padding="lg" className="lg:col-span-5">
+          <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-1">Competency Radar</h3>
+          <p className="text-xs text-[#5e5e6e] mb-6">Normalized performance across 6 system design vectors</p>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {radarCategories.map((c) => (
-              <div key={c.name}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', marginBottom: '4px' }}>
-                  <span style={{ fontWeight: 500 }}>{c.name}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{c.score}/100</span>
+          <div className="space-y-4">
+            {radarCategories.map((c, i) => (
+              <div key={i}>
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="font-semibold text-[#0a0a0f]">{c.name}</span>
+                  <span className="font-mono font-bold text-[#6b38d4]">{c.score}%</span>
                 </div>
-                <div style={{ height: '6px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: '3px', overflow: 'hidden' }}>
+                <div className="w-full h-2 bg-[#e5e1ea] rounded-full overflow-hidden">
                   <div
-                    style={{
-                      height: '100%',
-                      width: `${c.score}%`,
-                      backgroundColor: c.score < 70 ? '#dc2626' : c.score > 90 ? '#1f8a65' : 'var(--color-text)',
-                    }}
+                    className={`h-full rounded-full ${
+                      c.score < 70 ? 'bg-[#f59e0b]' : c.score > 90 ? 'bg-[#10b981]' : 'bg-[#6b38d4]'
+                    }`}
+                    style={{ width: `${c.score}%` }}
                   />
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        </Card>
       </div>
 
-      {/* Weak vs Strong Horizontal Bars List */}
-      <div className="card-solid">
-        <h3 style={{ fontSize: '18px', fontWeight: 500, marginBottom: '16px' }}>Weak vs. Strong Area Summary</h3>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
-          <div style={{ padding: '16px', backgroundColor: '#fee2e2', borderRadius: 'var(--radius-card)', border: '1px solid #fca5a5' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#dc2626', textTransform: 'uppercase' }}>Weakest Category</div>
-            <div style={{ fontSize: '18px', fontWeight: 600, color: '#171717', marginTop: '4px' }}>Database Design & Sharding (62%)</div>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-              Recommend reviewing partition keys and read-replica replication lag.
-            </p>
-          </div>
-
-          <div style={{ padding: '16px', backgroundColor: '#e6f4ef', borderRadius: 'var(--radius-card)', border: '1px solid #a7f3d0' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#1f8a65', textTransform: 'uppercase' }}>Strongest Category</div>
-            <div style={{ fontSize: '18px', fontWeight: 600, color: '#171717', marginTop: '4px' }}>Requirements Gathering (92%)</div>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
-              Consistently specifies QPS, write ratios, and SLA constraints accurately.
-            </p>
-          </div>
+      {/* Target Company Matrix */}
+      <Card padding="lg">
+        <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-4">
+          Company Loop Calibration Matrix
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {companyReadiness.map((comp, idx) => (
+            <div key={idx} className="p-4 rounded-xl bg-[#faf9fc] border border-[#e5e1ea]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-xs text-[#0a0a0f]">{comp.name}</span>
+                <Badge variant={comp.readiness === 'Ready' ? 'success' : 'warning'}>
+                  {comp.readiness}
+                </Badge>
+              </div>
+              <div className="font-display font-bold text-2xl text-[#0a0a0f]">{comp.score}%</div>
+              <div className="text-[11px] text-[#5e5e6e] mt-1">Passing threshold: 75%</div>
+            </div>
+          ))}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

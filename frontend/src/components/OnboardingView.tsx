@@ -1,19 +1,50 @@
 import React, { useState } from 'react';
-import { ArrowRight, Check, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, GraduationCap, Terminal, Code, Award, Shield } from 'lucide-react';
+import type { UserProfile } from '../types';
+import { Button, Badge } from './ui';
 
 interface OnboardingViewProps {
-  onComplete: (profile: any) => void;
+  onComplete: (profile: UserProfile) => void;
   onSkip: () => void;
 }
 
 export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onSkip }) => {
   const [step, setStep] = useState<number>(1);
-  const [experienceLevel, setExperienceLevel] = useState<string>('Mid-Level');
-  const [position, setPosition] = useState<string>('Software Engineer');
-  const [years, setYears] = useState<number>(4);
+  const [experienceLevel, setExperienceLevel] = useState<string>('Senior');
+  const [position, setPosition] = useState<string>('Backend Systems Engineer');
+  const [years, setYears] = useState<number>(5);
   const [targetCompany, setTargetCompany] = useState<string>('Google');
   const [targetLevel, setTargetLevel] = useState<string>('Senior (L5)');
-  const [preferredDifficulty, setPreferredDifficulty] = useState<string>('Medium');
+  const [focusAreas, setFocusAreas] = useState<string[]>(['High Throughput', 'Caching & CDNs']);
+
+  const levels = [
+    { id: 'Student', label: 'Student', sub: 'Intern / Campus Grad', icon: GraduationCap },
+    { id: 'Junior', label: 'Junior', sub: 'L3 / Software Eng I', icon: Terminal },
+    { id: 'Mid-Level', label: 'Mid-Level', sub: 'L4 / Software Eng II', icon: Code },
+    { id: 'Senior', label: 'Senior', sub: 'L5 / Senior SWE', icon: Award },
+    { id: 'Staff+', label: 'Staff+', sub: 'L6+ / Principal Architect', icon: Shield },
+  ];
+
+  const companies = [
+    'Google', 'Meta', 'Amazon', 'Netflix', 'Stripe', 'Uber', 'Apple', 'OpenAI',
+  ];
+
+  const allFocusAreas = [
+    'High Throughput & Distributed',
+    'Storage & Databases (SQL / NoSQL)',
+    'Microservices & Async Messaging',
+    'Caching & CDN Strategy',
+    'Consensus & Fault Tolerance (Raft/Paxos)',
+    'Rate Limiting & API Gateways',
+  ];
+
+  const toggleFocusArea = (area: string) => {
+    if (focusAreas.includes(area)) {
+      setFocusAreas(focusAreas.filter((a) => a !== area));
+    } else {
+      setFocusAreas([...focusAreas, area]);
+    }
+  };
 
   const handleNext = () => {
     if (step < 3) {
@@ -25,191 +56,234 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onSk
         years,
         targetCompany,
         targetLevel,
-        preferredDifficulty,
+        focusAreas,
       });
     }
   };
 
   return (
-    <div className="container section-padding" style={{ maxWidth: '640px', margin: '0 auto' }}>
-      <div className="card-solid" style={{ padding: '36px' }}>
-        {/* Stepper Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+    <div className="min-h-[calc(100vh-64px)] bg-[#faf9fe] py-12 px-4 flex items-center justify-center relative overflow-hidden">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#ede9fe]/60 blur-[100px] rounded-full -z-10" />
+
+      <div className="w-full max-w-2xl bg-white border border-[#e5e1ea] rounded-3xl p-6 sm:p-10 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.12)]">
+        {/* Step Indicator Header */}
+        <div className="flex items-center justify-between mb-8 pb-6 border-b border-[#e5e1ea]">
           <div>
-            <span className="badge-accent" style={{ marginBottom: '6px' }}>
-              <Sparkles size={12} /> Profile Personalization
-            </span>
-            <h2 style={{ fontSize: '24px', fontWeight: 400 }}>
-              {step === 1 && 'Tell us about yourself'}
-              {step === 2 && 'Set your interview target'}
-              {step === 3 && 'Choose your starting difficulty'}
+            <Badge variant="primary" icon={<Sparkles size={12} />} className="mb-2">
+              STEP {step} OF 3
+            </Badge>
+            <h2 className="font-display font-bold text-2xl text-[#0a0a0f]">
+              {step === 1 && 'Target Level & Background'}
+              {step === 2 && 'Target Company & Trajectory'}
+              {step === 3 && 'Key Focus Areas & Deep Dives'}
             </h2>
+            <p className="text-xs text-[#5e5e6e] mt-1">
+              Calibrate the AI interviewer to your current experience and interview goals.
+            </p>
           </div>
+
           {/* Stepper Dots */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div className="flex items-center gap-2">
             {[1, 2, 3].map((s) => (
               <div
                 key={s}
-                style={{
-                  width: s === step ? '24px' : '10px',
-                  height: '10px',
-                  borderRadius: '5px',
-                  backgroundColor: s === step ? 'var(--color-text)' : s < step ? '#1f8a65' : 'var(--color-border-strong)',
-                  transition: 'all 0.2s ease',
-                  boxShadow: s === step ? '0 0 8px rgba(0,0,0,0.2)' : 'none',
-                }}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  s === step
+                    ? 'w-8 bg-[#6b38d4]'
+                    : s < step
+                    ? 'w-2.5 bg-[#10b981]'
+                    : 'w-2.5 bg-[#e5e1ea]'
+                }`}
               />
             ))}
           </div>
         </div>
 
-        {/* Step 1: Tell us about yourself */}
+        {/* Step 1: Current Level & Years */}
         {step === 1 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="space-y-6">
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '8px' }}>
-                Experience Level
+              <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-3">
+                Current Seniority / Target Band
               </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {['Student', 'Junior', 'Mid-Level', 'Senior', 'Staff'].map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => setExperienceLevel(lvl)}
-                    style={{
-                      padding: '8px 14px',
-                      borderRadius: 'var(--radius-button)',
-                      border: experienceLevel === lvl ? '2px solid var(--color-text)' : '1px solid var(--color-border-subtle)',
-                      backgroundColor: experienceLevel === lvl ? 'var(--color-primary)' : 'var(--color-bg)',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {lvl}
-                  </button>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {levels.map((lvl) => {
+                  const Icon = lvl.icon;
+                  const isSelected = experienceLevel === lvl.id;
+                  return (
+                    <button
+                      key={lvl.id}
+                      type="button"
+                      onClick={() => setExperienceLevel(lvl.id)}
+                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#f3f0ff] border-[#6b38d4] shadow-xs'
+                          : 'bg-[#faf9fc] border-[#e5e1ea] hover:bg-white'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2 font-bold text-xs text-[#0a0a0f]">
+                          <Icon size={16} className={isSelected ? 'text-[#6b38d4]' : 'text-[#8e8ea0]'} />
+                          <span>{lvl.label}</span>
+                        </div>
+                        {isSelected && <Check size={14} className="text-[#6b38d4]" />}
+                      </div>
+                      <div className="text-[11px] text-[#5e5e6e] font-mono pl-6">{lvl.sub}</div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Current Position
-              </label>
-              <input
-                type="text"
-                className="input-cofounder"
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                placeholder="e.g. Backend Engineer, Full-Stack Lead"
-              />
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', fontSize: '13px', fontWeight: 600 }}>
-                <span style={{ color: 'var(--color-text-secondary)' }}>Years of Experience</span>
-                <span>{years} Years</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-1.5">
+                  Current / Desired Role
+                </label>
+                <input
+                  type="text"
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#faf9fc] border border-[#e5e1ea] rounded-xl text-xs sm:text-sm text-[#0a0a0f] focus:outline-hidden focus:border-[#6b38d4] focus:bg-white"
+                />
               </div>
-              <input
-                type="range"
-                min={0}
-                max={20}
-                value={years}
-                onChange={(e) => setYears(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--color-text)' }}
-              />
+
+              <div>
+                <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-1.5">
+                  Years of Experience ({years} yrs)
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="15"
+                  value={years}
+                  onChange={(e) => setYears(Number(e.target.value))}
+                  className="w-full h-2 bg-[#ede9fe] rounded-lg appearance-none cursor-pointer accent-[#6b38d4] mt-3"
+                />
+              </div>
             </div>
           </div>
         )}
 
-        {/* Step 2: Set your target */}
+        {/* Step 2: Target Company & Trajectory */}
         {step === 2 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="space-y-6">
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '8px' }}>
-                Target Company
+              <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-3">
+                Target Company Caliber / Rubric
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-                {['Google', 'Amazon', 'Meta', 'Netflix', 'Microsoft', 'Apple'].map((comp) => (
-                  <button
-                    key={comp}
-                    onClick={() => setTargetCompany(comp)}
-                    style={{
-                      padding: '12px',
-                      borderRadius: 'var(--radius-button)',
-                      border: targetCompany === comp ? '2px solid var(--color-text)' : '1px solid var(--color-border-subtle)',
-                      backgroundColor: targetCompany === comp ? 'var(--color-primary)' : 'var(--color-bg)',
-                      fontWeight: 600,
-                      textAlign: 'left',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <span>{comp}</span>
-                    {targetCompany === comp && <Check size={16} />}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {companies.map((comp) => {
+                  const isSelected = targetCompany === comp;
+                  return (
+                    <button
+                      key={comp}
+                      type="button"
+                      onClick={() => setTargetCompany(comp)}
+                      className={`p-3 rounded-xl border text-center transition-all text-xs font-semibold cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#6b38d4] text-white border-[#6b38d4] shadow-xs'
+                          : 'bg-[#faf9fc] text-[#0a0a0f] border-[#e5e1ea] hover:bg-white'
+                      }`}
+                    >
+                      {comp}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Target Level
+              <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-3">
+                Target Interview Level
               </label>
-              <select className="input-cofounder" value={targetLevel} onChange={(e) => setTargetLevel(e.target.value)}>
-                <option value="Mid (L4 / IC4)">Mid (L4 / IC4)</option>
-                <option value="Senior (L5 / IC5)">Senior (L5 / IC5)</option>
-                <option value="Staff (L6 / E6)">Staff (L6 / E6)</option>
-                <option value="Principal (L7+)">Principal (L7+)</option>
-              </select>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {['Mid-Level (L4)', 'Senior (L5)', 'Staff / Lead (L6+)'].map((lvl) => {
+                  const isSelected = targetLevel === lvl;
+                  return (
+                    <button
+                      key={lvl}
+                      type="button"
+                      onClick={() => setTargetLevel(lvl)}
+                      className={`p-3 rounded-xl border text-center transition-all text-xs font-semibold cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#ede9fe] text-[#6b38d4] border-[#6b38d4]'
+                          : 'bg-[#faf9fc] text-[#0a0a0f] border-[#e5e1ea] hover:bg-white'
+                      }`}
+                    >
+                      {lvl}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Step 3: Choose your difficulty */}
+        {/* Step 3: Focus Areas */}
         {step === 3 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block' }}>
-              Preferred Difficulty
+          <div className="space-y-4">
+            <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold">
+              Select Your Primary Prep Priorities (Pick 2 or more)
             </label>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-              {[
-                { level: 'Easy', desc: 'Core fundamentals & clear requirements' },
-                { level: 'Medium', desc: 'Standard production scale & trade-offs' },
-                { level: 'Hard', desc: 'Massive multi-region scale & SPOF audits' },
-              ].map((item) => (
-                <div
-                  key={item.level}
-                  onClick={() => setPreferredDifficulty(item.level)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: 'var(--radius-card)',
-                    border: preferredDifficulty === item.level ? '2px solid var(--color-text)' : '1px solid var(--color-border-subtle)',
-                    backgroundColor: preferredDifficulty === item.level ? 'var(--color-primary)' : 'var(--color-bg)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>{item.level}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', lineHeight: 1.3 }}>{item.desc}</div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ backgroundColor: 'var(--color-bg-secondary)', padding: '12px 16px', borderRadius: 'var(--radius-button)', fontSize: '13px' }}>
-              🎯 <strong>Customized Path:</strong> We will tailor your interview questions, mock interviewer persona, and scoring criteria based on {targetCompany} ({targetLevel}).
+            <div className="space-y-2">
+              {allFocusAreas.map((area) => {
+                const isSelected = focusAreas.includes(area);
+                return (
+                  <button
+                    key={area}
+                    type="button"
+                    onClick={() => toggleFocusArea(area)}
+                    className={`w-full flex items-center justify-between p-3.5 rounded-xl border text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-[#f3f0ff] border-[#6b38d4] text-[#6b38d4]'
+                        : 'bg-[#faf9fc] border-[#e5e1ea] text-[#0a0a0f] hover:bg-white'
+                    }`}
+                  >
+                    <span className="text-xs font-semibold">{area}</span>
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center border ${
+                        isSelected ? 'bg-[#6b38d4] border-[#6b38d4] text-white' : 'border-[#cbc3d7]'
+                      }`}
+                    >
+                      {isSelected && <Check size={12} />}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Bottom Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '32px', paddingTop: '20px', borderTop: '1px solid var(--color-border-subtle)' }}>
-          <button onClick={onSkip} className="btn-ghost" style={{ fontSize: '13px', color: 'var(--color-text-muted)' }}>
+        {/* Footer Actions */}
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-[#e5e1ea]">
+          <button
+            onClick={onSkip}
+            className="text-xs text-[#8e8ea0] hover:text-[#0a0a0f] transition-colors cursor-pointer"
+          >
             Skip for now
           </button>
-          <button onClick={handleNext} className="btn-accent">
-            {step === 3 ? 'Complete Setup' : 'Continue'} <ArrowRight size={16} />
-          </button>
+
+          <div className="flex items-center gap-3">
+            {step > 1 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setStep(step - 1)}
+              >
+                Back
+              </Button>
+            )}
+            <Button
+              variant="dark"
+              size="md"
+              iconRight={<ArrowRight size={14} />}
+              onClick={handleNext}
+            >
+              {step === 3 ? 'Complete Setup' : 'Continue'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

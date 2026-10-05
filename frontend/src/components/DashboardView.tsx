@@ -1,8 +1,10 @@
 import React from 'react';
-import { Play, Sparkles, Flame, Bot } from 'lucide-react';
+import { Play, Sparkles, Flame, ArrowRight, Award, Clock, TrendingUp, ChevronRight, Layers } from 'lucide-react';
+import type { User } from '../types';
+import { Button, Card, Badge } from './ui';
 
 interface DashboardViewProps {
-  user?: any;
+  user?: User | null;
   onStartNewInterview?: () => void;
   onNavigateTab: (tab: string) => void;
   onOpenSetupModal: () => void;
@@ -13,193 +15,262 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onNavigateTab,
   onOpenSetupModal,
 }) => {
-  const userName = user?.fullName || user?.email || 'Architect Candidate';
+  const userName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Architect Candidate';
 
   const recentInterviews = [
     {
       id: 'int-1',
-      title: 'Design Uber / Real-Time Location Dispatch',
+      title: 'Design Uber / Real-Time Dispatch System',
       track: 'Google Track',
-      score: 82,
-      date: 'Sep 18, 2026',
-      status: 'Completed',
+      difficulty: 'Hard (L6)',
+      score: 84,
+      verdict: 'Strong Hire',
+      date: 'Oct 2, 2026',
+      duration: '42 min',
     },
     {
       id: 'int-2',
-      title: 'Design Global Twitter / X News Feed',
+      title: 'Design Twitter / X News Feed Fan-Out',
       track: 'Meta Track',
-      score: 74,
-      date: 'Sep 15, 2026',
-      status: 'Completed',
+      difficulty: 'Medium (L5)',
+      score: 79,
+      verdict: 'Hire',
+      date: 'Sep 28, 2026',
+      duration: '38 min',
     },
     {
       id: 'int-3',
-      title: 'Design WhatsApp / End-to-End Chat',
-      track: 'Amazon Track',
-      score: 68,
-      date: 'Sep 10, 2026',
-      status: 'In Progress',
+      title: 'Design Global CDN & Distributed Edge Cache',
+      track: 'Stripe Track',
+      difficulty: 'Staff (L6+)',
+      score: 72,
+      verdict: 'Lean Hire',
+      date: 'Sep 21, 2026',
+      duration: '46 min',
     },
   ];
 
   const recommendedTopics = [
-    { title: 'Database Sharding & Partitioning', progress: 40, est: '20 min' },
-    { title: 'Consistent Hashing & GeoDNS Routing', progress: 65, est: '15 min' },
-    { title: 'CAP Theorem & Quorum Consistency', progress: 15, est: '25 min' },
+    { title: 'Database Sharding & Partition Keys', progress: 65, est: '20 min', category: 'Storage' },
+    { title: 'Consistent Hashing & Virtual Nodes', progress: 85, est: '15 min', category: 'Distributed' },
+    { title: 'Raft Consensus & Quorum Invariants', progress: 30, est: '30 min', category: 'Fault Tolerance' },
   ];
 
   return (
-    <div className="container section-padding" style={{ position: 'relative' }}>
-      {/* Top Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Top Banner */}
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#e5e1ea]">
         <div>
-          <span className="badge-accent" style={{ marginBottom: '6px' }}>
-            <Sparkles size={12} /> Personal Workspace
-          </span>
-          <h1 style={{ fontSize: '32px', fontWeight: 400 }}>Welcome back, {userName}</h1>
+          <Badge variant="primary" icon={<Sparkles size={12} />} className="mb-3">
+            L5 SENIOR → L6 STAFF PREP TRACK
+          </Badge>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
+            Welcome back, {userName}
+          </h1>
+          <p className="text-sm text-[#5e5e6e] mt-1">
+            Your readiness score is up <strong className="text-[#10b981]">+8%</strong> this month across distributed systems scenarios.
+          </p>
         </div>
 
-        <button onClick={onOpenSetupModal} className="btn-accent" style={{ padding: '12px 20px' }}>
-          <Play size={16} /> Start New Interview
-        </button>
-      </div>
-
-      {/* Stat Row (4 Cards) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '36px' }}>
-        <div className="card-solid">
-          <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Total Mock Interviews</div>
-          <div style={{ fontSize: '32px', fontWeight: 600 }}>24</div>
-          <div style={{ fontSize: '12px', color: '#1f8a65', marginTop: '4px' }}>+4 this week</div>
-        </div>
-
-        <div className="card-solid" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div>
-            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Average Score</div>
-            <div style={{ fontSize: '32px', fontWeight: 600 }}>78</div>
-            <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Top 15% quantile</div>
-          </div>
-          {/* Score Circular Ring */}
-          <div
-            style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '50%',
-              background: 'conic-gradient(#171717 78%, #e8e7e6 0%)',
-              display: 'flex',
-              alignItems: 'center',
-              justify: 'center',
-            }}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={() => onNavigateTab('questions')}
           >
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 600 }}>
-              78%
+            Browse Library
+          </Button>
+          <Button
+            variant="dark"
+            size="md"
+            iconLeft={<Play size={14} fill="currentColor" />}
+            onClick={onOpenSetupModal}
+          >
+            Launch Mock Interview
+          </Button>
+        </div>
+      </div>
+
+      {/* 4 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+        <Card padding="md">
+          <div className="flex items-center justify-between text-xs text-[#5e5e6e] font-mono uppercase mb-2">
+            <span>Interviews Completed</span>
+            <Award size={16} className="text-[#6b38d4]" />
+          </div>
+          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">24</div>
+          <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
+            <span>+4 this week</span>
+            <span className="text-[#8e8ea0]">• Top 10% activity</span>
+          </div>
+        </Card>
+
+        <Card padding="md" className="flex items-center justify-between">
+          <div>
+            <div className="text-xs text-[#5e5e6e] font-mono uppercase mb-2">Average Score</div>
+            <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">81<span className="text-lg font-normal text-[#8e8ea0]">/100</span></div>
+            <div className="text-xs text-[#6b38d4] font-medium mt-2">Strong Hire Baseline</div>
+          </div>
+          <div className="w-14 h-14 rounded-full border-4 border-[#ede9fe] border-t-[#6b38d4] flex items-center justify-center font-display font-bold text-xs text-[#6b38d4]">
+            81%
+          </div>
+        </Card>
+
+        <Card padding="md">
+          <div className="flex items-center justify-between text-xs text-[#5e5e6e] font-mono uppercase mb-2">
+            <span>Practice Time</span>
+            <Clock size={16} className="text-[#6b38d4]" />
+          </div>
+          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">18.5 <span className="text-base font-normal text-[#8e8ea0]">hrs</span></div>
+          <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
+            <Flame size={13} className="text-amber-500 fill-amber-500" />
+            <span>5-day streak active</span>
+          </div>
+        </Card>
+
+        <Card padding="md">
+          <div className="flex items-center justify-between text-xs text-[#5e5e6e] font-mono uppercase mb-2">
+            <span>Top Competency</span>
+            <TrendingUp size={16} className="text-[#10b981]" />
+          </div>
+          <div className="font-display font-extrabold text-xl text-[#0a0a0f] truncate">Data Modeling</div>
+          <div className="text-xs text-[#5e5e6e] mt-2">
+            92% avg across NoSQL &amp; Sharding
+          </div>
+        </Card>
+      </div>
+
+      {/* Main Grid: Recent Interviews (Left) + Roadmap & Drills (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column (8 cols) */}
+        <div className="lg:col-span-8 space-y-8">
+          {/* Recent Sessions Table */}
+          <Card padding="md">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-display font-bold text-lg text-[#0a0a0f]">Recent Mock Interviews</h3>
+                <p className="text-xs text-[#5e5e6e]">Turn-by-turn evaluations from your latest sessions</p>
+              </div>
+              <button
+                onClick={() => onNavigateTab('report')}
+                className="text-xs text-[#6b38d4] font-semibold hover:underline cursor-pointer"
+              >
+                View Latest Report
+              </button>
             </div>
+
+            <div className="divide-y divide-[#e5e1ea]">
+              {recentInterviews.map((session) => (
+                <div key={session.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm text-[#0a0a0f]">{session.title}</span>
+                      <Badge variant="primary">
+                        {session.track}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-[#8e8ea0] font-mono">
+                      <span>{session.date}</span>
+                      <span>•</span>
+                      <span>{session.duration}</span>
+                      <span>•</span>
+                      <span>{session.difficulty}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 self-end sm:self-auto">
+                    <div className="text-right">
+                      <div className="font-display font-bold text-base text-[#0a0a0f]">{session.score}/100</div>
+                      <Badge variant="success">
+                        {session.verdict}
+                      </Badge>
+                    </div>
+                    <button
+                      onClick={() => onNavigateTab('report')}
+                      className="p-2 rounded-full border border-[#e5e1ea] text-[#5e5e6e] hover:text-[#0a0a0f] hover:bg-[#faf9fc] cursor-pointer transition-colors"
+                      title="Inspect Report"
+                      aria-label="Inspect Report"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Quick Studio Launch Banner */}
+          <div className="p-6 rounded-2xl bg-gradient-to-r from-[#f3f0ff] to-[#faf9fe] border border-[#8b5cf6]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#6b38d4] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Layers size={24} />
+              </div>
+              <div>
+                <h4 className="font-display font-bold text-base text-[#0a0a0f]">Architecture Diagram Studio</h4>
+                <p className="text-xs text-[#5e5e6e]">Generate Mermaid topologies or let the AI audit your system diagrams for SPOFs.</p>
+              </div>
+            </div>
+            <Button
+              variant="dark"
+              size="sm"
+              className="shrink-0"
+              onClick={() => onNavigateTab('diagrams')}
+            >
+              Open Studio
+            </Button>
           </div>
         </div>
 
-        <div className="card-solid">
-          <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Practice Hours</div>
-          <div style={{ fontSize: '32px', fontWeight: 600 }}>16.5h</div>
-          <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>Avg 45m / session</div>
-        </div>
+        {/* Right Column (4 cols): Active Roadmap & Weak Area Drills */}
+        <div className="lg:col-span-4 space-y-6">
+          <Card padding="md">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-base text-[#0a0a0f]">Recommended Next Drills</h3>
+              <button
+                onClick={() => onNavigateTab('roadmap')}
+                className="text-xs text-[#6b38d4] font-semibold hover:underline cursor-pointer"
+              >
+                Roadmap
+              </button>
+            </div>
+            <p className="text-xs text-[#5e5e6e] mb-4">
+              Targeted exercises derived from your missed trade-offs in recent mock loops.
+            </p>
 
-        <div className="card-solid">
-          <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', marginBottom: '8px' }}>Current Streak</div>
-          <div style={{ fontSize: '32px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-            5 days <Flame size={24} color="#d97706" />
-          </div>
-          <div style={{ fontSize: '12px', color: '#d97706', marginTop: '4px' }}>Best streak: 12 days</div>
+            <div className="space-y-4">
+              {recommendedTopics.map((topic, i) => (
+                <div key={i} className="p-3.5 rounded-xl bg-[#faf9fc] border border-[#e5e1ea]">
+                  <div className="flex items-center justify-between text-xs mb-1.5">
+                    <span className="font-semibold text-[#0a0a0f] truncate">{topic.title}</span>
+                    <span className="text-[11px] font-mono text-[#8e8ea0]">{topic.est}</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#e5e1ea] rounded-full overflow-hidden mb-2">
+                    <div
+                      className="h-full bg-[#6b38d4] rounded-full"
+                      style={{ width: `${topic.progress}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[#5e5e6e]">
+                    <span className="bg-[#ede9fe] text-[#6b38d4] px-2 py-0.5 rounded font-semibold">{topic.category}</span>
+                    <span>{topic.progress}% completed</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              fullWidth
+              className="mt-5"
+              iconRight={<ArrowRight size={13} />}
+              onClick={() => onNavigateTab('roadmap')}
+            >
+              Explore Full 6-Week Roadmap
+            </Button>
+          </Card>
         </div>
       </div>
-
-      {/* Main Grid: Recent Interviews (Left) vs Recommended Next (Right) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
-        {/* Recent Interviews */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 500 }}>Recent Interview Sessions</h3>
-            <button onClick={() => onNavigateTab('questions')} className="btn-ghost" style={{ fontSize: '13px' }}>
-              View Question Bank →
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            {recentInterviews.map((item) => (
-              <div key={item.id} className="card-solid" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span className="badge-subtle">{item.track}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{item.date}</span>
-                  </div>
-                  <h4 style={{ fontSize: '16px', fontWeight: 600 }}>{item.title}</h4>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '18px', fontWeight: 600, color: 'var(--color-text)' }}>{item.score}/100</div>
-                    <div style={{ fontSize: '11px', color: item.status === 'Completed' ? '#1f8a65' : '#d97706' }}>{item.status}</div>
-                  </div>
-                  <button onClick={() => onNavigateTab('report')} className="btn-filled" style={{ fontSize: '13px' }}>
-                    {item.status === 'Completed' ? 'Replay / Report' : 'Resume'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recommended Next Topics */}
-        <div>
-          <div style={{ marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: 500 }}>Recommended Next</h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>Targeting weak score areas</p>
-          </div>
-
-          <div className="card-cofounder" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {recommendedTopics.map((top) => (
-              <div key={top.title} style={{ paddingBottom: '12px', borderBottom: '1px solid var(--color-border-subtle)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 500, marginBottom: '6px' }}>
-                  <span>{top.title}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{top.est}</span>
-                </div>
-
-                <div style={{ height: '6px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
-                  <div style={{ height: '100%', width: `${top.progress}%`, backgroundColor: 'var(--color-text)' }} />
-                </div>
-
-                <button onClick={() => onNavigateTab('roadmap')} className="btn-ghost" style={{ padding: 0, fontSize: '12px', color: 'var(--color-text)' }}>
-                  Continue module →
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Floating AI Assistant Orb */}
-      <button
-        onClick={() => onNavigateTab('interview')}
-        title="Launch AI Architecture Assistant"
-        style={{
-          position: 'fixed',
-          bottom: '32px',
-          right: '32px',
-          width: '56px',
-          height: '56px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--color-text)',
-          color: '#ffffff',
-          border: 'none',
-          boxShadow: 'var(--shadow-dropdown)',
-          display: 'flex',
-          alignItems: 'center',
-          justify: 'center',
-          cursor: 'pointer',
-          zIndex: 90,
-          transition: 'transform 0.2s ease',
-        }}
-      >
-        <Bot size={26} color="var(--color-primary)" />
-      </button>
     </div>
   );
 };

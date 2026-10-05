@@ -1,13 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Designo — AI System Design Interview Coach</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-canvas": "#faf9fe",
+              "surface-subtle": "#ffffff",
+              "surface-lavender": "#f4f1fb",
+              "surface-lavender-tint": "#ede9fe",
+              "surface-lavender-pill": "#f3f0ff",
+              "border-subtle": "rgba(15, 15, 25, 0.08)",
+              "border-lavender": "rgba(139, 92, 246, 0.22)",
+              "ink": "#0a0a0f",
+              "ink-muted": "#5e5e6e",
+              "ink-dim": "#8e8ea0",
+              "primary": "#6b38d4",
+              "primary-container": "#8455ef",
+              "accent-glow": "#7c3aed",
+              "status-success": "#10b981",
+              "status-warning": "#f59e0b",
+              "status-danger": "#ef4444"
+            },
+            fontFamily: {
+              display: ["'Plus Jakarta Sans'", "sans-serif"],
+              body: ["'Inter'", "sans-serif"],
+              mono: ["'JetBrains Mono'", "monospace"]
+            }
+          }
+        }
+      };
+    </script>
   </head>
-  <body>
+  <body class="bg-[#faf9fe] text-[#0a0a0f] font-sans antialiased selection:bg-[#ede9fe] selection:text-[#6b38d4]">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
+

@@ -1,10 +1,27 @@
-import React from 'react';
-import { Terminal, BookOpen, BarChart3, Map, Cpu, Bell, Shield, CreditCard, LayoutDashboard, User as UserIcon, LogOut, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Terminal,
+  BookOpen,
+  BarChart3,
+  Map,
+  Cpu,
+  Bell,
+  CreditCard,
+  LayoutDashboard,
+  User as UserIcon,
+  LogOut,
+  Play,
+  Sparkles,
+  Menu,
+  X,
+} from 'lucide-react';
+import type { User } from '../types';
+import { Button, Badge } from './ui';
 
 interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  user: any;
+  user: User | null;
   onOpenAuth: () => void;
   onOpenNotifications: () => void;
   onOpenSetupModal: () => void;
@@ -20,8 +37,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSetupModal,
   onLogout,
 }) => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const navItems = [
-    { id: 'landing', label: 'Overview', icon: Cpu },
+    { id: 'landing', label: 'Overview', icon: Sparkles },
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'questions', label: 'Questions', icon: BookOpen },
     { id: 'interview', label: 'Simulator', icon: Terminal },
@@ -29,39 +48,41 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'roadmap', label: 'Roadmap', icon: Map },
     { id: 'billing', label: 'Billing', icon: CreditCard },
-    { id: 'admin', label: 'Admin', icon: Shield },
   ];
 
   return (
-    <header
-      style={{
-        height: '64px',
-        backgroundColor: 'var(--color-bg)',
-        borderBottom: '1px solid var(--color-border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justify: 'space-between',
-        padding: '0 24px',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}
-    >
-      {/* Brand Logo & Nav */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-        <a
-          href="#landing"
-          onClick={(e) => {
-            e.preventDefault();
-            setActiveTab('landing');
-          }}
-          style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-text)', fontWeight: 600, fontSize: '18px' }}
-        >
-          <Terminal size={22} color="var(--color-text)" />
-          Designo<span style={{ color: 'var(--color-text-secondary)', fontWeight: 400 }}>.ai</span>
-        </a>
+    <header className="sticky top-0 z-40 transition-all duration-300 backdrop-blur-xl bg-[#faf9fe]/90 border-b border-[#e5e1ea]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        {/* Brand & Badge */}
+        <div className="flex items-center gap-6">
+          <a
+            href="#landing"
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveTab('landing');
+            }}
+            className="flex items-center gap-3 group text-decoration-none"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#0a0a0f] flex items-center justify-center transition-transform group-hover:scale-95 shadow-xs text-white">
+              <Terminal size={17} />
+            </div>
+            <span className="font-display font-extrabold text-xl tracking-tight text-[#0a0a0f]">
+              Designo<span className="text-[#6b38d4]">.ai</span>
+            </span>
+          </a>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <div className="hidden lg:inline-flex">
+            <Badge
+              variant="primary"
+              icon={<span className="w-1.5 h-1.5 rounded-full bg-[#6b38d4] animate-pulse" />}
+            >
+              L6/L7 Architect AI
+            </Badge>
+          </div>
+        </div>
+
+        {/* Navigation Tabs (Desktop) */}
+        <nav className="hidden md:flex items-center gap-1 font-sans text-sm">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -69,70 +90,113 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                style={{
-                  background: isActive ? 'var(--color-primary)' : 'transparent',
-                  border: '1px solid transparent',
-                  borderRadius: 'var(--radius-button)',
-                  padding: '6px 12px',
-                  fontSize: '14px',
-                  fontWeight: isActive ? 600 : 450,
-                  color: 'var(--color-text)',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-[#ede9fe] text-[#6b38d4] shadow-xs'
+                    : 'text-[#5e5e6e] hover:text-[#0a0a0f] hover:bg-[#f4f1fb]'
+                }`}
               >
-                <Icon size={15} />
+                <Icon size={14} className={isActive ? 'text-[#6b38d4]' : 'text-[#8e8ea0]'} />
                 {item.label}
               </button>
             );
           })}
         </nav>
-      </div>
 
-      {/* Right User Bar & Notifications Trigger */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <button
-          onClick={onOpenNotifications}
-          className="btn-ghost"
-          style={{ position: 'relative', padding: '8px' }}
-          title="Notifications"
-        >
-          <Bell size={18} />
-          {/* Unread badge dot */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#2563eb',
-            }}
-          />
-        </button>
-
-        <button onClick={onOpenSetupModal} className="btn-filled" style={{ fontSize: '13px', padding: '6px 12px' }}>
-          <Play size={14} /> Quick Session
-        </button>
-
-        {user ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="badge-accent" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <UserIcon size={12} /> {user.fullName || user.email}
-            </span>
-            <button onClick={onLogout} className="btn-ghost" style={{ padding: '6px' }} title="Sign Out">
-              <LogOut size={16} />
-            </button>
-          </div>
-        ) : (
-          <button onClick={onOpenAuth} className="btn-dark">
-            Sign In / Register
+        {/* Right Actions */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={onOpenNotifications}
+            className="relative p-2 rounded-full text-[#5e5e6e] hover:text-[#0a0a0f] hover:bg-[#f4f1fb] transition-colors cursor-pointer"
+            title="Notifications"
+            aria-label="View notifications"
+          >
+            <Bell size={18} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#6b38d4]" />
           </button>
-        )}
+
+          <Button
+            variant="dark"
+            size="sm"
+            className="hidden sm:inline-flex"
+            iconLeft={<Play size={13} fill="currentColor" />}
+            onClick={onOpenSetupModal}
+          >
+            Mock Interview
+          </Button>
+
+          {user ? (
+            <div className="flex items-center gap-2 pl-2 border-l border-[#e5e1ea]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#6b38d4] font-semibold text-xs flex items-center justify-center border border-[#8b5cf6]/30">
+                  {user.name ? user.name.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="hidden xl:block text-left text-xs">
+                  <div className="font-semibold text-[#0a0a0f] leading-tight">
+                    {user.fullName || user.name || user.email?.split('@')[0] || 'Engineer'}
+                  </div>
+                  <div className="text-[10px] text-[#5e5e6e] font-mono">
+                    {user.tier || 'Pro Candidate'}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={onLogout}
+                className="p-1.5 text-[#8e8ea0] hover:text-red-600 rounded-full hover:bg-red-50 transition-colors cursor-pointer"
+                title="Log Out"
+                aria-label="Log out"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              iconLeft={<UserIcon size={14} />}
+              onClick={onOpenAuth}
+            >
+              Sign In
+            </Button>
+          )}
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 md:hidden rounded-lg text-[#5e5e6e] hover:text-[#0a0a0f] hover:bg-[#f4f1fb] cursor-pointer"
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile navigation dropdown */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-[#e5e1ea] bg-white px-4 py-3 space-y-1 shadow-lg">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                  isActive
+                    ? 'bg-[#ede9fe] text-[#6b38d4]'
+                    : 'text-[#5e5e6e] hover:bg-[#faf9fc] hover:text-[#0a0a0f]'
+                }`}
+              >
+                <Icon size={16} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
     </header>
   );
 };

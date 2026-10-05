@@ -1,260 +1,263 @@
 import React, { useState } from 'react';
-import { Sparkles, Upload, Download, Share2, ZoomIn, ZoomOut, History } from 'lucide-react';
+import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu } from 'lucide-react';
+import { Button, Card, Badge } from './ui';
 
 export const DiagramStudioView: React.FC = () => {
   const [mode, setMode] = useState<'generator' | 'review'>('generator');
 
   // Generator State
-  const [prompt, setPrompt] = useState('Design WhatsApp real-time messaging system with WebSockets, Cassandra message store, and Redis online status cache.');
+  const [prompt, setPrompt] = useState(
+    'Design a real-time messaging pipeline handling 50k msgs/sec with WebSocket Envoy gateways, Apache Kafka event queues, Redis online status cluster, and ScyllaDB for chat history.'
+  );
   const [selectedFormat, setSelectedFormat] = useState('Mermaid');
-  const [history] = useState([
-    { title: 'WhatsApp Chat System', date: 'Sep 19', format: 'Mermaid' },
-    { title: 'Uber Driver Matching', date: 'Sep 17', format: 'SVG' },
-    { title: 'TinyURL Key Generation', date: 'Sep 12', format: 'Draw.io' },
-  ]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const annotations = [
     {
       id: 'a1',
-      type: 'Single Point of Failure',
-      severity: 'High',
-      color: '#dc2626',
-      explanation: 'The primary MySQL master database has no standby replica. A hardware failure here crashes the entire write path.',
+      type: 'Single Point of Failure (SPOF)',
+      severity: 'Critical',
+      variant: 'danger' as const,
+      title: 'Postgres Primary Writer Lacks Multi-AZ Replica',
+      explanation: 'If the primary database node crashes during traffic spikes, the write path goes completely offline. Mitigate with Aurora multi-AZ standby.',
     },
     {
       id: 'a2',
-      type: 'Scalability Risk',
+      type: 'Bottleneck Risk',
       severity: 'Medium',
-      color: '#d97706',
-      explanation: 'The Timeline Push worker is synchronous. High-volume celebrity accounts will cause worker queue backups.',
+      variant: 'warning' as const,
+      title: 'Synchronous Timeline Fan-out Ingestion',
+      explanation: 'Broadcasting messages directly to Redis follower timelines synchronously will block worker threads for accounts with >50k contacts.',
     },
     {
       id: 'a3',
-      type: 'Optimization Suggestion',
+      type: 'Optimization Opportunity',
       severity: 'Low',
-      color: '#2563eb',
-      explanation: 'Introduce an Edge CDN Origin Shield to absorb static media requests before hitting origin S3 buckets.',
+      variant: 'primary' as const,
+      title: 'Missing CDN Origin Shielding',
+      explanation: 'Direct media uploads to S3 buckets should be fronted by Cloudflare edge caching to absorb redundant thumbnail downloads.',
     },
   ];
 
   return (
-    <div className="container section-padding">
-      {/* Tab Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {/* Header & Mode Switcher */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#e5e1ea]">
         <div>
-          <span className="badge-accent" style={{ marginBottom: '6px' }}>
-            <Sparkles size={12} /> Architecture Studio
-          </span>
-          <h1 style={{ fontSize: '32px', fontWeight: 400 }}>
-            {mode === 'generator' ? 'Diagram Generator' : 'Diagram Review & SPOF Audit'}
+          <Badge variant="primary" icon={<Cpu size={13} />} className="mb-2">
+            DIAGRAM ENGINE // MERMAID &amp; SVG SYNTHESIZER
+          </Badge>
+          <h1 className="font-display font-bold text-3xl text-[#0a0a0f]">
+            {mode === 'generator' ? 'Architecture Diagram Generator' : 'Architecture Audit & SPOF Review'}
           </h1>
+          <p className="text-xs text-[#5e5e6e] mt-1">
+            {mode === 'generator'
+              ? 'Generate production-grade topologies from natural language specifications.'
+              : 'Automated vulnerability scanner identifying bottlenecks, SPOFs, and partition failure points.'}
+          </p>
         </div>
 
-        {/* Mode Selector Tabs */}
-        <div style={{ display: 'flex', backgroundColor: 'var(--color-bg-secondary)', padding: '4px', borderRadius: 'var(--radius-button)' }}>
+        {/* Tab Pills */}
+        <div className="flex items-center p-1 rounded-full bg-[#f4f1fb] border border-[#e5e1ea]">
           <button
             onClick={() => setMode('generator')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: 'var(--radius-button)',
-              border: 'none',
-              backgroundColor: mode === 'generator' ? 'var(--color-card-solid)' : 'transparent',
-              fontWeight: 500,
-              fontSize: '14px',
-              color: 'var(--color-text)',
-              cursor: 'pointer',
-            }}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              mode === 'generator'
+                ? 'bg-[#0a0a0f] text-white shadow-xs'
+                : 'text-[#5e5e6e] hover:text-[#0a0a0f]'
+            }`}
           >
             Diagram Generator
           </button>
           <button
             onClick={() => setMode('review')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: 'var(--radius-button)',
-              border: 'none',
-              backgroundColor: mode === 'review' ? 'var(--color-card-solid)' : 'transparent',
-              fontWeight: 500,
-              fontSize: '14px',
-              color: 'var(--color-text)',
-              cursor: 'pointer',
-            }}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              mode === 'review'
+                ? 'bg-[#0a0a0f] text-white shadow-xs'
+                : 'text-[#5e5e6e] hover:text-[#0a0a0f]'
+            }`}
           >
-            Diagram Review (Audit)
+            SPOF &amp; Risk Audit
           </button>
         </div>
       </div>
 
-      {/* SCREEN 9: Diagram Generator */}
+      {/* Mode 1: Generator */}
       {mode === 'generator' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px', minHeight: '520px' }}>
-          {/* Left Panel: Controls & History */}
-          <div className="card-solid" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div>
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                System Architecture Prompt
-              </label>
-              <textarea
-                className="input-cofounder"
-                style={{ height: '110px', resize: 'none', marginBottom: '16px' }}
-                placeholder="Describe the system you want to design... e.g. Design WhatsApp"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-              />
-
-              <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', display: 'block', marginBottom: '6px' }}>
-                Output Format
-              </label>
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                {['Mermaid', 'SVG', 'PNG', 'Draw.io'].map((fmt) => (
-                  <button
-                    key={fmt}
-                    onClick={() => setSelectedFormat(fmt)}
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: 'var(--radius-pill)',
-                      border: selectedFormat === fmt ? '1px solid var(--color-text)' : '1px solid var(--color-border-subtle)',
-                      backgroundColor: selectedFormat === fmt ? 'var(--color-primary)' : 'var(--color-bg)',
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {fmt}
-                  </button>
-                ))}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Controls (4 cols) */}
+          <Card padding="md" className="lg:col-span-4 flex flex-col justify-between space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-2">
+                  System Architecture Prompt
+                </label>
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={4}
+                  className="w-full p-3 bg-[#faf9fc] border border-[#e5e1ea] rounded-xl text-xs sm:text-sm text-[#0a0a0f] focus:outline-hidden focus:border-[#6b38d4] focus:bg-white resize-none"
+                  placeholder="Describe system components, scale parameters, and databases..."
+                />
               </div>
 
-              <button
-                className="btn-dark"
-                style={{ width: '100%', justifyContent: 'center', marginBottom: '28px' }}
-              >
-                <Sparkles size={16} color="var(--color-primary)" /> Generate Diagram
-              </button>
-
-              {/* History List */}
-              <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
-                <History size={12} style={{ display: 'inline', marginRight: '4px' }} /> Previously Generated
+              <div>
+                <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-2">
+                  Export Format
+                </label>
+                <div className="flex gap-2">
+                  {['Mermaid', 'SVG Topology', 'ASCII'].map((fmt) => (
+                    <button
+                      key={fmt}
+                      type="button"
+                      onClick={() => setSelectedFormat(fmt)}
+                      className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all text-center cursor-pointer ${
+                        selectedFormat === fmt
+                          ? 'bg-[#ede9fe] text-[#6b38d4] border-[#6b38d4]'
+                          : 'bg-[#faf9fc] text-[#5e5e6e] border-[#e5e1ea] hover:bg-white'
+                      }`}
+                    >
+                      {fmt}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {history.map((h, i) => (
-                  <div key={i} style={{ padding: '8px 12px', backgroundColor: 'var(--color-bg-secondary)', borderRadius: 'var(--radius-button)', fontSize: '13px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ fontWeight: 500 }}>{h.title}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>{h.date}</span>
-                  </div>
-                ))}
+
+              <div>
+                <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-2">
+                  Inject Components
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Envoy Proxy', 'Kafka Cluster', 'Redis GeoSet', 'Postgres 16', 'ScyllaDB', 'S3 Origin'].map(
+                    (comp) => (
+                      <button
+                        key={comp}
+                        onClick={() => setPrompt((prev) => `${prev}, include ${comp}`)}
+                        className="px-2.5 py-1 rounded-full bg-[#f4f1fb] hover:bg-[#ede9fe] text-[10px] font-mono text-[#5e5e6e] hover:text-[#6b38d4] border border-[#e5e1ea] transition-colors cursor-pointer"
+                      >
+                        + {comp}
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Panel: Canvas & Floating Toolbar */}
-          <div className="card-cofounder" style={{ position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '440px' }}>
-            {/* Floating Toolbar */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                backgroundColor: 'var(--color-card-solid)',
-                border: '1px solid var(--color-border-subtle)',
-                borderRadius: 'var(--radius-button)',
-                padding: '4px 8px',
-                display: 'flex',
-                gap: '8px',
-                boxShadow: 'var(--shadow-low)',
+            <Button
+              variant="dark"
+              size="md"
+              fullWidth
+              loading={isGenerating}
+              iconLeft={<Sparkles size={14} />}
+              onClick={() => {
+                setIsGenerating(true);
+                setTimeout(() => setIsGenerating(false), 800);
               }}
             >
-              <button className="btn-ghost" style={{ padding: '4px' }} title="Zoom In"><ZoomIn size={16} /></button>
-              <button className="btn-ghost" style={{ padding: '4px' }} title="Zoom Out"><ZoomOut size={16} /></button>
-              <button className="btn-ghost" style={{ padding: '4px' }} title="Export"><Download size={16} /></button>
-              <button className="btn-ghost" style={{ padding: '4px' }} title="Share"><Share2 size={16} /></button>
-            </div>
+              {isGenerating ? 'Synthesizing Architecture...' : 'Generate Architecture Diagram'}
+            </Button>
+          </Card>
 
-            {/* Generated Node Graph Canvas */}
-            <div style={{ width: '100%', maxWidth: '540px', backgroundColor: '#ffffff', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-card)', padding: '24px', boxShadow: 'var(--shadow-low)' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, fontFamily: 'var(--font-mono)', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
-                graph TD // WhatsApp Architecture ({selectedFormat})
+          {/* Right Canvas (8 cols) */}
+          <Card padding="md" className="lg:col-span-8 flex flex-col justify-between min-h-[500px]">
+            {/* Canvas Toolbar */}
+            <div className="flex items-center justify-between pb-4 border-b border-[#e5e1ea]">
+              <div className="flex items-center gap-2 font-mono text-xs text-[#0a0a0f]">
+                <Layers size={15} className="text-[#6b38d4]" />
+                <span className="font-semibold">Topology Canvas // Real-Time Messaging Spec</span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', alignItems: 'center' }}>
-                <div style={{ padding: '10px 20px', border: '2px solid var(--color-text)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-primary)', fontWeight: 600, fontSize: '14px' }}>
-                  📱 WebSocket Mobile Gateway
+              <div className="flex items-center gap-2">
+                <button
+                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer"
+                  aria-label="Zoom in"
+                >
+                  <ZoomIn size={14} />
+                </button>
+                <button
+                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer"
+                  aria-label="Zoom out"
+                >
+                  <ZoomOut size={14} />
+                </button>
+                <Button variant="outline" size="sm" iconLeft={<Download size={13} />}>
+                  Export
+                </Button>
+              </div>
+            </div>
+
+            {/* Architecture Node Visual */}
+            <div className="my-auto py-8 px-4 rounded-xl bg-[#faf9fe] border border-[#e5e1ea] flex flex-col items-center justify-center space-y-4">
+              <div className="p-3.5 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-xs font-semibold text-[#0a0a0f] w-72 text-center">
+                Client Layer (Web / iOS / Android)
+              </div>
+              <span className="font-mono text-[10px] text-[#8e8ea0]">↓ WSS (TLS 1.3)</span>
+
+              <div className="p-3.5 rounded-xl bg-[#ede9fe] border border-[#8b5cf6]/30 shadow-xs text-xs font-bold text-[#6b38d4] w-80 text-center">
+                Edge Gateway (Envoy Proxy + JWT Auth)
+              </div>
+              <span className="font-mono text-[10px] text-[#8e8ea0]">↓ Async Pub/Sub</span>
+
+              <div className="grid grid-cols-3 gap-3 w-full max-w-lg">
+                <div className="p-3 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
+                  <div className="font-mono text-[10px] text-[#8e8ea0]">Queue</div>
+                  <div className="font-bold text-xs text-[#0a0a0f] mt-1">Kafka Cluster</div>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>↓ TCP / TLS Persistent Session</div>
-                <div style={{ display: 'flex', gap: '16px' }}>
-                  <div style={{ padding: '10px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-bg)', fontSize: '13px', fontWeight: 500 }}>
-                    ⚡ Session Store (Redis Cluster)
-                  </div>
-                  <div style={{ padding: '10px 16px', border: '1px solid var(--color-border-strong)', borderRadius: 'var(--radius-button)', backgroundColor: 'var(--color-bg)', fontSize: '13px', fontWeight: 500 }}>
-                    📦 Message DB (Cassandra)
-                  </div>
+                <div className="p-3 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
+                  <div className="font-mono text-[10px] text-[#8e8ea0]">Status Cache</div>
+                  <div className="font-bold text-xs text-[#0a0a0f] mt-1">Redis Clustered</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
+                  <div className="font-mono text-[10px] text-[#8e8ea0]">History Store</div>
+                  <div className="font-bold text-xs text-[#0a0a0f] mt-1">ScyllaDB / Cassandra</div>
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Bottom Sizing */}
+            <div className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
+              <span>Throughput: <strong>50,000 writes/sec</strong></span>
+              <span>Replication Factor: <strong>3</strong></span>
+              <span className="text-emerald-600 font-semibold">Active Standby Ready</span>
+            </div>
+          </Card>
         </div>
       )}
 
-      {/* SCREEN 10: Diagram Review & SPOF Audit */}
+      {/* Mode 2: SPOF & Risk Review */}
       {mode === 'review' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          {/* Upload Zone */}
-          <div
-            className="card-solid"
-            style={{
-              border: '2px dashed var(--color-border-strong)',
-              textAlign: 'center',
-              padding: '36px',
-              backgroundColor: 'var(--color-bg-secondary)',
-              cursor: 'pointer',
-            }}
-          >
-            <Upload size={32} color="var(--color-text-secondary)" style={{ marginBottom: '10px' }} />
-            <h3 style={{ fontSize: '18px', fontWeight: 500 }}>Drag and drop your architecture diagram, or click to upload</h3>
-            <p style={{ fontSize: '13px', color: 'var(--color-text-muted)', marginTop: '4px' }}>Accepts PNG, SVG, Draw.io files up to 25MB</p>
-          </div>
+        <div className="space-y-6">
+          <Card padding="lg">
+            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">
+              Detected Vulnerabilities &amp; Bottlenecks (3 Issues Found)
+            </h3>
+            <p className="text-xs text-[#5e5e6e] mb-6">
+              AI scanned your proposed topology against high-scale distributed failure conditions.
+            </p>
 
-          {/* Two Column Results */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '24px' }}>
-            {/* Left: Diagram Visual with Annotated Markers */}
-            <div className="card-solid" style={{ position: 'relative', minHeight: '380px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-secondary)', marginBottom: '12px' }}>
-                  Uploaded Diagram: system_architecture_sketch.png
-                </div>
-
-                {/* Annotated Diagram Node Graph */}
-                <div style={{ padding: '24px', border: '1px solid var(--color-border-subtle)', borderRadius: 'var(--radius-card)', backgroundColor: '#ffffff', display: 'inline-block', position: 'relative' }}>
-                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                    <div style={{ padding: '12px', border: '1px solid #171717', borderRadius: '8px' }}>Load Balancer</div>
-                    <span>──►</span>
-                    {/* SPOF Red Marker */}
-                    <div style={{ position: 'relative', padding: '12px', border: '2px solid #dc2626', borderRadius: '8px', backgroundColor: '#fee2e2' }}>
-                      Primary MySQL DB
-                      <span style={{ position: 'absolute', top: '-8px', right: '-8px', backgroundColor: '#dc2626', color: '#fff', fontSize: '10px', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>!</span>
+            <div className="space-y-4">
+              {annotations.map((ann) => (
+                <div
+                  key={ann.id}
+                  className="p-5 rounded-2xl bg-[#faf9fc] border border-[#e5e1ea] flex flex-col sm:flex-row items-start justify-between gap-4"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={ann.variant}>
+                        {ann.severity.toUpperCase()} // {ann.type}
+                      </Badge>
                     </div>
+                    <h4 className="font-bold text-sm text-[#0a0a0f]">{ann.title}</h4>
+                    <p className="text-xs text-[#5e5e6e] leading-relaxed max-w-2xl">{ann.explanation}</p>
                   </div>
+
+                  <Button variant="secondary" size="sm" className="shrink-0">
+                    Apply Recommended Fix
+                  </Button>
                 </div>
-              </div>
+              ))}
             </div>
-
-            {/* Right: Review Report Cards */}
-            <div>
-              <h3 style={{ fontSize: '20px', fontWeight: 500, marginBottom: '16px' }}>Review Audit Report</h3>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {annotations.map((ann) => (
-                  <div key={ann.id} className="card-solid" style={{ borderLeft: `4px solid ${ann.color}` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: ann.color }}>{ann.type}</span>
-                      <span className="badge-subtle" style={{ fontSize: '11px' }}>{ann.severity} Severity</span>
-                    </div>
-                    <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{ann.explanation}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          </Card>
         </div>
       )}
     </div>
