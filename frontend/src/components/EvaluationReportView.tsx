@@ -1,16 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Download, Play, CheckCircle2, AlertCircle, Award, ArrowRight } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
 
 interface EvaluationReportViewProps {
-  onReplay: () => void;
-  onNavigateRoadmap: () => void;
+  onReplay?: () => void;
+  onNavigateRoadmap?: () => void;
 }
 
 export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
-  onReplay,
-  onNavigateRoadmap,
+  onReplay: propOnReplay,
+  onNavigateRoadmap: propOnNavigateRoadmap,
 }) => {
+  const navigate = useNavigate();
+  const onReplay = propOnReplay || (() => navigate('/interview'));
+  const onNavigateRoadmap = propOnNavigateRoadmap || (() => navigate('/roadmap'));
   const overallScore = 86;
   const performanceLabel = 'STRONG HIRE (L6 STAFF CALIBRATED)';
 

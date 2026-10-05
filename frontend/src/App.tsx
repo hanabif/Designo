@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
 import { NotificationsModal } from './components/NotificationsModal';
@@ -14,16 +15,16 @@ import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
 import { LearningRoadmapView } from './components/LearningRoadmapView';
 import { BillingView } from './components/BillingView';
 import { AdminPanelView } from './components/AdminPanelView';
+import { NotFoundView } from './components/NotFoundView';
 import { api, removeAuthToken } from './services/api';
-import type { User, Question, UserProfile } from './types';
+import type { User, Question } from './types';
 
 export function App() {
-  const [activeTab, setActiveTab] = useState<string>('landing');
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
-  const [activeInterviewId, setActiveInterviewId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     api
@@ -35,19 +36,17 @@ export function App() {
   const handleLogout = () => {
     removeAuthToken();
     setUser(null);
-    setActiveTab('landing');
+    navigate('/');
   };
 
   const handleBeginInterview = async (questionId: string, difficulty: string, companyTrack: string) => {
     try {
       const interview = await api.startInterview({ questionId, difficulty, companyTrack });
-      setActiveInterviewId(interview.id);
-      setActiveTab('interview');
+      navigate(`/interview/${interview.id}`);
     } catch {
       // Fallback mock launch for instant interactive demo
       const mockId = `session-${Date.now()}`;
-      setActiveInterviewId(mockId);
-      setActiveTab('interview');
+      navigate(`/interview/${mockId}`);
     }
   };
 
@@ -61,8 +60,6 @@ export function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4]">
       <Navbar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
@@ -71,67 +68,50 @@ export function App() {
       />
 
       <main className="flex-1">
-        {activeTab === 'landing' && (
-          <HeroLanding
+        <Routes>
+          <Route path="/" element={<HeroLanding
             onStartInterview={() => {
               if (!user) setIsAuthOpen(true);
-              else setActiveTab('onboarding');
+              else navigate('/onboarding');
             }}
-            onExploreQuestions={() => setActiveTab('questions')}
-            onSelectPricing={() => setActiveTab('billing')}
-          />
-        )}
+            onExploreQuestions={() => navigate('/questions')}
+            onSelectPricing={() => navigate('/billing')}
+          />} />
 
-        {activeTab === 'onboarding' && (
-          <OnboardingView
-            onComplete={(profile: UserProfile) => {
+          <Route path="/onboarding" element={<OnboardingView
+            onComplete={(profile) => {
               setUser((prev) => (prev ? { ...prev, profile } : { email: 'candidate@designo.ai', profile }));
-              setActiveTab('dashboard');
+              navigate('/dashboard');
             }}
-            onSkip={() => setActiveTab('dashboard')}
-          />
-        )}
+            onSkip={() => navigate('/dashboard')}
+          />} />
 
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            user={user}
-            onStartNewInterview={() => setIsSetupModalOpen(true)}
-            onNavigateTab={setActiveTab}
-            onOpenSetupModal={() => setIsSetupModalOpen(true)}
-          />
-        )}
+          <Route path="/dashboard" element={<DashboardView user={user} onOpenSetupModal={() => setIsSetupModalOpen(true)} />} />
 
-        {activeTab === 'questions' && (
-          <QuestionBankView
-            onSelectQuestion={(qId, diff, track) => {
-              handleBeginInterview(qId, diff, track);
-            }}
-          />
-        )}
+          <Route path="/questions" element={<QuestionBankView
+            onSelectQuestion={(qId, diff, track) => handleBeginInterview(qId, diff, track)}
+          />} />
 
-        {activeTab === 'interview' && (
-          <InterviewRunnerView
-            interviewId={activeInterviewId || 'session-demo-1'}
-            onFinish={() => setActiveTab('report')}
-          />
-        )}
+          <Route path="/interview" element={<InterviewRunnerView />} />
+          <Route path="/interview/:interviewId" element={<InterviewRunnerView />} />
 
-        {activeTab === 'report' && (
-          <EvaluationReportView
-            onReplay={() => setActiveTab('interview')}
-            onNavigateRoadmap={() => setActiveTab('roadmap')}
-          />
-        )}
+          <Route path="/report" element={<EvaluationReportView />} />
 
-        {activeTab === 'diagrams' && <DiagramStudioView />}
+          <Route path="/diagrams" element={<DiagramStudioView />} />
 
-        {activeTab === 'analytics' && <AnalyticsDashboardView />}
+          <Route path="/analytics" element={<AnalyticsDashboardView />} />
 
-        {activeTab === 'roadmap' && <LearningRoadmapView />}
+          <Route path="/roadmap" element={<LearningRoadmapView />} />
 
-        {activeTab === 'billing' && <BillingView user={user} />}
+          <Route path="/billing" element={<BillingView user={user} />} />
 
-        {activeTab === 'admin' && <AdminPanelView user={user} />}
+          <Route path="/admin" element={<AdminPanelView user={user} />} />
+
+          {/* Redirect legacy hash-based paths */}
+          <Route path="/landing" element={<Navigate to="/" replace />} />
+
+          <Route path="*" element={<NotFoundView />} />
+        </Routes>
       </main>
 
       {/* Global Modals */}
@@ -140,7 +120,7 @@ export function App() {
         onClose={() => setIsAuthOpen(false)}
         onSuccess={(loggedUser) => {
           setUser(loggedUser);
-          setActiveTab('onboarding');
+          navigate('/onboarding');
         }}
       />
 

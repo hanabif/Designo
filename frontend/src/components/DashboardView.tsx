@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Play, Sparkles, Flame, ArrowRight, Award, Clock, TrendingUp, ChevronRight, Layers } from 'lucide-react';
 import type { User } from '../types';
 import { Button, Card, Badge } from './ui';
@@ -6,15 +7,23 @@ import { Button, Card, Badge } from './ui';
 interface DashboardViewProps {
   user?: User | null;
   onStartNewInterview?: () => void;
-  onNavigateTab: (tab: string) => void;
-  onOpenSetupModal: () => void;
+  onNavigateTab?: (tab: string) => void;
+  onOpenSetupModal?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   user,
-  onNavigateTab,
+  onNavigateTab: propOnNavigateTab,
   onOpenSetupModal,
 }) => {
+  const navigate = useNavigate();
+  const onNavigateTab = (tab: string) => {
+    if (propOnNavigateTab) {
+      propOnNavigateTab(tab);
+    } else {
+      navigate(tab.startsWith('/') ? tab : `/${tab}`);
+    }
+  };
   const userName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Architect Candidate';
 
   const recentInterviews = [

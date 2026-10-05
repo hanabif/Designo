@@ -1,13 +1,29 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Send, CheckCircle2 } from 'lucide-react';
 import { api } from '../services/api';
 
+
 interface InterviewRunnerViewProps {
-  interviewId: string;
-  onFinish: (interviewId: string) => void;
+  interviewId?: string;
+  onFinish?: (interviewId: string) => void;
 }
 
-export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({ interviewId, onFinish }) => {
+export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
+  interviewId: propInterviewId,
+  onFinish: propOnFinish,
+}) => {
+  const { interviewId: paramInterviewId } = useParams<{ interviewId?: string }>();
+  const navigate = useNavigate();
+  const interviewId = propInterviewId || paramInterviewId || 'session-demo-1';
+
+  const onFinish = (id: string) => {
+    if (propOnFinish) {
+      propOnFinish(id);
+    } else {
+      navigate('/report');
+    }
+  };
   const [currentStageIndex, setCurrentStageIndex] = useState<number>(3);
   const [messages, setMessages] = useState<any[]>([
     {

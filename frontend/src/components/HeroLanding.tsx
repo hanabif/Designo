@@ -1,18 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play, Check, Sparkles, Cpu, Zap, Activity, Layers, Award } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
 
 interface HeroLandingProps {
-  onStartInterview: () => void;
-  onExploreQuestions: () => void;
+  onStartInterview?: () => void;
+  onExploreQuestions?: () => void;
   onSelectPricing?: () => void;
 }
 
 export const HeroLanding: React.FC<HeroLandingProps> = ({
-  onStartInterview,
-  onExploreQuestions,
-  onSelectPricing: _onSelectPricing,
+  onStartInterview: propOnStartInterview,
+  onExploreQuestions: propOnExploreQuestions,
+  onSelectPricing: propOnSelectPricing,
 }) => {
+  const navigate = useNavigate();
+  const onStartInterview = propOnStartInterview || (() => navigate('/dashboard'));
+  const onExploreQuestions = propOnExploreQuestions || (() => navigate('/questions'));
+  void (propOnSelectPricing || (() => navigate('/billing')));
   return (
     <div className="bg-[#faf9fe] text-[#0a0a0f] pb-24 relative overflow-hidden">
       {/* Ambient background glows */}

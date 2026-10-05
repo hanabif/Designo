@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Terminal,
   BookOpen,
@@ -19,8 +20,6 @@ import type { User } from '../types';
 import { Button, Badge } from './ui';
 
 interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
   user: User | null;
   onOpenAuth: () => void;
   onOpenNotifications: () => void;
@@ -29,8 +28,6 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
-  activeTab,
-  setActiveTab,
   user,
   onOpenAuth,
   onOpenNotifications,
@@ -38,29 +35,34 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
-    { id: 'landing', label: 'Overview', icon: Sparkles },
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'questions', label: 'Questions', icon: BookOpen },
-    { id: 'interview', label: 'Simulator', icon: Terminal },
-    { id: 'diagrams', label: 'Diagram Studio', icon: Cpu },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-    { id: 'roadmap', label: 'Roadmap', icon: Map },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
+    { path: '/', label: 'Overview', icon: Sparkles },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/questions', label: 'Questions', icon: BookOpen },
+    { path: '/interview', label: 'Simulator', icon: Terminal },
+    { path: '/diagrams', label: 'Diagram Studio', icon: Cpu },
+    { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { path: '/roadmap', label: 'Roadmap', icon: Map },
+    { path: '/billing', label: 'Billing', icon: CreditCard },
   ];
+
+  const checkIsActive = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   return (
     <header className="sticky top-0 z-40 transition-all duration-300 backdrop-blur-xl bg-[#faf9fe]/90 border-b border-[#e5e1ea]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand & Badge */}
         <div className="flex items-center gap-6">
-          <a
-            href="#landing"
-            onClick={(e) => {
-              e.preventDefault();
-              setActiveTab('landing');
-            }}
+          <Link
+            to="/"
             className="flex items-center gap-3 group text-decoration-none"
           >
             <div className="w-8 h-8 rounded-full bg-[#0a0a0f] flex items-center justify-center transition-transform group-hover:scale-95 shadow-xs text-white">
@@ -69,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="font-display font-extrabold text-xl tracking-tight text-[#0a0a0f]">
               Designo<span className="text-[#6b38d4]">.ai</span>
             </span>
-          </a>
+          </Link>
 
           <div className="hidden lg:inline-flex">
             <Badge
@@ -85,11 +87,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         <nav className="hidden md:flex items-center gap-1 font-sans text-sm">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = checkIsActive(item.path);
             return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
+              <Link
+                key={item.path}
+                to={item.path}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   isActive
                     ? 'bg-[#ede9fe] text-[#6b38d4] shadow-xs'
@@ -98,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Icon size={14} className={isActive ? 'text-[#6b38d4]' : 'text-[#8e8ea0]'} />
                 {item.label}
-              </button>
+              </Link>
             );
           })}
         </nav>
@@ -127,7 +129,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {user ? (
             <div className="flex items-center gap-2 pl-2 border-l border-[#e5e1ea]">
-              <div className="flex items-center gap-2">
+              <div
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center gap-2 cursor-pointer"
+                title="Go to dashboard"
+              >
                 <div className="w-8 h-8 rounded-full bg-[#ede9fe] text-[#6b38d4] font-semibold text-xs flex items-center justify-center border border-[#8b5cf6]/30">
                   {user.name ? user.name.charAt(0).toUpperCase() : user.email ? user.email.charAt(0).toUpperCase() : 'U'}
                 </div>
@@ -176,14 +182,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="md:hidden border-t border-[#e5e1ea] bg-white px-4 py-3 space-y-1 shadow-lg">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = checkIsActive(item.path);
             return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setMobileMenuOpen(false);
-                }}
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() => setMobileMenuOpen(false)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
                   isActive
                     ? 'bg-[#ede9fe] text-[#6b38d4]'
@@ -192,7 +196,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Icon size={16} />
                 <span>{item.label}</span>
-              </button>
+              </Link>
             );
           })}
         </div>
