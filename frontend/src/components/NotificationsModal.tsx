@@ -60,7 +60,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({ isOpen, 
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} maxWidth="md">
-      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-1" data-lenis-prevent>
         {notifications.map((n) => {
           const Icon = n.icon;
           return (

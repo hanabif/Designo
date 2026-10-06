@@ -170,7 +170,7 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
         {/* Left Column: Chat Dialogue (7 cols) */}
         <div className="lg:col-span-7 flex flex-col border-r border-[#e5e1ea] bg-[#faf9fe] overflow-hidden">
           {/* Chat Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4" data-lenis-prevent>
             {messages.map((m) => {
               const isAi = m.sender === 'ai';
               return (
@@ -312,7 +312,7 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex-1 p-4 overflow-y-auto" data-lenis-prevent>
             {rightTab === 'topology' && (
               <div className="h-full flex flex-col justify-between">
                 <div className="rounded-2xl border border-[#e5e1ea] bg-[#faf9fe] p-4 relative overflow-hidden flex-1 flex flex-col justify-center">

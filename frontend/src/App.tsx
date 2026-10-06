@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
 import { NotificationsModal } from './components/NotificationsModal';
@@ -25,6 +25,7 @@ export function App() {
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     api
@@ -59,13 +60,15 @@ export function App() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4]">
-      <Navbar
-        user={user}
-        onOpenAuth={() => setIsAuthOpen(true)}
-        onOpenNotifications={() => setIsNotificationsOpen(true)}
-        onOpenSetupModal={() => setIsSetupModalOpen(true)}
-        onLogout={handleLogout}
-      />
+      {location.pathname !== '/' && (
+        <Navbar
+          user={user}
+          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenNotifications={() => setIsNotificationsOpen(true)}
+          onOpenSetupModal={() => setIsSetupModalOpen(true)}
+          onLogout={handleLogout}
+        />
+      )}
 
       <main className="flex-1">
         <Routes>
@@ -76,6 +79,7 @@ export function App() {
             }}
             onExploreQuestions={() => navigate('/questions')}
             onSelectPricing={() => navigate('/billing')}
+            onOpenAuth={() => setIsAuthOpen(true)}
           />} />
 
           <Route path="/onboarding" element={<OnboardingView

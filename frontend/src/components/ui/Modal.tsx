@@ -63,6 +63,7 @@ export const Modal: React.FC<ModalProps> = ({
       <div
         className={`relative w-full ${maxWidthMap[maxWidth]} bg-white border border-[#e5e1ea] rounded-3xl p-6 sm:p-8 shadow-2xl z-10 max-h-[92vh] overflow-y-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
+        data-lenis-prevent
       >
         {(title || showCloseButton) && (
           <div className="flex items-start justify-between mb-6 pb-4 border-b border-[#e5e1ea]">

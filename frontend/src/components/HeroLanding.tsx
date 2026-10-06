@@ -2,46 +2,114 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play, Check, Sparkles, Cpu, Zap, Activity, Layers, Award } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
+import { useLenisScroll } from '../hooks/useLenisScroll';
+import GridRise from './GridRise';
 
 interface HeroLandingProps {
   onStartInterview?: () => void;
   onExploreQuestions?: () => void;
   onSelectPricing?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartInterview: propOnStartInterview,
   onExploreQuestions: propOnExploreQuestions,
   onSelectPricing: propOnSelectPricing,
+  onOpenAuth,
 }) => {
   const navigate = useNavigate();
+  const { scrollTo } = useLenisScroll();
   const onStartInterview = propOnStartInterview || (() => navigate('/dashboard'));
   const onExploreQuestions = propOnExploreQuestions || (() => navigate('/questions'));
   void (propOnSelectPricing || (() => navigate('/billing')));
   return (
     <div className="bg-[#faf9fe] text-[#0a0a0f] pb-24 relative overflow-hidden">
-      {/* Ambient background glows */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#ede9fe]/80 via-[#f4f1fb]/40 to-transparent blur-[120px] -z-10 rounded-full" />
-      <div className="pointer-events-none absolute top-48 right-[-140px] w-[500px] h-[500px] rounded-full border-[50px] border-[#ede9fe]/70 blur-[40px] -z-10" />
+      {/* ── Grid Rise WebGL background ── */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[680px] z-0 overflow-hidden"
+      >
+        <GridRise
+          className="w-full h-full"
+          brightness={0.62}
+          accentColor={[0.42, 0.22, 0.83]}
+          riseStrength={1.15}
+        />
+        {/* fade-out at the bottom so the grid blends into the page */}
+        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#faf9fe] to-transparent" />
+        {/* side vignettes */}
+        <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#faf9fe] to-transparent" />
+        <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#faf9fe] to-transparent" />
+      </div>
+      {/* Retained ambient glows */}
+      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#ede9fe]/50 via-[#f4f1fb]/20 to-transparent blur-[120px] rounded-full z-0" />
+      <div className="pointer-events-none absolute top-48 right-[-140px] w-[500px] h-[500px] rounded-full border-[50px] border-[#ede9fe]/40 blur-[40px] z-0" />
 
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 pt-12 md:pt-16 pb-16">
-        {/* Top Protocol Row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#e5e1ea] pb-5 mb-12">
-          <div className="flex items-center gap-3 font-mono text-[11px] text-[#5e5e6e] uppercase tracking-widest">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10b981] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10b981]" />
+      {/* Landing Top Nav */}
+      <header className="sticky top-0 z-50 w-full border-b border-[#e5e1ea] bg-[#faf9fe]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6b38d4] to-[#8b5cf6] flex items-center justify-center shadow-sm">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" fillOpacity="0.9" />
+                <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span className="font-display font-extrabold text-[18px] tracking-tight text-[#0a0a0f]">
+              Designo
             </span>
-            <span>Zero-Latency First Principles Simulator</span>
-            <span className="text-neutral-300">•</span>
-            <span className="text-[#6b38d4] font-semibold">Model 4.2 Calibrated</span>
           </div>
-          <div className="flex items-center gap-6 font-mono text-[11px] text-[#5e5e6e]">
-            <span>FAANG+ BENCHMARKS</span>
-            <span>// 42MS EVALUATION</span>
+
+          {/* Smooth Lenis Anchor Navigation */}
+          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-[#5e5e6e]">
+            <button
+              type="button"
+              onClick={() => scrollTo('#simulation', { offset: -80 })}
+              className="hover:text-[#6b38d4] transition-colors cursor-pointer"
+            >
+              Simulation Demo
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo('#benchmarks', { offset: -80 })}
+              className="hover:text-[#6b38d4] transition-colors cursor-pointer"
+            >
+              Benchmarks
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollTo('#capabilities', { offset: -80 })}
+              className="hover:text-[#6b38d4] transition-colors cursor-pointer"
+            >
+              Capabilities
+            </button>
+          </nav>
+
+          {/* CTA buttons */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onOpenAuth}
+              className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
+            >
+              Sign In
+            </button>
+            <Button
+              variant="dark"
+              size="sm"
+              iconRight={<ArrowRight size={14} />}
+              onClick={onStartInterview}
+            >
+              Get Started
+            </Button>
           </div>
         </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-12 md:pt-16 pb-16">
 
         {/* Editorial Headline Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-16">
@@ -58,8 +126,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
           <div className="lg:col-span-4 flex flex-col justify-end space-y-6 pb-2">
             <p className="font-sans text-base md:text-lg text-[#5e5e6e] leading-relaxed">
-              Practice unsparing mock technical loops with an AI calibrated by Staff and Principal engineers.
-              Objectively scored on mathematical rigor, data contracts, and fault tolerance.
+              Practice System Design with AI before your Big Tech interview
             </p>
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Button
@@ -74,6 +141,13 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 variant="outline"
                 size="lg"
                 iconLeft={<Play size={16} className="text-[#6b38d4]" fill="currentColor" />}
+                onClick={() => scrollTo('#simulation', { offset: -80 })}
+              >
+                Watch Simulation
+              </Button>
+              <Button
+                variant="ghost"
+                size="lg"
                 onClick={onExploreQuestions}
               >
                 Explore Library
@@ -93,7 +167,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
         </div>
 
         {/* Floating Architecture Terminal Card */}
-        <div className="relative w-full rounded-2xl md:rounded-[2rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.14)] border border-[#e5e1ea]">
+        <div id="simulation" className="relative w-full rounded-2xl md:rounded-[2rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.14)] border border-[#e5e1ea] scroll-mt-24">
           {/* Header Bar */}
           <div className="flex flex-wrap items-center justify-between px-4 py-3 rounded-xl bg-[#f7f5fa] border border-[#e5e1ea] mb-3">
             <div className="flex items-center gap-3">
@@ -227,7 +301,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       </section>
 
       {/* Numerical Benchmark Strip */}
-      <section className="border-y border-[#e5e1ea] bg-white py-10 mb-20">
+      <section id="benchmarks" className="border-y border-[#e5e1ea] bg-white py-10 mb-20 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8">
           <div>
             <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]">42ms</div>
@@ -249,7 +323,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       </section>
 
       {/* 4 Pillars Section */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 py-12">
+      <section id="capabilities" className="max-w-7xl mx-auto px-6 md:px-12 py-12 scroll-mt-24">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <Badge variant="primary" className="mb-4">
             CORE PLATFORM CAPABILITIES
@@ -306,7 +380,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       </section>
 
       {/* CTA Banner */}
-      <section className="max-w-7xl mx-auto px-6 md:px-12 mt-16">
+      <section id="start" className="max-w-7xl mx-auto px-6 md:px-12 mt-16 scroll-mt-24">
         <div className="rounded-3xl bg-gradient-to-r from-[#0a0a0f] via-[#1a1528] to-[#0a0a0f] text-white p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
           <div className="max-w-xl">
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white mb-3">
