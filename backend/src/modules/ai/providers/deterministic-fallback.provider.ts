@@ -20,7 +20,7 @@ export class DeterministicFallbackProvider implements AiProvider {
     options?: AiCompletionOptions,
   ): Promise<AiCompletionResponse> {
     this.logger.warn(
-      'No primary AI API keys configured; serving deterministic development mock response.',
+      'Falling back to deterministic development response (no healthy primary AI provider available).',
     );
 
     if (options?.responseFormat === 'json_object') {

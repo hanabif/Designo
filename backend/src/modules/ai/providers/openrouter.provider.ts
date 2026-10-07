@@ -36,6 +36,8 @@ export class OpenRouterProvider implements AiProvider {
     const client = new OpenAI({
       apiKey,
       baseURL,
+      timeout: 60_000,
+      maxRetries: 1,
       defaultHeaders: {
         'HTTP-Referer': 'https://designo.app',
         'X-Title': 'Designo AI Interview Coach',

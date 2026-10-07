@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import OpenAI from 'openai';
+import { AiRouterService } from '../ai/ai-router.service.js';
+import { AiUseCase } from '../ai/interfaces/ai-provider.interface.js';
 import type { EvaluationResult } from './evaluation.types.js';
 
 export interface EvaluationContext {
@@ -17,22 +17,12 @@ const scoreFields = [
 export class EvaluationProvider {
   private readonly logger = new Logger(EvaluationProvider.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly ai: AiRouterService) {}
 
   async evaluate(context: EvaluationContext): Promise<EvaluationResult> {
-    const apiKey = this.config.get<string>('ai.apiKey') ?? this.config.get<string>('openai.apiKey');
-    if (!apiKey) {
-      this.logger.warn('Neither GEMINI_API_KEY nor OPENAI_API_KEY is configured; using a deterministic development evaluation.');
-      return this.developmentResult(context);
-    }
-
-    const baseURL = this.config.get<string>('ai.baseUrl');
-    const client = new OpenAI({ apiKey, baseURL: baseURL || undefined });
-    const model = this.config.get<string>('ai.model') ?? 'gemini-2.5-flash';
-
-    const response = await client.chat.completions.create({
-      model,
-      messages: [
+    const response = await this.ai.execute(
+      AiUseCase.EVALUATION,
+      [
         {
           role: 'system',
           content: [
@@ -47,12 +37,21 @@ export class EvaluationProvider {
           content: JSON.stringify(context),
         },
       ],
-      response_format: { type: 'json_object' },
-    });
+      { responseFormat: 'json_object' },
+    );
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) throw new Error('AI provider returned an empty response');
-    return this.validate(JSON.parse(content));
+    this.logger.log(
+      `Evaluation generated via provider [${response.provider}:${response.model}]`,
+    );
+    if (!response.content) throw new Error('AI provider returned an empty response');
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(response.content);
+    } catch {
+      throw new Error('AI provider returned invalid JSON for the evaluation');
+    }
+    return this.validate(parsed);
   }
 
   private validate(value: unknown): EvaluationResult {
@@ -69,18 +68,5 @@ export class EvaluationProvider {
       }
     }
     return result as unknown as EvaluationResult;
-  }
-
-  private developmentResult(context: EvaluationContext): EvaluationResult {
-    const answerCount = context.messages.filter((message) => message.role === 'USER').length;
-    const score = Math.min(75, 35 + answerCount * 5);
-    return {
-      overallScore: score, requirementsScore: score, architectureScore: score,
-      scalabilityScore: score, databaseDesignScore: score, reliabilityScore: score,
-      securityScore: score, costAwarenessScore: score,
-      strengths: answerCount ? ['Completed a persisted interview response flow.'] : [],
-      weaknesses: answerCount ? ['Development evaluation: configure OPENAI_API_KEY for transcript-specific feedback.'] : ['No candidate responses were recorded.'],
-      recommendations: ['Review trade-offs, failure modes, and capacity estimates before the next session.'],
-    };
   }
 }

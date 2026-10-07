@@ -29,10 +29,10 @@ export class GeminiProvider implements AiProvider {
     }
 
     const baseURL = this.config.get<string>('ai.gemini.baseUrl');
-    const defaultModel = this.config.get<string>('ai.gemini.model') ?? 'gemini-2.5-flash';
+    const defaultModel = this.config.get<string>('ai.gemini.model') ?? 'gemini-3.8-flash';
     const model = options?.model ?? defaultModel;
 
-    const client = new OpenAI({ apiKey, baseURL });
+    const client = new OpenAI({ apiKey, baseURL, timeout: 60_000, maxRetries: 1 });
 
     const formattedMessages = [...messages];
     if (options?.systemInstruction) {

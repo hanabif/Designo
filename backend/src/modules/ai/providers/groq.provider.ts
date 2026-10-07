@@ -29,10 +29,10 @@ export class GroqProvider implements AiProvider {
     }
 
     const baseURL = this.config.get<string>('ai.groq.baseUrl');
-    const defaultModel = this.config.get<string>('ai.groq.model') ?? 'llama-3.3-70b-versatile';
+    const defaultModel = this.config.get<string>('ai.groq.model') ?? 'qwen/qwen3.8-27b';
     const model = options?.model ?? defaultModel;
 
-    const client = new OpenAI({ apiKey, baseURL });
+    const client = new OpenAI({ apiKey, baseURL, timeout: 60_000, maxRetries: 1 });
 
     const formattedMessages = [...messages];
     if (options?.systemInstruction) {

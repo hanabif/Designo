@@ -6,12 +6,12 @@ export default () => ({
   ai: {
     gemini: {
       apiKey: process.env.GEMINI_API_KEY?.trim() ?? process.env.GOOGLE_API_KEY?.trim(),
-      model: process.env.GEMINI_MODEL ?? 'gemini-1.5-flash',
+      model: process.env.GEMINI_MODEL ?? 'gemini-3.8-flash',
       baseUrl: process.env.GEMINI_BASE_URL ?? 'https://generativelanguage.googleapis.com/v1beta/openai/',
     },
     groq: {
       apiKey: process.env.GROQ_API_KEY?.trim(),
-      model: process.env.GROQ_MODEL ?? 'llama-3.1-8b-instant',
+      model: process.env.GROQ_MODEL ?? 'qwen/qwen3.8-27b',
       baseUrl: process.env.GROQ_BASE_URL ?? 'https://api.groq.com/openai/v1',
     },
     openrouter: {
