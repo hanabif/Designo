@@ -13,7 +13,7 @@ export class RecommendationsService {
   async getRecommendations(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { fullName: true, targetCompany: true, targetLevel: true, experienceLevel: true },
+      select: { fullName: true, currentPosition: true, targetCompany: true, targetLevel: true, experienceLevel: true },
     });
 
     const evaluations = await this.prisma.evaluationReport.findMany({
@@ -27,21 +27,8 @@ export class RecommendationsService {
 
     if (!evaluations.length) {
       return {
-        weakAreas: ['Database Sharding', 'Rate Limiting', 'CAP Theorem'],
-        learningRoadmap: [
-          {
-            topic: 'Database Sharding & Partitioning',
-            priority: 'HIGH',
-            reason: 'Essential for scalable system design interviews.',
-            resources: ['Read Designing Data-Intensive Applications Ch. 6', 'Practice Twitter Feed Architecture'],
-          },
-          {
-            topic: 'Distributed Caching Strategies',
-            priority: 'MEDIUM',
-            reason: 'Core requirement for low-latency backend designs.',
-            resources: ['Redis Cache-Aside pattern', 'Write-through vs Write-back caching'],
-          },
-        ],
+        weakAreas: [],
+        learningRoadmap: [],
       };
     }
 
@@ -58,6 +45,7 @@ export class RecommendationsService {
 
     const prompt = [
       'You are a senior system design interview mentor.',
+      `Tailor recommendations for the candidate's role: ${user?.currentPosition ?? 'software engineer'}.`,
       `Analyze candidate profile and category scores: ${JSON.stringify(averages)}.`,
       'Output a JSON object with: { "weakAreas": string[], "learningRoadmap": [{ "topic": string, "priority": "HIGH"|"MEDIUM"|"LOW", "reason": string, "resources": string[] }] }',
     ].join(' ');
@@ -66,7 +54,7 @@ export class RecommendationsService {
       AiUseCase.RECOMMENDATION,
       [
         { role: 'system', content: prompt },
-        { role: 'user', content: `Target Company: ${user?.targetCompany ?? 'Tier 1 Tech'}. Target Level: ${user?.targetLevel ?? 'Senior'}` },
+        { role: 'user', content: `Target Company: ${user?.targetCompany ?? 'Tier 1 Tech'}. Target Level: ${user?.targetLevel ?? user?.experienceLevel ?? 'Senior'}` },
       ],
       { responseFormat: 'json_object' },
     );

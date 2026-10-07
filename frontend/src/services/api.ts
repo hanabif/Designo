@@ -8,7 +8,7 @@ import type {
   Diagram,
 } from '../types';
 
-const API_BASE = 'http://localhost:3001';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export function getAuthToken(): string | null {
   return localStorage.getItem('designo_access_token');
@@ -20,6 +20,12 @@ export function setAuthToken(token: string) {
 
 export function removeAuthToken() {
   localStorage.removeItem('designo_access_token');
+  localStorage.removeItem('designo_refresh_token');
+}
+
+export function saveAuthTokens(accessToken: string, refreshToken?: string) {
+  localStorage.setItem('designo_access_token', accessToken);
+  if (refreshToken) localStorage.setItem('designo_refresh_token', refreshToken);
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -33,10 +39,18 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(`Cannot reach the Designo API at ${API_BASE}. Start the backend service, or set VITE_API_URL to its address.`);
+    }
+    throw error;
+  }
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ message: 'Request failed' }));
@@ -53,6 +67,7 @@ export const api = {
   login: (data: { email: string; password?: string }) =>
     request<AuthResponse>('/auth/login', { method: 'POST', body: JSON.stringify(data) }),
   getMe: () => request<User>('/users/me'),
+  updateProfile: (data: Record<string, unknown>) => request<User>('/users/me', { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Questions
   getQuestions: () => request<Question[]>('/questions'),
@@ -74,6 +89,9 @@ export const api = {
   getAnalyticsDashboard: () => request<any>('/analytics/dashboard'),
   getAnalyticsProgress: () => request<any>('/analytics/progress'),
   getRecommendations: () => request<any>('/recommendations'),
+  getBillingHistory: () => request<any>('/billing/history'),
+  checkout: (plan: string) => request<any>('/billing/checkout', { method: 'POST', body: JSON.stringify({ plan }) }),
+  logout: (refreshToken: string) => request<any>('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
 
   // Diagrams
   generateDiagram: (data: { title: string; prompt: string; format?: string; interviewId?: string }) =>

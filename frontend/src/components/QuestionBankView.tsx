@@ -15,105 +15,31 @@ interface DisplayQuestion extends Question {
   isPro?: boolean;
 }
 
-const defaultQuestions: DisplayQuestion[] = [
-  {
-    id: 'q1',
-    title: 'Design URL Shortener (TinyURL)',
-    difficulty: 'Beginner',
-    company: 'Google',
-    companyTrack: 'Google',
-    description: 'Design a highly available URL shortening service handling 100M daily short URLs with custom aliases, rate limiting, and real-time click analytics.',
-    tags: ['Base62 Hashing', 'Key Generation Service', 'Redis Cache', 'B-Tree Indexing'],
-    estTime: '45 min',
-    isPro: false,
-  },
-  {
-    id: 'q2',
-    title: 'Design Twitter / X News Feed',
-    difficulty: 'Intermediate',
-    company: 'Meta',
-    companyTrack: 'Meta',
-    description: 'Design a social media newsfeed system supporting post publishing, timeline generation, and fan-out to 500 million active users with celebrity write-fallbacks.',
-    tags: ['Hybrid Fan-out', 'Redis Timelines', 'Kafka Event Streaming', 'Origin Shield'],
-    estTime: '45 min',
-    isPro: false,
-  },
-  {
-    id: 'q3',
-    title: 'Design Uber / Real-Time Dispatch System',
-    difficulty: 'Advanced',
-    company: 'Uber',
-    companyTrack: 'Uber',
-    description: 'Design a real-time driver matching and geospatial tracking service with dynamic quad-tree updates, WebSockets, and distributed surge pricing engines.',
-    tags: ['QuadTree / GeoHash', 'WebSocket Gateway', 'Surge Pricing Engine', 'Redis Pub/Sub'],
-    estTime: '50 min',
-    isPro: false,
-  },
-  {
-    id: 'q4',
-    title: 'Design Global CDN & Distributed Edge Cache',
-    difficulty: 'Staff',
-    company: 'Cloudflare',
-    companyTrack: 'Cloudflare',
-    description: 'Design a multi-region Content Delivery Network with dynamic edge routing, cache invalidation protocols, and Geo-DNS Anycast load balancing.',
-    tags: ['Anycast BGP', 'Consistent Hashing', 'Origin Shielding', 'Cache Purge Mesh'],
-    estTime: '60 min',
-    isPro: true,
-  },
-  {
-    id: 'q5',
-    title: 'Design Netflix Video Streaming Pipeline',
-    difficulty: 'Advanced',
-    company: 'Netflix',
-    companyTrack: 'Netflix',
-    description: 'Design an adaptive bitrate video ingestion and transcode pipeline with chunked delivery, regional Open Connect CDN appliances, and DRM licensing.',
-    tags: ['Bitrate Laddering', 'Open Connect Appliances', 'S3 Object Storage', 'Cassandra Metadata'],
-    estTime: '45 min',
-    isPro: true,
-  },
-  {
-    id: 'q6',
-    title: 'Design Distributed Message Queue (Kafka Clone)',
-    difficulty: 'Staff',
-    company: 'Amazon',
-    companyTrack: 'Amazon',
-    description: 'Design an append-only distributed commit log with partition rebalancing, zero-copy socket transfers, and leader-follower quorum replication.',
-    tags: ['Commit Log', 'Zero-Copy OS Sendfile', 'Raft Consensus', 'Partition Rebalancing'],
-    estTime: '60 min',
-    isPro: true,
-  },
-];
-
 export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQuestion }) => {
   const [questions, setQuestions] = useState<DisplayQuestion[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
-  const [companyFilter, setCompanyFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => {
     api
       .getQuestions()
       .then((data: any) => {
         if (data && data.length > 0) setQuestions(data);
-        else setQuestions(defaultQuestions);
+        else setQuestions([]);
       })
-      .catch(() => setQuestions(defaultQuestions));
+      .catch((error: Error) => { setQuestions([]); setLoadError(error.message); });
   }, []);
 
   const difficultyTiers = ['ALL', 'Beginner', 'Intermediate', 'Advanced', 'Staff'];
-  const companyList = ['ALL', 'Google', 'Meta', 'Uber', 'Netflix', 'Amazon', 'Cloudflare'];
-
-  const filtered = (questions.length > 0 ? questions : defaultQuestions).filter((q) => {
+  const filtered = questions.filter((q) => {
     const matchesDifficulty =
       difficultyFilter === 'ALL' || q.difficulty.toUpperCase() === difficultyFilter.toUpperCase();
-    const companyName = q.company || q.companyTrack;
-    const matchesCompany =
-      companyFilter === 'ALL' || (companyName && companyName.toUpperCase() === companyFilter.toUpperCase());
     const desc = q.description || q.summary || '';
     const matchesSearch =
       q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       desc.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesDifficulty && matchesCompany && matchesSearch;
+    return matchesDifficulty && matchesSearch;
   });
 
   const getDifficultyVariant = (diff: string): 'success' | 'warning' | 'primary' | 'neutral' => {
@@ -136,13 +62,13 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
       {/* Title */}
       <div className="mb-8">
         <Badge variant="primary" icon={<BookOpen size={12} />} className="mb-3">
-          FAANG+ SCENARIOS // 40+ ARCHITECTURE LABS
+          INTERVIEW SCENARIOS
         </Badge>
         <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
           System Design Question Library
         </h1>
         <p className="text-sm text-[#5e5e6e] mt-1 max-w-2xl">
-          Curated scenarios calibrated by Staff and Principal interviewers from Google, Meta, Amazon, and Netflix.
+          Practice scenarios from your interview question library.
         </p>
       </div>
 
@@ -179,27 +105,12 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
           </div>
         </div>
 
-        {/* Company Filter Tags */}
-        <div className="flex items-center gap-2 pt-2 border-t border-[#e5e1ea] overflow-x-auto">
-          <span className="text-[11px] font-mono text-[#8e8ea0] uppercase shrink-0">Company Track:</span>
-          {companyList.map((comp) => (
-            <button
-              key={comp}
-              onClick={() => setCompanyFilter(comp)}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all shrink-0 cursor-pointer ${
-                companyFilter === comp
-                  ? 'bg-[#ede9fe] text-[#6b38d4] font-semibold border border-[#8b5cf6]/30'
-                  : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
-              }`}
-            >
-              {comp}
-            </button>
-          ))}
-        </div>
+      {loadError && <p role="alert" className="mb-4 text-sm text-red-700">Question library unavailable: {loadError}</p>}
       </Card>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filtered.length === 0 && !loadError && <p className="col-span-full rounded-xl border border-[#e5e1ea] bg-white p-6 text-sm text-[#5e5e6e]">No questions are available yet. Please try again later.</p>}
         {filtered.map((item) => (
           <Card
             key={item.id}

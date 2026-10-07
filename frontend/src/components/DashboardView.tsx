@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Sparkles, Flame, ArrowRight, Award, Clock, TrendingUp, ChevronRight, Layers } from 'lucide-react';
 import type { User } from '../types';
 import { Button, Card, Badge } from './ui';
+import { api } from '../services/api';
 
 interface DashboardViewProps {
   user?: User | null;
@@ -26,44 +27,25 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
   const userName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Architect Candidate';
 
-  const recentInterviews = [
-    {
-      id: 'int-1',
-      title: 'Design Uber / Real-Time Dispatch System',
-      track: 'Google Track',
-      difficulty: 'Hard (L6)',
-      score: 84,
-      verdict: 'Strong Hire',
-      date: 'Oct 2, 2026',
-      duration: '42 min',
-    },
-    {
-      id: 'int-2',
-      title: 'Design Twitter / X News Feed Fan-Out',
-      track: 'Meta Track',
-      difficulty: 'Medium (L5)',
-      score: 79,
-      verdict: 'Hire',
-      date: 'Sep 28, 2026',
-      duration: '38 min',
-    },
-    {
-      id: 'int-3',
-      title: 'Design Global CDN & Distributed Edge Cache',
-      track: 'Stripe Track',
-      difficulty: 'Staff (L6+)',
-      score: 72,
-      verdict: 'Lean Hire',
-      date: 'Sep 21, 2026',
-      duration: '46 min',
-    },
-  ];
-
-  const recommendedTopics = [
-    { title: 'Database Sharding & Partition Keys', progress: 65, est: '20 min', category: 'Storage' },
-    { title: 'Consistent Hashing & Virtual Nodes', progress: 85, est: '15 min', category: 'Distributed' },
-    { title: 'Raft Consensus & Quorum Invariants', progress: 30, est: '30 min', category: 'Fault Tolerance' },
-  ];
+  const [recentInterviews, setRecentInterviews] = useState<Array<{ id: string; evaluationId?: string; title: string; track: string; difficulty: string; score: string; verdict: string; date: string; duration: string }>>([]);
+  const [interviewCount, setInterviewCount] = useState(0);
+  const [averageScore, setAverageScore] = useState<number | null>(null);
+  const [recommendedTopics, setRecommendedTopics] = useState<Array<{ title: string; progress: number; est: string; category: string }>>([]);
+  const [topCompetency, setTopCompetency] = useState<{ name: string; score: number } | null>(null);
+  const [loadError, setLoadError] = useState('');
+  useEffect(() => {
+    Promise.all([api.getInterviewHistory(), api.getAnalyticsDashboard(), api.getRecommendations()]).then(([history, analytics, recommendations]) => {
+      setInterviewCount(analytics.interviewMetrics?.totalInterviews ?? history.length);
+      setAverageScore(analytics.performanceMetrics?.averageScore ?? null);
+      const scoredAreas = Object.entries(analytics.categoryMetrics || {}).filter((entry): entry is [string, number] => typeof entry[1] === 'number').sort((a, b) => b[1] - a[1]);
+      if (scoredAreas.length) setTopCompetency({ name: scoredAreas[0][0], score: scoredAreas[0][1] });
+      setRecommendedTopics((recommendations.learningRoadmap || []).slice(0, 3).map((item: any) => ({ title: item.topic, progress: 0, est: item.priority || 'Recommended', category: item.priority || 'Focus area' })));
+      setRecentInterviews(history.slice(0, 3).map((item: any) => {
+        const score = item.evaluation?.overallScore;
+        return { id: item.id, evaluationId: item.evaluation?.id, title: item.question?.title ?? 'Interview session', track: `${item.companyTrack} Track`, difficulty: item.difficulty, score: score == null ? 'Pending' : `${score}/100`, verdict: score == null ? item.status : score >= 85 ? 'Strong Hire' : score >= 75 ? 'Hire' : 'Needs Practice', date: new Date(item.createdAt).toLocaleDateString(), duration: '—' };
+      }));
+    }).catch((error: Error) => setLoadError(error.message));
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -71,13 +53,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#e5e1ea]">
         <div>
           <Badge variant="primary" icon={<Sparkles size={12} />} className="mb-3">
-            L5 SENIOR → L6 STAFF PREP TRACK
+            PERSONALIZED INTERVIEW PREP
           </Badge>
           <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
             Welcome back, {userName}
           </h1>
           <p className="text-sm text-[#5e5e6e] mt-1">
-            Your readiness score is up <strong className="text-[#10b981]">+8%</strong> this month across distributed systems scenarios.
+            Your dashboard reflects your saved interview sessions and feedback.
           </p>
         </div>
 
@@ -107,21 +89,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Interviews Completed</span>
             <Award size={16} className="text-[#6b38d4]" />
           </div>
-          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">24</div>
+          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">{interviewCount}</div>
           <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
-            <span>+4 this week</span>
-            <span className="text-[#8e8ea0]">• Top 10% activity</span>
+            <span>Completed practice sessions</span>
           </div>
         </Card>
 
         <Card padding="md" className="flex items-center justify-between">
           <div>
             <div className="text-xs text-[#5e5e6e] font-mono uppercase mb-2">Average Score</div>
-            <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">81<span className="text-lg font-normal text-[#8e8ea0]">/100</span></div>
+            <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">{averageScore ?? '—'}<span className="text-lg font-normal text-[#8e8ea0]">{averageScore === null ? '' : '/100'}</span></div>
             <div className="text-xs text-[#6b38d4] font-medium mt-2">Strong Hire Baseline</div>
           </div>
           <div className="w-14 h-14 rounded-full border-4 border-[#ede9fe] border-t-[#6b38d4] flex items-center justify-center font-display font-bold text-xs text-[#6b38d4]">
-            81%
+            {averageScore ?? '—'}{averageScore === null ? '' : '%'}
           </div>
         </Card>
 
@@ -130,10 +111,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Practice Time</span>
             <Clock size={16} className="text-[#6b38d4]" />
           </div>
-          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">18.5 <span className="text-base font-normal text-[#8e8ea0]">hrs</span></div>
+          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">—</div>
           <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
             <Flame size={13} className="text-amber-500 fill-amber-500" />
-            <span>5-day streak active</span>
+            <span>Practice time is not tracked yet</span>
           </div>
         </Card>
 
@@ -142,14 +123,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Top Competency</span>
             <TrendingUp size={16} className="text-[#10b981]" />
           </div>
-          <div className="font-display font-extrabold text-xl text-[#0a0a0f] truncate">Data Modeling</div>
+          <div className="font-display font-extrabold text-xl text-[#0a0a0f] truncate">{topCompetency?.name ?? '—'}</div>
           <div className="text-xs text-[#5e5e6e] mt-2">
-            92% avg across NoSQL &amp; Sharding
+            {topCompetency ? `${topCompetency.score}% average score` : 'Complete an interview to see your strongest area.'}
           </div>
         </Card>
       </div>
 
       {/* Main Grid: Recent Interviews (Left) + Roadmap & Drills (Right) */}
+      {loadError && <p role="alert" className="mb-5 text-sm text-red-700">Could not load your saved interview data: {loadError}</p>}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column (8 cols) */}
         <div className="lg:col-span-8 space-y-8">
@@ -161,7 +143,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <p className="text-xs text-[#5e5e6e]">Turn-by-turn evaluations from your latest sessions</p>
               </div>
               <button
-                onClick={() => onNavigateTab('report')}
+                onClick={() => { const latestReport = recentInterviews.find((session) => session.evaluationId); if (latestReport?.evaluationId) navigate(`/report/${latestReport.evaluationId}`); }}
                 className="text-xs text-[#6b38d4] font-semibold hover:underline cursor-pointer"
               >
                 View Latest Report
@@ -169,6 +151,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             </div>
 
             <div className="divide-y divide-[#e5e1ea]">
+              {!recentInterviews.length && <p className="py-5 text-sm text-[#5e5e6e]">Your interview history will appear here when you finish a session.</p>}
               {recentInterviews.map((session) => (
                 <div key={session.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
@@ -189,7 +172,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
                   <div className="flex items-center gap-4 self-end sm:self-auto">
                     <div className="text-right">
-                      <div className="font-display font-bold text-base text-[#0a0a0f]">{session.score}/100</div>
+                      <div className="font-display font-bold text-base text-[#0a0a0f]">{session.score}</div>
                       <Badge variant="success">
                         {session.verdict}
                       </Badge>
@@ -253,19 +236,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     <span className="font-semibold text-[#0a0a0f] truncate">{topic.title}</span>
                     <span className="text-[11px] font-mono text-[#8e8ea0]">{topic.est}</span>
                   </div>
-                  <div className="w-full h-1.5 bg-[#e5e1ea] rounded-full overflow-hidden mb-2">
-                    <div
-                      className="h-full bg-[#6b38d4] rounded-full"
-                      style={{ width: `${topic.progress}%` }}
-                    />
-                  </div>
                   <div className="flex items-center justify-between text-[10px] font-mono text-[#5e5e6e]">
                     <span className="bg-[#ede9fe] text-[#6b38d4] px-2 py-0.5 rounded font-semibold">{topic.category}</span>
-                    <span>{topic.progress}% completed</span>
+                    <span>{topic.est}</span>
                   </div>
                 </div>
               ))}
             </div>
+            {!recommendedTopics.length && <p className="text-xs text-[#8e8ea0]">Recommendations will appear after interview evaluations are available.</p>}
 
             <Button
               variant="outline"

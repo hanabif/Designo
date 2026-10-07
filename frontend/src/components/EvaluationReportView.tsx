@@ -1,7 +1,8 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Download, Play, CheckCircle2, AlertCircle, Award, ArrowRight } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
+import { api } from '../services/api';
 
 interface EvaluationReportViewProps {
   onReplay?: () => void;
@@ -13,45 +14,46 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
   onNavigateRoadmap: propOnNavigateRoadmap,
 }) => {
   const navigate = useNavigate();
+  const { evaluationId } = useParams();
   const onReplay = propOnReplay || (() => navigate('/interview'));
   const onNavigateRoadmap = propOnNavigateRoadmap || (() => navigate('/roadmap'));
-  const overallScore = 86;
-  const performanceLabel = 'STRONG HIRE (L6 STAFF CALIBRATED)';
-
-  const categoryBreakdown = [
-    { name: '1. Requirements & Scope Clarification', weight: '15%', score: 92, status: 'Exemplary' },
-    { name: '2. High-Level Architecture & Topologies', weight: '25%', score: 88, status: 'Strong Hire' },
-    { name: '3. Data Contracts & Storage Modeling', weight: '20%', score: 74, status: 'Hire' },
-    { name: '4. Concurrency, Caching & Fan-Out', weight: '20%', score: 94, status: 'Exemplary' },
-    { name: '5. Fault Tolerance & SPOF Resilience', weight: '15%', score: 78, status: 'Hire' },
-    { name: '6. Communication & Justification of Trade-offs', weight: '5%', score: 85, status: 'Strong Hire' },
-  ];
-
-  const strengths = [
-    'Articulated concrete mathematical QPS estimation (25k writes/sec, 3.2 MB/sec throughput) before choosing in-memory storage.',
-    'Proposed a hybrid fan-out pipeline (Redis Geospatial + Kafka partition by GeoHash cell), preventing write amplification.',
-    'Correctly integrated probabilistic leases (XFetch) to neutralize cache stampedes during concurrent spikes.',
-  ];
-
-  const areasToImprove = [
-    'Database Sharding strategy lacks explicit composite partition key choice for cross-city boundary queries.',
-    'Quorum consistency parameters (N, R, W) were left unspecified during network partition recovery scenarios.',
-    'Did not calculate operational memory eviction policies (allkeys-lru vs volatile-lru) under extreme OOM conditions.',
-  ];
+  const [report, setReport] = useState<any>(null);
+  const [reportError, setReportError] = useState('');
+  useEffect(() => {
+    if (!evaluationId) return;
+    let active = true;
+    const load = async () => {
+      try {
+        const result = await api.getEvaluation(evaluationId);
+        if (active) setReport(result);
+        if (active && result.status !== 'COMPLETED' && result.status !== 'FAILED') window.setTimeout(load, 2000);
+      } catch (error) { if (active) setReportError(error instanceof Error ? error.message : 'Report unavailable.'); }
+    };
+    void load();
+    return () => { active = false; };
+  }, [evaluationId]);
+  const overallScore = report?.overallScore ?? '—';
+  const performanceLabel = report?.status !== 'COMPLETED' ? (report?.status === 'FAILED' ? 'EVALUATION FAILED' : 'EVALUATION IN PROGRESS') : overallScore >= 85 ? 'STRONG HIRE' : overallScore >= 75 ? 'HIRE' : 'NEEDS PRACTICE';
+  const categoryBreakdown = report ? [
+    ['Requirements & Scope Clarification', 'requirementsScore'], ['High-Level Architecture', 'architectureScore'], ['Scalability', 'scalabilityScore'], ['Database Design', 'databaseDesignScore'], ['Reliability', 'reliabilityScore'], ['Security', 'securityScore'], ['Cost Awareness', 'costAwarenessScore'],
+  ].map(([name, key]) => ({ name, weight: '—', score: report[key] ?? 0, status: (report[key] ?? 0) >= 85 ? 'Strong' : (report[key] ?? 0) >= 70 ? 'Developing' : 'Needs Practice' })) : [];
+  const strengths: string[] = report?.strengths || [];
+  const areasToImprove: string[] = report?.weaknesses || report?.recommendations || [];
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Top Action Bar */}
+      {reportError && <p role="alert" className="mb-4 text-sm text-red-700">{reportError}</p>}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#e5e1ea]">
         <div>
           <Badge variant="primary" icon={<Award size={13} />} className="mb-2">
-            EVALUATION REPORT #DES-9104
+            {report?.id ? `EVALUATION REPORT #${report.id.slice(-8).toUpperCase()}` : 'EVALUATION REPORT'}
           </Badge>
           <h1 className="font-display font-bold text-3xl text-[#0a0a0f]">
             Mock Interview Evaluation
           </h1>
           <p className="text-xs text-[#5e5e6e] font-mono mt-1">
-            Scenario: Design Uber Dispatch // Duration: 42m 18s // Calibrated: Google L6 Loop
+            Scenario: {report?.interview?.question?.title || '—'} // {report?.status === 'COMPLETED' ? 'Completed evaluation' : 'Awaiting evaluation'}
           </p>
         </div>
 

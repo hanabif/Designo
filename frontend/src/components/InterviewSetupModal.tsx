@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Play, Check, Sparkles, Clock } from 'lucide-react';
 import { Modal, Button, Badge } from './ui';
 import type { Question } from '../types';
@@ -8,6 +8,8 @@ interface InterviewSetupModalProps {
   onClose: () => void;
   onBegin: (questionId: string, difficulty: string, companyTrack: string) => void;
   questions: Question[];
+  loadingQuestions?: boolean;
+  questionsError?: string;
 }
 
 export const InterviewSetupModal: React.FC<InterviewSetupModalProps> = ({
@@ -15,12 +17,23 @@ export const InterviewSetupModal: React.FC<InterviewSetupModalProps> = ({
   onClose,
   onBegin,
   questions,
+  loadingQuestions = false,
+  questionsError = '',
 }) => {
-  const [selectedQuestionId, setSelectedQuestionId] = useState<string>(questions[0]?.id || 'q1');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('Intermediate');
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string>(questions[0]?.id || '');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>(questions[0]?.difficulty || '');
   const [selectedTrack, setSelectedTrack] = useState<string>('Google');
   const [interviewerStyle, setInterviewerStyle] = useState<string>('Calibrated');
   const [timeLimit, setTimeLimit] = useState<string>('45 min');
+
+  useEffect(() => {
+    if (questions.length && !questions.some((question) => question.id === selectedQuestionId)) {
+      setSelectedQuestionId(questions[0].id);
+      setSelectedDifficulty(questions[0].difficulty);
+    }
+  }, [questions, selectedQuestionId]);
+
+  const availableDifficulties = [...new Set(questions.map((question) => question.difficulty))];
 
   const tracks = [
     { id: 'Google', name: 'Google', focus: 'Scalability & First Principles' },
@@ -56,9 +69,16 @@ export const InterviewSetupModal: React.FC<InterviewSetupModalProps> = ({
           <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-2">
             1. Target Architecture Scenario
           </label>
+          {questionsError && <p role="alert" className="mb-2 text-xs text-red-700">{questionsError}</p>}
+          {loadingQuestions && <p className="mb-2 text-xs text-[#5e5e6e]">Loading questions from the backend…</p>}
+          {!loadingQuestions && !questionsError && !questions.length && <p className="mb-2 text-xs text-[#5e5e6e]">No interview questions are available from the backend yet.</p>}
           <select
             value={selectedQuestionId}
-            onChange={(e) => setSelectedQuestionId(e.target.value)}
+            onChange={(e) => {
+              const question = questions.find((item) => item.id === e.target.value);
+              setSelectedQuestionId(e.target.value);
+              if (question) setSelectedDifficulty(question.difficulty);
+            }}
             className="w-full px-4 py-2.5 bg-[#faf9fc] border border-[#e5e1ea] rounded-xl text-xs sm:text-sm text-[#0a0a0f] font-sans focus:outline-hidden focus:border-[#6b38d4] focus:bg-white"
           >
             {questions.map((q) => (
@@ -75,13 +95,17 @@ export const InterviewSetupModal: React.FC<InterviewSetupModalProps> = ({
             2. Target Difficulty Level
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {['Beginner', 'Intermediate', 'Advanced', 'Staff'].map((level) => {
+            {availableDifficulties.map((level) => {
               const isSelected = selectedDifficulty.toLowerCase() === level.toLowerCase();
               return (
                 <button
                   key={level}
                   type="button"
-                  onClick={() => setSelectedDifficulty(level)}
+                  onClick={() => {
+                    setSelectedDifficulty(level);
+                    const matchingQuestion = questions.find((question) => question.difficulty.toLowerCase() === level.toLowerCase());
+                    if (matchingQuestion) setSelectedQuestionId(matchingQuestion.id);
+                  }}
                   className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all text-center cursor-pointer ${
                     isSelected
                       ? 'bg-[#ede9fe] text-[#6b38d4] border-[#6b38d4] shadow-xs'
@@ -189,9 +213,11 @@ export const InterviewSetupModal: React.FC<InterviewSetupModalProps> = ({
           size="md"
           iconLeft={<Play size={14} fill="currentColor" />}
           onClick={() => {
-            onBegin(selectedQuestionId, selectedDifficulty, selectedTrack);
+            const question = questions.find((item) => item.id === selectedQuestionId);
+            if (question) onBegin(question.id, question.difficulty, selectedTrack);
             onClose();
           }}
+          disabled={!questions.length || !selectedQuestionId}
         >
           Launch Live Session
         </Button>

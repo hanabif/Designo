@@ -1,30 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { TrendingUp, BarChart3 } from 'lucide-react';
 import { Card, Badge } from './ui';
+import { api } from '../services/api';
 
 export const AnalyticsDashboardView: React.FC = () => {
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [progress, setProgress] = useState<any[]>([]);
+  const [loadError, setLoadError] = useState('');
+  useEffect(() => {
+    Promise.all([api.getAnalyticsDashboard(), api.getAnalyticsProgress()]).then(([data, timeline]) => { setDashboard(data); setProgress(timeline); }).catch((error: Error) => setLoadError(error.message));
+  }, []);
+  const metrics = dashboard?.interviewMetrics;
+  const performance = dashboard?.performanceMetrics;
+  const categoryMetrics = dashboard?.categoryMetrics || {};
+  const radarCategories = Object.entries(categoryMetrics).filter((entry): entry is [string, number] => typeof entry[1] === 'number').map(([name, score]) => ({ name, score, status: score >= 85 ? 'Strong' : score >= 70 ? 'Developing' : 'Needs Practice' }));
   const kpis = [
-    { title: 'Total Interviews Completed', value: '24', trend: '+4 this week', isPositive: true },
-    { title: 'Mean Loop Score', value: '81.4', trend: '+8.2 pts vs last month', isPositive: true },
-    { title: 'Staff+ Benchmark Delta', value: '+6.2%', trend: 'Top 12th percentile', isPositive: true },
-    { title: 'Prep Hours Logged', value: '18.5h', trend: '5-day streak active', isPositive: true },
+    { title: 'Interview Sessions', value: metrics?.totalInterviews ?? '—', trend: `${metrics?.interviewsThisMonth ?? 0} this month`, isPositive: true },
+    { title: 'Mean Interview Score', value: performance?.averageScore ?? '—', trend: `Best: ${performance?.bestScore ?? '—'}`, isPositive: true },
+    { title: 'Completed Evaluations', value: progress.length, trend: 'Based on saved reports', isPositive: true },
+    { title: 'Practice Hours Logged', value: metrics?.practiceHours ? `${metrics.practiceHours}h` : '—', trend: 'Not tracked yet', isPositive: true },
   ];
-
-  const radarCategories = [
-    { name: 'Requirements & Scope Clarification', score: 92, status: 'Exemplary' },
-    { name: 'Concurrency & In-Memory Caching', score: 94, status: 'Exemplary' },
-    { name: 'High-Level Topologies & Microservices', score: 86, status: 'Strong Hire' },
-    { name: 'Communication & Trade-off Articulation', score: 85, status: 'Strong Hire' },
-    { name: 'Fault Tolerance & SPOF Resilience', score: 78, status: 'Hire' },
-    { name: 'Distributed Storage & Sharding Keys', score: 68, status: 'Needs Practice' },
-  ];
-
-  const companyReadiness = [
-    { name: 'Google L6 Staff Track', score: 86, readiness: 'Ready' },
-    { name: 'Meta E5/E6 Production Track', score: 82, readiness: 'Ready' },
-    { name: 'Amazon Principal Architect Track', score: 79, readiness: 'Borderline' },
-    { name: 'Stripe Core Infrastructure Track', score: 76, readiness: 'Borderline' },
-  ];
+  const chartData = progress.slice(-8);
+  const chartPoints = chartData.map((item, index) => `${chartData.length < 2 ? 250 : index * (500 / (chartData.length - 1))},${165 - Math.max(0, Math.min(100, item.overallScore ?? 0)) * 1.5}`).join(' ');
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -40,6 +37,7 @@ export const AnalyticsDashboardView: React.FC = () => {
           Longitudinal progress tracking calibrated against actual FAANG+ Staff &amp; Principal interview evaluations.
         </p>
       </div>
+      {loadError && <p role="alert" className="mb-5 text-sm text-red-700">Could not load analytics: {loadError}</p>}
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
@@ -62,7 +60,7 @@ export const AnalyticsDashboardView: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="font-display font-bold text-lg text-[#0a0a0f]">Score Trajectory (Last 30 Days)</h3>
-              <p className="text-xs text-[#5e5e6e]">Progression across 24 simulated mock loops</p>
+              <p className="text-xs text-[#5e5e6e]">Completed evaluation scores over time</p>
             </div>
             <Badge variant="primary">
               +14% Growth
@@ -71,32 +69,11 @@ export const AnalyticsDashboardView: React.FC = () => {
 
           {/* SVG Score Progression Graphic */}
           <div className="h-56 relative w-full pt-4">
-            <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="purpleGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="#ede9fe" stopOpacity="0.0" />
-                </linearGradient>
-              </defs>
-              <path
-                d="M0,140 Q80,120 160,95 T320,60 T500,25 L500,180 L0,180 Z"
-                fill="url(#purpleGrad)"
-              />
-              <path
-                d="M0,140 Q80,120 160,95 T320,60 T500,25"
-                fill="none"
-                stroke="#6b38d4"
-                strokeWidth="3.5"
-              />
-              {/* Highlight points */}
-              <circle cx="160" cy="95" r="4.5" fill="#6b38d4" />
-              <circle cx="320" cy="60" r="4.5" fill="#6b38d4" />
-              <circle cx="500" cy="25" r="5" fill="#10b981" />
-            </svg>
+            {chartData.length ? <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none"><polyline points={chartPoints} fill="none" stroke="#6b38d4" strokeWidth="3.5" />{chartData.map((item, index) => <circle key={item.interviewId} cx={chartData.length < 2 ? 250 : index * (500 / (chartData.length - 1))} cy={165 - Math.max(0, Math.min(100, item.overallScore ?? 0)) * 1.5} r="4" fill="#6b38d4" />)}</svg> : <div className="flex h-full items-center justify-center text-sm text-[#8e8ea0]">Score history appears after your first completed evaluation.</div>}
             <div className="flex justify-between text-[11px] font-mono text-[#8e8ea0] mt-2">
-              <span>Day 1 (Score: 68)</span>
-              <span>Day 15 (Score: 78)</span>
-              <span className="text-[#10b981] font-bold">Latest (Score: 86)</span>
+              <span>{chartData[0] ? new Date(chartData[0].completedAt).toLocaleDateString() : 'No data'}</span>
+              <span>{chartData.length ? `${chartData.length} evaluation${chartData.length === 1 ? '' : 's'}` : ''}</span>
+              <span className="text-[#10b981] font-bold">{chartData.length ? `Latest: ${chartData[chartData.length - 1].overallScore}/100` : ''}</span>
             </div>
           </div>
         </Card>
@@ -127,24 +104,25 @@ export const AnalyticsDashboardView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Target Company Matrix */}
+      {/* Performance by evaluation category */}
       <Card padding="lg">
         <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-4">
-          Company Loop Calibration Matrix
+          Evaluation Category Scores
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {companyReadiness.map((comp, idx) => (
+          {radarCategories.map((comp, idx) => (
             <div key={idx} className="p-4 rounded-xl bg-[#faf9fc] border border-[#e5e1ea]">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-xs text-[#0a0a0f]">{comp.name}</span>
-                <Badge variant={comp.readiness === 'Ready' ? 'success' : 'warning'}>
-                  {comp.readiness}
+                <Badge variant={comp.score >= 85 ? 'success' : 'warning'}>
+                  {comp.status}
                 </Badge>
               </div>
               <div className="font-display font-bold text-2xl text-[#0a0a0f]">{comp.score}%</div>
-              <div className="text-[11px] text-[#5e5e6e] mt-1">Passing threshold: 75%</div>
+              <div className="text-[11px] text-[#5e5e6e] mt-1">Average from completed evaluations</div>
             </div>
           ))}
+          {!radarCategories.length && <p className="text-sm text-[#5e5e6e]">Complete an interview to generate category score analytics.</p>}
         </div>
       </Card>
     </div>

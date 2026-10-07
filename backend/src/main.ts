@@ -15,8 +15,9 @@ async function bootstrap() {
     }),
   );
 
+  const frontendOrigin = configService.get<string>('frontendUrl')?.replace(/\/+$/, '');
   app.enableCors({
-    origin: configService.get<string>('frontendUrl'),
+    origin: frontendOrigin,
     credentials: true,
   });
 

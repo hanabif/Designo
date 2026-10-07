@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, Send, CheckCircle2 } from 'lucide-react';
+import { Clock, Send } from 'lucide-react';
 import { api } from '../services/api';
 
 
@@ -15,39 +15,25 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
 }) => {
   const { interviewId: paramInterviewId } = useParams<{ interviewId?: string }>();
   const navigate = useNavigate();
-  const interviewId = propInterviewId || paramInterviewId || 'session-demo-1';
+  const interviewId = propInterviewId || paramInterviewId || '';
 
-  const onFinish = (id: string) => {
+  const onFinish = async (id: string) => {
     if (propOnFinish) {
       propOnFinish(id);
     } else {
-      navigate('/report');
+      try {
+        await api.finishInterview(id);
+        const report = await api.generateEvaluation(id);
+        navigate(`/report/${report.id}`);
+      } catch (error) {
+        setRequestError(error instanceof Error ? error.message : 'Could not finish this interview.');
+      }
     }
   };
-  const [currentStageIndex, setCurrentStageIndex] = useState<number>(3);
-  const [messages, setMessages] = useState<any[]>([
-    {
-      id: 'm1',
-      sender: 'ai',
-      stage: 'Scope & Requirements',
-      content: 'Welcome to your system design interview. We will design a Global Real-Time Ride Hashing & Dispatch System (like Uber). Let’s begin by defining core functional requirements and traffic estimates.',
-      timestamp: '14:00',
-    },
-    {
-      id: 'm2',
-      sender: 'user',
-      content: '1. Riders can request a ride and get matched with nearby drivers within 5 seconds.\n2. Drivers broadcast location coordinates (lat/long) every 4 seconds.\n3. Dynamic surge pricing calculated per H3 hexagon cell.\nTraffic: 100k active concurrent drivers, 25k requests/sec at peak.',
-      scoreDelta: '+12pts',
-      timestamp: '14:02',
-    },
-    {
-      id: 'm3',
-      sender: 'ai',
-      stage: 'High-Level Architecture',
-      content: 'Under a sudden surge of 100k drivers broadcasting GPS coordinates every 4 seconds (25k writes/sec), your database will choke if written directly to disk. What caching and pub/sub topology do you deploy to buffer ingest?',
-      timestamp: '14:04',
-    },
-  ]);
+  const [currentStageIndex, setCurrentStageIndex] = useState<number>(0);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [requestError, setRequestError] = useState('');
+  const [interviewTitle, setInterviewTitle] = useState('System Design Interview');
   const [inputMessage, setInputMessage] = useState<string>('');
   const [rightTab, setRightTab] = useState<'topology' | 'scratchpad' | 'math'>('topology');
   const [notes, setNotes] = useState<string>(
@@ -77,6 +63,14 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    if (!interviewId) return;
+    api.getInterview(interviewId).then((interview: any) => {
+      setInterviewTitle(interview.question?.title || 'System Design Interview');
+      setMessages((interview.messages || []).map((message: any) => ({ id: message.id, sender: message.role === 'USER' ? 'user' : 'ai', stage: message.stage, content: message.content, timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })));
+    }).catch((error: Error) => setRequestError(error.message));
+  }, [interviewId]);
+
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -85,48 +79,30 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
+    if (!interviewId) { setRequestError('Start an interview from the dashboard or question library first.'); return; }
 
     const userMsg = {
       id: `u-${Date.now()}`,
       sender: 'user',
       content: inputMessage,
-      scoreDelta: '+16pts',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
     const currentInput = inputMessage;
     setInputMessage('');
+    setRequestError('');
 
     try {
       const res: any = await api.sendInterviewMessage(interviewId, currentInput);
-      if (res) {
-        const replyMsg = res.message || res.content || res;
-        const aiMsg = typeof replyMsg === 'object' && replyMsg.content ? replyMsg : {
-          id: `ai-${Date.now()}`,
-          sender: 'ai',
-          stage: stages[currentStageIndex],
-          content: typeof replyMsg === 'string' ? replyMsg : (replyMsg.text || JSON.stringify(replyMsg)),
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
-        setMessages((prev) => [...prev, { ...aiMsg, sender: 'ai' }]);
+      const reply = res.assistantMessage || res.message || res;
+      if (reply?.content) {
+        setMessages((prev) => [...prev, { ...reply, sender: 'ai', timestamp: new Date(reply.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
       }
-    } catch {
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `ai-${Date.now()}`,
-            sender: 'ai',
-            stage: stages[currentStageIndex],
-            content: "Excellent reasoning on utilizing Redis GeoSet and Kafka. Now, how do you handle split-brain or network partitions if the Redis master node drops during a citywide surge event?",
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          },
-        ]);
-        if (currentStageIndex < stages.length - 1) {
-          setCurrentStageIndex((prev) => prev + 1);
-        }
-      }, 900);
+      setCurrentStageIndex((prev) => Math.min(prev + 1, stages.length - 1));
+    } catch (error) {
+      setMessages((prev) => prev.filter((message) => message.id !== userMsg.id));
+      setRequestError(error instanceof Error ? error.message : 'Message could not be sent.');
     }
   };
 
@@ -138,7 +114,7 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] animate-pulse"></span>
             <span className="font-display font-bold text-sm text-[#0a0a0f]">
-              Design Uber / Real-Time Dispatch System
+              {interviewTitle}
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-2 font-mono text-xs">
@@ -164,6 +140,7 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
           </button>
         </div>
       </div>
+      {requestError && <div role="alert" className="mx-4 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{requestError}</div>}
 
       {/* Main 2-Column Area */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
@@ -217,16 +194,7 @@ Workers consume from Kafka, update Redis GeoSet, push to WebSocket Gateway`
               );
             })}
 
-            {/* Live Evaluator Metric Pill */}
-            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 text-emerald-800">
-                <CheckCircle2 size={16} className="text-emerald-600" />
-                <span>
-                  <strong>Active Evaluation Vector:</strong> Scalability &amp; In-Memory Data Structures
-                </span>
-              </div>
-              <span className="font-mono text-xs font-bold text-emerald-700">SCORE: 88% STRONG HIRE</span>
-            </div>
+            {messages.length > 0 && <p className="rounded-xl border border-[#e5e1ea] bg-white p-3 text-xs text-[#5e5e6e]">Your evaluation is generated after you finish this session.</p>}
           </div>
 
           {/* Chat Input Toolbar */}

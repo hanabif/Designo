@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Terminal } from 'lucide-react';
-import { api, setAuthToken } from '../services/api';
+import { api, saveAuthTokens } from '../services/api';
 import { Modal, Button } from './ui';
 import type { User } from '../types';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: User) => void;
+  onSuccess: (user: User, isNewAccount: boolean) => void;
+  initialMode?: 'signup' | 'login';
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess, initialMode = 'signup' }) => {
   const [mode, setMode] = useState<'signup' | 'login' | 'reset'>('signup');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,6 +19,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [error, setError] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setMode(initialMode);
+  }, [isOpen, initialMode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,24 +38,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
       if (mode === 'signup') {
         const res = await api.register({ fullName, email, password });
-        setAuthToken(res.token);
-        onSuccess(res.user);
+        saveAuthTokens(res.accessToken, res.refreshToken);
+        onSuccess(res.user, true);
         onClose();
       } else {
         const res = await api.login({ email, password });
-        setAuthToken(res.token);
-        onSuccess(res.user);
+        saveAuthTokens(res.accessToken, res.refreshToken);
+        onSuccess(res.user, false);
         onClose();
       }
-    } catch {
-      // Fallback mock session for smooth local testing
-      const mockUser: User = {
-        fullName: fullName || email.split('@')[0] || 'Architect Candidate',
-        email: email || 'candidate@designo.ai',
-        tier: 'Pro Candidate',
-      };
-      onSuccess(mockUser);
-      onClose();
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : 'Unable to authenticate. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -78,10 +76,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         <div className="space-y-2.5 mb-6">
           <button
             type="button"
-            onClick={() => {
-              onSuccess({ email: 'developer@github.com', fullName: 'Staff Engineer', tier: 'Pro Candidate' });
-              onClose();
-            }}
+            onClick={() => setError('GitHub sign-in is not configured yet. Please use email and password.')}
             className="w-full py-2.5 px-4 rounded-xl border border-[#e5e1ea] bg-[#faf9fc] hover:bg-white text-xs font-semibold text-[#0a0a0f] flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">

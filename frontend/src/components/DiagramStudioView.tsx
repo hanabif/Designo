@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
+import { api } from '../services/api';
 
 export const DiagramStudioView: React.FC = () => {
   const [mode, setMode] = useState<'generator' | 'review'>('generator');
@@ -11,33 +12,32 @@ export const DiagramStudioView: React.FC = () => {
   );
   const [selectedFormat, setSelectedFormat] = useState('Mermaid');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [diagram, setDiagram] = useState<any>(null);
+  const [review, setReview] = useState<any>(null);
+  const [requestError, setRequestError] = useState('');
+  useEffect(() => {
+    api.getDiagrams().then((items) => { if (items.length) setDiagram(items[0]); }).catch((error: Error) => setRequestError(error.message));
+  }, []);
+  const generateDiagram = async () => {
+    setIsGenerating(true);
+    setRequestError('');
+    try {
+      const result = await api.generateDiagram({ title: 'Architecture Diagram', prompt, format: selectedFormat === 'SVG Topology' ? 'SVG' : 'MERMAID' });
+      setDiagram(result);
+      setReview(null);
+    } catch (error) { setRequestError(error instanceof Error ? error.message : 'Diagram generation failed.'); }
+    finally { setIsGenerating(false); }
+  };
+  const reviewDiagram = async () => {
+    if (!diagram?.id) { setRequestError('Generate or select a saved diagram before reviewing it.'); return; }
+    setIsGenerating(true);
+    setRequestError('');
+    try { setReview(await api.reviewDiagram({ diagramId: diagram.id })); }
+    catch (error) { setRequestError(error instanceof Error ? error.message : 'Diagram review failed.'); }
+    finally { setIsGenerating(false); }
+  };
 
-  const annotations = [
-    {
-      id: 'a1',
-      type: 'Single Point of Failure (SPOF)',
-      severity: 'Critical',
-      variant: 'danger' as const,
-      title: 'Postgres Primary Writer Lacks Multi-AZ Replica',
-      explanation: 'If the primary database node crashes during traffic spikes, the write path goes completely offline. Mitigate with Aurora multi-AZ standby.',
-    },
-    {
-      id: 'a2',
-      type: 'Bottleneck Risk',
-      severity: 'Medium',
-      variant: 'warning' as const,
-      title: 'Synchronous Timeline Fan-out Ingestion',
-      explanation: 'Broadcasting messages directly to Redis follower timelines synchronously will block worker threads for accounts with >50k contacts.',
-    },
-    {
-      id: 'a3',
-      type: 'Optimization Opportunity',
-      severity: 'Low',
-      variant: 'primary' as const,
-      title: 'Missing CDN Origin Shielding',
-      explanation: 'Direct media uploads to S3 buckets should be fronted by Cloudflare edge caching to absorb redundant thumbnail downloads.',
-    },
-  ];
+  const annotations = review ? [...review.spofRisks, ...review.securityRisks, ...review.scalabilityRisks, ...review.reliabilityRisks].map((title: string, id: number) => ({ id: String(id), title, explanation: review.summary, severity: 'Finding', type: 'AI review', variant: 'warning' as const })) : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -149,10 +149,7 @@ export const DiagramStudioView: React.FC = () => {
               fullWidth
               loading={isGenerating}
               iconLeft={<Sparkles size={14} />}
-              onClick={() => {
-                setIsGenerating(true);
-                setTimeout(() => setIsGenerating(false), 800);
-              }}
+              onClick={generateDiagram}
             >
               {isGenerating ? 'Synthesizing Architecture...' : 'Generate Architecture Diagram'}
             </Button>
@@ -164,7 +161,7 @@ export const DiagramStudioView: React.FC = () => {
             <div className="flex items-center justify-between pb-4 border-b border-[#e5e1ea]">
               <div className="flex items-center gap-2 font-mono text-xs text-[#0a0a0f]">
                 <Layers size={15} className="text-[#6b38d4]" />
-                <span className="font-semibold">Topology Canvas // Real-Time Messaging Spec</span>
+              <span className="font-semibold">{diagram?.title || 'Generated topology'}</span>
               </div>
 
               <div className="flex items-center gap-2">
@@ -187,38 +184,14 @@ export const DiagramStudioView: React.FC = () => {
             </div>
 
             {/* Architecture Node Visual */}
-            <div className="my-auto py-8 px-4 rounded-xl bg-[#faf9fe] border border-[#e5e1ea] flex flex-col items-center justify-center space-y-4">
-              <div className="p-3.5 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-xs font-semibold text-[#0a0a0f] w-72 text-center">
-                Client Layer (Web / iOS / Android)
-              </div>
-              <span className="font-mono text-[10px] text-[#8e8ea0]">↓ WSS (TLS 1.3)</span>
-
-              <div className="p-3.5 rounded-xl bg-[#ede9fe] border border-[#8b5cf6]/30 shadow-xs text-xs font-bold text-[#6b38d4] w-80 text-center">
-                Edge Gateway (Envoy Proxy + JWT Auth)
-              </div>
-              <span className="font-mono text-[10px] text-[#8e8ea0]">↓ Async Pub/Sub</span>
-
-              <div className="grid grid-cols-3 gap-3 w-full max-w-lg">
-                <div className="p-3 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
-                  <div className="font-mono text-[10px] text-[#8e8ea0]">Queue</div>
-                  <div className="font-bold text-xs text-[#0a0a0f] mt-1">Kafka Cluster</div>
-                </div>
-                <div className="p-3 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
-                  <div className="font-mono text-[10px] text-[#8e8ea0]">Status Cache</div>
-                  <div className="font-bold text-xs text-[#0a0a0f] mt-1">Redis Clustered</div>
-                </div>
-                <div className="p-3 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
-                  <div className="font-mono text-[10px] text-[#8e8ea0]">History Store</div>
-                  <div className="font-bold text-xs text-[#0a0a0f] mt-1">ScyllaDB / Cassandra</div>
-                </div>
-              </div>
-            </div>
+            {requestError && <p role="alert" className="mb-3 text-sm text-red-700">{requestError}</p>}
+            <pre className="my-auto max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-5 font-mono text-xs text-[#0a0a0f]">{diagram?.diagramCode || 'Generate a diagram to see the Mermaid architecture returned by the backend.'}</pre>
 
             {/* Bottom Sizing */}
             <div className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
-              <span>Throughput: <strong>50,000 writes/sec</strong></span>
-              <span>Replication Factor: <strong>3</strong></span>
-              <span className="text-emerald-600 font-semibold">Active Standby Ready</span>
+              <span>Format: <strong>{diagram?.format || '—'}</strong></span>
+              <span>Saved: <strong>{diagram ? new Date(diagram.createdAt).toLocaleString() : '—'}</strong></span>
+              <Button variant="outline" size="sm" loading={isGenerating} onClick={reviewDiagram}>Review diagram</Button>
             </div>
           </Card>
         </div>
@@ -229,14 +202,15 @@ export const DiagramStudioView: React.FC = () => {
         <div className="space-y-6">
           <Card padding="lg">
             <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">
-              Detected Vulnerabilities &amp; Bottlenecks (3 Issues Found)
+              AI Review Findings {review ? `(${annotations.length})` : ''}
             </h3>
-            <p className="text-xs text-[#5e5e6e] mb-6">
-              AI scanned your proposed topology against high-scale distributed failure conditions.
-            </p>
+            <p className="text-xs text-[#5e5e6e] mb-6">Review the currently saved topology for single points of failure, security, scalability, and reliability risks.</p>
+            {requestError && <p role="alert" className="mb-3 text-sm text-red-700">{requestError}</p>}
+            {review && <p className="mb-4 rounded-xl bg-[#f3f0ff] p-4 text-sm text-[#5e5e6e]">Completeness: <strong>{review.completenessScore}/100.</strong> {review.summary}</p>}
+            {!review && <Button variant="dark" size="sm" loading={isGenerating} className="mb-4" onClick={reviewDiagram}>Run AI review</Button>}
 
             <div className="space-y-4">
-              {annotations.map((ann) => (
+              {annotations.map((ann: any) => (
                 <div
                   key={ann.id}
                   className="p-5 rounded-2xl bg-[#faf9fc] border border-[#e5e1ea] flex flex-col sm:flex-row items-start justify-between gap-4"
@@ -251,11 +225,10 @@ export const DiagramStudioView: React.FC = () => {
                     <p className="text-xs text-[#5e5e6e] leading-relaxed max-w-2xl">{ann.explanation}</p>
                   </div>
 
-                  <Button variant="secondary" size="sm" className="shrink-0">
-                    Apply Recommended Fix
-                  </Button>
+                  <span className="shrink-0 text-xs text-[#8e8ea0]">AI suggestion</span>
                 </div>
               ))}
+              {review && annotations.length === 0 && <p className="text-sm text-[#5e5e6e]">No findings were returned for this diagram.</p>}
             </div>
           </Card>
         </div>

@@ -28,6 +28,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onSk
   const companies = [
     'Google', 'Meta', 'Amazon', 'Netflix', 'Stripe', 'Uber', 'Apple', 'OpenAI',
   ];
+  const roles = ['Frontend Engineer', 'Backend Engineer', 'Full-Stack Engineer', 'Mobile Engineer (iOS)', 'Mobile Engineer (Android)', 'Software Engineer', 'Platform Engineer', 'DevOps Engineer', 'Cloud Infrastructure Engineer', 'Site Reliability Engineer (SRE)', 'Data Engineer', 'Analytics Engineer', 'Machine Learning Engineer', 'AI Engineer', 'Data Scientist', 'Security Engineer', 'QA / Test Automation Engineer', 'Embedded Systems Engineer', 'Game Developer', 'Engineering Manager', 'Solutions Architect'];
 
   const allFocusAreas = [
     'High Throughput & Distributed',
@@ -141,12 +142,13 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({ onComplete, onSk
                 <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-1.5">
                   Current / Desired Role
                 </label>
-                <input
-                  type="text"
+                <select
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   className="w-full px-4 py-2.5 bg-[#faf9fc] border border-[#e5e1ea] rounded-xl text-xs sm:text-sm text-[#0a0a0f] focus:outline-hidden focus:border-[#6b38d4] focus:bg-white"
-                />
+                >
+                  {roles.map((role) => <option key={role} value={role}>{role}</option>)}
+                </select>
               </div>
 
               <div>

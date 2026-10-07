@@ -16,6 +16,7 @@ import { LearningRoadmapView } from './components/LearningRoadmapView';
 import { BillingView } from './components/BillingView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { NotFoundView } from './components/NotFoundView';
+import { ProfileSettingsView } from './components/ProfileSettingsView';
 import { api, removeAuthToken } from './services/api';
 import type { User, Question } from './types';
 
@@ -23,72 +24,95 @@ export function App() {
   const [isAuthOpen, setIsAuthOpen] = useState<boolean>(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isSetupModalOpen, setIsSetupModalOpen] = useState<boolean>(false);
+  const [authInitialMode, setAuthInitialMode] = useState<'signup' | 'login'>('signup');
   const [user, setUser] = useState<User | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [questionsRequestStarted, setQuestionsRequestStarted] = useState(false);
+  const [questionsError, setQuestionsError] = useState('');
+  const [appError, setAppError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
     api
       .getMe()
-      .then((userData) => setUser(userData))
-      .catch(() => setUser(null));
+      .then((userData) => setUser({ ...userData, profile: { experienceLevel: userData.experienceLevel, position: userData.currentPosition, years: userData.yearsOfExperience, targetCompany: userData.targetCompany, targetLevel: userData.targetLevel } }))
+      .catch(() => { removeAuthToken(); setUser(null); });
   }, []);
 
+  useEffect(() => {
+    if (!isSetupModalOpen) { setQuestionsRequestStarted(false); return; }
+    if (questions.length || questionsLoading || questionsRequestStarted) return;
+    setQuestionsRequestStarted(true);
+    setQuestionsLoading(true);
+    setQuestionsError('');
+    api.getQuestions()
+      .then(setQuestions)
+      .catch((error: Error) => setQuestionsError(`Could not connect to the interview API. Start the backend on port 3001 and try again. (${error.message})`))
+      .finally(() => setQuestionsLoading(false));
+  }, [isSetupModalOpen, questions.length, questionsLoading, questionsRequestStarted]);
+
   const handleLogout = () => {
+    const refreshToken = localStorage.getItem('designo_refresh_token');
+    if (refreshToken) void api.logout(refreshToken).catch(() => undefined);
     removeAuthToken();
     setUser(null);
     navigate('/');
   };
 
   const handleBeginInterview = async (questionId: string, difficulty: string, companyTrack: string) => {
+    setAppError('');
     try {
-      const interview = await api.startInterview({ questionId, difficulty, companyTrack });
+      const track = ['GOOGLE', 'META', 'AMAZON', 'NETFLIX'].includes(companyTrack.toUpperCase()) ? companyTrack.toUpperCase() : 'GENERAL';
+      const interview = await api.startInterview({ questionId, difficulty: difficulty.toUpperCase().replace('-', '_').replace('+', ''), companyTrack: track });
       navigate(`/interview/${interview.id}`);
-    } catch {
-      // Fallback mock launch for instant interactive demo
-      const mockId = `session-${Date.now()}`;
-      navigate(`/interview/${mockId}`);
+    } catch (error) {
+      setAppError(error instanceof Error ? error.message : 'Could not start the interview. Please try again.');
     }
   };
 
-  const sampleQuestions: Question[] = [
-    { id: 'q1', title: 'Design URL Shortener (TinyURL)', difficulty: 'Beginner', companyTrack: 'Google', category: 'Core Distributed' },
-    { id: 'q2', title: 'Design Twitter / X News Feed', difficulty: 'Intermediate', companyTrack: 'Meta', category: 'High QPS & Social' },
-    { id: 'q3', title: 'Design Uber / Real-Time Dispatch System', difficulty: 'Advanced', companyTrack: 'Uber', category: 'Geo & Real-Time' },
-    { id: 'q4', title: 'Design Global CDN & Distributed Cache', difficulty: 'Staff', companyTrack: 'Netflix', category: 'Infra & Edge' },
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4]">
+    <div className={`min-h-screen bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4] ${location.pathname === '/' ? 'flex flex-col' : 'flex flex-col md:flex-row'}`}>
       {location.pathname !== '/' && (
         <Navbar
           user={user}
-          onOpenAuth={() => setIsAuthOpen(true)}
+          onOpenAuth={() => { setAuthInitialMode('login'); setIsAuthOpen(true); }}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           onOpenSetupModal={() => setIsSetupModalOpen(true)}
           onLogout={handleLogout}
         />
       )}
 
-      <main className="flex-1">
+      <main className="flex-1 min-w-0">
+        {appError && <div role="alert" className="mx-4 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 md:mx-8">{appError}<button className="ml-3 underline" onClick={() => setAppError('')}>Dismiss</button></div>}
         <Routes>
           <Route path="/" element={<HeroLanding
             onStartInterview={() => {
               if (!user) setIsAuthOpen(true);
-              else navigate('/onboarding');
+              else navigate('/dashboard');
             }}
             onExploreQuestions={() => navigate('/questions')}
             onSelectPricing={() => navigate('/billing')}
-            onOpenAuth={() => setIsAuthOpen(true)}
+            onOpenAuth={() => { setAuthInitialMode('login'); setIsAuthOpen(true); }}
           />} />
 
           <Route path="/onboarding" element={<OnboardingView
-            onComplete={(profile) => {
-              setUser((prev) => (prev ? { ...prev, profile } : { email: 'candidate@designo.ai', profile }));
+            onComplete={async (profile) => {
+              const experienceLevel = profile.experienceLevel === 'Staff+' ? 'STAFF' : profile.experienceLevel?.toUpperCase().replace('-', '_');
+              const update = { experienceLevel, currentPosition: profile.position, yearsOfExperience: profile.years, targetCompany: profile.targetCompany, targetLevel: profile.targetLevel };
+              try {
+                const saved = await api.updateProfile(update);
+                setUser({ ...saved, profile });
+              } catch {
+                setUser((prev) => (prev ? { ...prev, ...update, profile } : { email: 'candidate@designo.ai', ...update, profile }));
+              }
               navigate('/dashboard');
             }}
             onSkip={() => navigate('/dashboard')}
           />} />
+
+          <Route path="/profile" element={<ProfileSettingsView user={user} onSave={(updated) => setUser(updated)} />} />
 
           <Route path="/dashboard" element={<DashboardView user={user} onOpenSetupModal={() => setIsSetupModalOpen(true)} />} />
 
@@ -100,6 +124,7 @@ export function App() {
           <Route path="/interview/:interviewId" element={<InterviewRunnerView />} />
 
           <Route path="/report" element={<EvaluationReportView />} />
+          <Route path="/report/:evaluationId" element={<EvaluationReportView />} />
 
           <Route path="/diagrams" element={<DiagramStudioView />} />
 
@@ -122,9 +147,11 @@ export function App() {
       <AuthModal
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
-        onSuccess={(loggedUser) => {
-          setUser(loggedUser);
-          navigate('/onboarding');
+        initialMode={authInitialMode}
+        onSuccess={(loggedUser, isNewAccount) => {
+          if (isNewAccount) setUser(loggedUser);
+          else api.getMe().then((profile) => setUser({ ...profile, profile: { experienceLevel: profile.experienceLevel, position: profile.currentPosition, years: profile.yearsOfExperience, targetCompany: profile.targetCompany, targetLevel: profile.targetLevel } })).catch(() => setUser(loggedUser));
+          navigate(isNewAccount ? '/onboarding' : '/dashboard');
         }}
       />
 
@@ -137,7 +164,9 @@ export function App() {
         isOpen={isSetupModalOpen}
         onClose={() => setIsSetupModalOpen(false)}
         onBegin={handleBeginInterview}
-        questions={sampleQuestions}
+        questions={questions}
+        loadingQuestions={questionsLoading}
+        questionsError={questionsError}
       />
     </div>
   );

@@ -21,10 +21,16 @@ export interface User {
   role?: string;
   profile?: UserProfile;
   createdAt?: string;
+  experienceLevel?: string;
+  currentPosition?: string;
+  yearsOfExperience?: number;
+  targetCompany?: string;
+  targetLevel?: string;
 }
 
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: User;
 }
 
@@ -35,6 +41,7 @@ export interface Question {
   companyTrack?: string;
   category?: string;
   summary?: string;
+  description?: string;
   recommendedTime?: string;
   completionsCount?: number;
   avgScore?: number;
@@ -84,6 +91,7 @@ export interface EvaluationReport {
   areasToImprove: string[];
   recommendedTopics: string[];
   createdAt: string;
+  status?: string;
 }
 
 export interface Diagram {
@@ -92,6 +100,7 @@ export interface Diagram {
   prompt: string;
   format?: string;
   code?: string;
+  diagramCode?: string;
   createdAt?: string;
 }
 

@@ -45,7 +45,9 @@ export class InterviewsService {
       },
     });
 
-    const initialGreeting = `Welcome to your ${dto.companyTrack} Track system design interview for "${question.title}". Let's start with Stage 1: Requirements Gathering. What functional use cases and features will our system support?`;
+    const candidate = await this.prisma.user.findUnique({ where: { id: userId }, select: { currentPosition: true, experienceLevel: true, targetLevel: true } });
+    const roleContext = candidate?.currentPosition ? `, tailored for a ${candidate.currentPosition} candidate at ${candidate.targetLevel ?? candidate.experienceLevel ?? 'their'} level` : '';
+    const initialGreeting = `Welcome to your ${dto.companyTrack} Track system design interview for "${question.title}"${roleContext}. Let's start with Stage 1: Requirements Gathering. What functional use cases and features will our system support?`;
 
     await this.prisma.interviewMessage.create({
       data: {
@@ -65,6 +67,7 @@ export class InterviewsService {
       include: {
         question: true,
         messages: { orderBy: { createdAt: 'asc' } },
+        user: { select: { currentPosition: true, experienceLevel: true, targetLevel: true } },
         evaluation: true,
       },
     });
@@ -82,7 +85,7 @@ export class InterviewsService {
       orderBy: { createdAt: 'desc' },
       include: {
         question: { select: { title: true, difficulty: true } },
-        evaluation: { select: { overallScore: true, status: true } },
+        evaluation: { select: { id: true, overallScore: true, status: true } },
       },
     });
   }
@@ -93,6 +96,7 @@ export class InterviewsService {
       include: {
         question: true,
         messages: { orderBy: { createdAt: 'asc' } },
+        user: { select: { currentPosition: true, experienceLevel: true, targetLevel: true } },
       },
     });
 
@@ -134,6 +138,7 @@ export class InterviewsService {
 
     const systemPrompt = [
       `You are an expert system design interviewer evaluating a candidate for question "${interview.question.title}" on the ${interview.companyTrack} Track.`,
+      `The candidate's current or desired role is ${interview.user.currentPosition ?? 'software engineer'}, targeting ${interview.user.targetLevel ?? interview.user.experienceLevel ?? 'their current'} level. Tailor follow-up questions and evaluation expectations to this role, emphasizing its relevant technical concerns.`,
       `The interview is advancing from ${interview.currentStage} to ${nextStage}.`,
       'Acknowledge the candidate response concisely, ask one targeted follow-up question for the next stage, and stay professional.',
     ].join(' ');
