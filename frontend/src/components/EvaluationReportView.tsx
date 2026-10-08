@@ -15,10 +15,15 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { evaluationId } = useParams();
-  const onReplay = propOnReplay || (() => navigate('/interview'));
   const onNavigateRoadmap = propOnNavigateRoadmap || (() => navigate('/roadmap'));
   const [report, setReport] = useState<any>(null);
   const [reportError, setReportError] = useState('');
+  // Replay the exact conversation this report evaluated. Fall back to the bare
+  // /interview route, which lists every session so the user can pick one.
+  const onReplay = propOnReplay || (() => {
+    const interviewId = report?.interview?.id ?? report?.interviewId;
+    navigate(interviewId ? `/interview/${interviewId}` : '/interview');
+  });
   useEffect(() => {
     if (!evaluationId) return;
     let active = true;

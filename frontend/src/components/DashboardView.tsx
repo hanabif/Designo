@@ -4,6 +4,7 @@ import { Play, Sparkles, Flame, ArrowRight, Award, Clock, TrendingUp, ChevronRig
 import type { User } from '../types';
 import { Button, Card, Badge } from './ui';
 import { api } from '../services/api';
+import { getPracticeSeconds, getTotalPracticeSeconds, formatDuration } from '../lib/practiceTime';
 
 interface DashboardViewProps {
   user?: User | null;
@@ -27,9 +28,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   };
   const userName = user?.fullName || user?.name || user?.email?.split('@')[0] || 'Architect Candidate';
 
-  const [recentInterviews, setRecentInterviews] = useState<Array<{ id: string; evaluationId?: string; title: string; track: string; difficulty: string; score: string; verdict: string; date: string; duration: string }>>([]);
+  const [recentInterviews, setRecentInterviews] = useState<Array<{ id: string; evaluationId?: string; status: string; title: string; track: string; difficulty: string; score: string; verdict: string; date: string; duration: string }>>([]);
   const [interviewCount, setInterviewCount] = useState(0);
   const [averageScore, setAverageScore] = useState<number | null>(null);
+  const [practiceTime, setPracticeTime] = useState('0 min');
+  const [practiceTracked, setPracticeTracked] = useState(false);
   const [recommendedTopics, setRecommendedTopics] = useState<Array<{ title: string; progress: number; est: string; category: string }>>([]);
   const [topCompetency, setTopCompetency] = useState<{ name: string; score: number } | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -40,9 +43,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       const scoredAreas = Object.entries(analytics.categoryMetrics || {}).filter((entry): entry is [string, number] => typeof entry[1] === 'number').sort((a, b) => b[1] - a[1]);
       if (scoredAreas.length) setTopCompetency({ name: scoredAreas[0][0], score: scoredAreas[0][1] });
       setRecommendedTopics((recommendations.learningRoadmap || []).slice(0, 3).map((item: any) => ({ title: item.topic, progress: 0, est: item.priority || 'Recommended', category: item.priority || 'Focus area' })));
+      const totalPracticeSeconds = getTotalPracticeSeconds();
+      setPracticeTime(formatDuration(totalPracticeSeconds));
+      setPracticeTracked(totalPracticeSeconds > 0);
       setRecentInterviews(history.slice(0, 3).map((item: any) => {
         const score = item.evaluation?.overallScore;
-        return { id: item.id, evaluationId: item.evaluation?.id, title: item.question?.title ?? 'Interview session', track: `${item.companyTrack} Track`, difficulty: item.difficulty, score: score == null ? 'Pending' : `${score}/100`, verdict: score == null ? item.status : score >= 85 ? 'Strong Hire' : score >= 75 ? 'Hire' : 'Needs Practice', date: new Date(item.createdAt).toLocaleDateString(), duration: '—' };
+        const inProgress = item.status === 'IN_PROGRESS';
+        const trackedSeconds = getPracticeSeconds(item.id);
+        return { id: item.id, evaluationId: item.evaluation?.id, status: item.status, title: item.question?.title ?? 'Interview session', track: `${item.companyTrack} Track`, difficulty: item.difficulty, score: score == null ? (inProgress ? '—' : 'Pending') : `${score}/100`, verdict: score == null ? (inProgress ? 'In Progress' : item.status) : score >= 85 ? 'Strong Hire' : score >= 75 ? 'Hire' : 'Needs Practice', date: new Date(item.createdAt).toLocaleDateString(), duration: trackedSeconds > 0 ? formatDuration(trackedSeconds) : '—' };
       }));
     }).catch((error: Error) => setLoadError(error.message));
   }, []);
@@ -111,10 +119,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Practice Time</span>
             <Clock size={16} className="text-[#6b38d4]" />
           </div>
-          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">—</div>
+          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">{practiceTime}</div>
           <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
             <Flame size={13} className="text-amber-500 fill-amber-500" />
-            <span>Practice time is not tracked yet</span>
+            <span>{practiceTracked ? 'Counted live while you practice' : 'Launch an interview — time tracks automatically'}</span>
           </div>
         </Card>
 
@@ -170,18 +178,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 self-end sm:self-auto">
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
                     <div className="text-right">
                       <div className="font-display font-bold text-base text-[#0a0a0f]">{session.score}</div>
-                      <Badge variant="success">
+                      <Badge variant={session.status === 'IN_PROGRESS' ? 'primary' : 'success'}>
                         {session.verdict}
                       </Badge>
                     </div>
+                    {session.status === 'IN_PROGRESS' && (
+                      <button
+                        onClick={() => navigate(`/interview/${session.id}`)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#6b38d4] hover:bg-[#5a2fc0] text-white text-xs font-semibold cursor-pointer transition-colors shadow-xs"
+                        title="Resume this interview where you left off"
+                        aria-label="Resume Interview"
+                      >
+                        <Play size={13} />
+                        Resume
+                      </button>
+                    )}
                     <button
-                      onClick={() => onNavigateTab('report')}
+                      onClick={() => {
+                        if (session.status === 'IN_PROGRESS') navigate(`/interview/${session.id}`);
+                        else if (session.evaluationId) navigate(`/report/${session.evaluationId}`);
+                        else onNavigateTab('report');
+                      }}
                       className="p-2 rounded-full border border-[#e5e1ea] text-[#5e5e6e] hover:text-[#0a0a0f] hover:bg-[#faf9fc] cursor-pointer transition-colors"
-                      title="Inspect Report"
-                      aria-label="Inspect Report"
+                      title={session.status === 'IN_PROGRESS' ? 'Open Interview' : 'Inspect Report'}
+                      aria-label={session.status === 'IN_PROGRESS' ? 'Open Interview' : 'Inspect Report'}
                     >
                       <ChevronRight size={16} />
                     </button>

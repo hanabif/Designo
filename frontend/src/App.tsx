@@ -17,7 +17,7 @@ import { BillingView } from './components/BillingView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { NotFoundView } from './components/NotFoundView';
 import { ProfileSettingsView } from './components/ProfileSettingsView';
-import { api, removeAuthToken } from './services/api';
+import { api, ApiError, getAuthToken, removeAuthToken } from './services/api';
 import type { User, Question } from './types';
 
 export function App() {
@@ -35,10 +35,20 @@ export function App() {
   const location = useLocation();
 
   useEffect(() => {
+    // Nothing to restore without an access token.
+    if (!getAuthToken()) return;
     api
       .getMe()
       .then((userData) => setUser({ ...userData, profile: { experienceLevel: userData.experienceLevel, position: userData.currentPosition, years: userData.yearsOfExperience, targetCompany: userData.targetCompany, targetLevel: userData.targetLevel } }))
-      .catch(() => { removeAuthToken(); setUser(null); });
+      .catch((error: unknown) => {
+        // Only wipe the session when the tokens are genuinely rejected (the
+        // API layer already attempted a refresh). Network hiccups or backend
+        // downtime must NOT sign the user out.
+        if (error instanceof ApiError && error.status === 401) {
+          removeAuthToken();
+        }
+        setUser(null);
+      });
   }, []);
 
   useEffect(() => {

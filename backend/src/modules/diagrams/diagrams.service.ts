@@ -19,6 +19,8 @@ export class DiagramsService {
     const format = dto.format ?? DiagramFormat.MERMAID;
 
     let diagramCode = `graph TD\n  Client[Client Application] --> API[API Gateway]\n  API --> Service[Core Service]\n  Service --> Cache[(Redis Cache)]\n  Service --> DB[(PostgreSQL)]`;
+    let aiProvider = 'unavailable';
+    let aiModel = 'none';
 
     const systemPrompt = [
       'You are an expert system design architect.',
@@ -35,12 +37,18 @@ export class DiagramsService {
         ],
       );
 
-      let raw = aiRes.content.trim();
-      if (raw.startsWith('```')) {
-        raw = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
-      }
-      if (raw) {
-        diagramCode = raw;
+      aiProvider = aiRes.provider;
+      aiModel = aiRes.model;
+
+      // Only persist output that is actually Mermaid, and never the
+      // deterministic dev mock (it returns canned chat text, not diagrams).
+      const extracted = this.extractMermaid(aiRes.content);
+      if (extracted && aiRes.provider !== 'deterministic-fallback') {
+        diagramCode = extracted;
+      } else {
+        this.logger.warn(
+          `AI diagram output rejected (provider=${aiRes.provider}); using static sample topology instead.`,
+        );
       }
     } catch (err: any) {
       this.logger.warn(`AI diagram generation fallback used: ${err?.message ?? err}`);
@@ -57,7 +65,22 @@ export class DiagramsService {
       },
     });
 
-    return diagram;
+    return { ...diagram, aiProvider, aiModel };
+  }
+
+  /**
+   * Pull raw Mermaid out of an AI response (strips markdown fences and any
+   * leading prose). Returns null when the response contains no Mermaid block.
+   */
+  private extractMermaid(content: string): string | null {
+    let raw = (content ?? '').trim();
+    if (raw.startsWith('```')) {
+      raw = raw.replace(/^```[a-z]*\n?/, '').replace(/\n?```$/, '').trim();
+    }
+    const keyword = /^(graph|flowchart|sequenceDiagram|erDiagram|classDiagram|stateDiagram(?:-v2)?|journey|gantt|pie|mindmap|timeline|gitGraph)\b/i;
+    const match = keyword.exec(raw);
+    if (!match) return null;
+    return raw.slice(match.index).trim();
   }
 
   async review(userId: string, dto: ReviewDiagramDto) {
@@ -87,6 +110,9 @@ export class DiagramsService {
       '{ "completenessScore": number (0-100), "spofRisks": string[], "securityRisks": string[], "scalabilityRisks": string[], "reliabilityRisks": string[], "summary": string }',
     ].join(' ');
 
+    let aiProvider = 'unavailable';
+    let aiModel = 'none';
+
     try {
       const aiRes = await this.ai.executeDirect(
         AiUseCase.DIAGRAM_REVIEW,
@@ -96,7 +122,26 @@ export class DiagramsService {
         ],
         { responseFormat: 'json_object' },
       );
-      parsed = JSON.parse(aiRes.content);
+
+      aiProvider = aiRes.provider;
+      aiModel = aiRes.model;
+
+      // The deterministic fallback returns evaluation-shaped JSON (not the
+      // diagram schema) — ignore it and keep the diagram-specific default.
+      if (aiRes.provider !== 'deterministic-fallback') {
+        const candidate = JSON.parse(aiRes.content);
+        const looksLikeDiagramReview =
+          typeof candidate?.completenessScore === 'number' ||
+          Array.isArray(candidate?.spofRisks) ||
+          Array.isArray(candidate?.securityRisks) ||
+          Array.isArray(candidate?.scalabilityRisks) ||
+          Array.isArray(candidate?.reliabilityRisks);
+        if (looksLikeDiagramReview) {
+          parsed = candidate;
+        } else {
+          this.logger.warn('AI diagram review returned an unexpected JSON shape; using default findings.');
+        }
+      }
     } catch (err: any) {
       this.logger.warn(`AI diagram review fallback used: ${err?.message ?? err}`);
     }
@@ -113,7 +158,7 @@ export class DiagramsService {
       },
     });
 
-    return reviewRecord;
+    return { ...reviewRecord, aiProvider, aiModel };
   }
 
   async getDiagram(userId: string, id: string) {

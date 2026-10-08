@@ -28,33 +28,102 @@ export function saveAuthTokens(accessToken: string, refreshToken?: string) {
   if (refreshToken) localStorage.setItem('designo_refresh_token', refreshToken);
 }
 
+export class ApiError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
+
+/**
+ * Exchange the stored refresh token for a fresh access token (the backend
+ * rotates refresh tokens). Single-flight: concurrent 401s share one refresh
+ * request so parallel callers don't invalidate each other's rotation.
+ */
+let refreshPromise: Promise<string> | null = null;
+
+export function refreshSession(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshToken = localStorage.getItem('designo_refresh_token');
+      if (!refreshToken) throw new ApiError('Session expired', 401);
+
+      let res: Response;
+      try {
+        res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch (error) {
+        if (error instanceof TypeError) {
+          throw new ApiError(`Cannot reach the Designo API at ${API_BASE}. Start the backend service, or set VITE_API_URL to its address.`, 0);
+        }
+        throw error;
+      }
+
+      if (res.status === 400 || res.status === 401) {
+        // Refresh token revoked/expired: the session is truly over.
+        removeAuthToken();
+        throw new ApiError('Session expired', 401);
+      }
+      if (!res.ok) throw new ApiError('Session refresh failed', res.status);
+
+      const data = await res.json();
+      saveAuthTokens(data.accessToken, data.refreshToken);
+      return data.accessToken as string;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = getAuthToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
   };
 
+  const token = getAuthToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+
+    // Expired access token? Refresh once and retry the original request.
+    if (
+      res.status === 401 &&
+      !endpoint.startsWith('/auth/') &&
+      localStorage.getItem('designo_refresh_token')
+    ) {
+      try {
+        const newToken = await refreshSession();
+        headers['Authorization'] = `Bearer ${newToken}`;
+        res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+      } catch {
+        // Fall through: the original 401 response is handled below.
+      }
+    }
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new Error(`Cannot reach the Designo API at ${API_BASE}. Start the backend service, or set VITE_API_URL to its address.`);
+      throw new ApiError(`Cannot reach the Designo API at ${API_BASE}. Start the backend service, or set VITE_API_URL to its address.`, 0);
     }
     throw error;
   }
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(errorBody.message || `HTTP ${res.status}`);
+    const message = Array.isArray(errorBody.message)
+      ? errorBody.message.join(', ')
+      : errorBody.message || `HTTP ${res.status}`;
+    throw new ApiError(message, res.status);
   }
 
   return res.json();

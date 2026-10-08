@@ -3,6 +3,14 @@ import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
 import { api } from '../services/api';
 
+// Risk categories surfaced by the AI review, in display order.
+const REVIEW_CATEGORIES = [
+  { key: 'spofRisks', label: 'SPOF', severity: 'High', variant: 'warning' },
+  { key: 'securityRisks', label: 'Security', severity: 'Risk', variant: 'danger' },
+  { key: 'scalabilityRisks', label: 'Scalability', severity: 'Finding', variant: 'primary' },
+  { key: 'reliabilityRisks', label: 'Reliability', severity: 'Finding', variant: 'primary' },
+] as const;
+
 export const DiagramStudioView: React.FC = () => {
   const [mode, setMode] = useState<'generator' | 'review'>('generator');
 
@@ -37,7 +45,20 @@ export const DiagramStudioView: React.FC = () => {
     finally { setIsGenerating(false); }
   };
 
-  const annotations = review ? [...review.spofRisks, ...review.securityRisks, ...review.scalabilityRisks, ...review.reliabilityRisks].map((title: string, id: number) => ({ id: String(id), title, explanation: review.summary, severity: 'Finding', type: 'AI review', variant: 'warning' as const })) : [];
+  // Flatten the AI review into per-category findings so each badge shows
+  // WHERE the AI found the risk (SPOF / Security / Scalability / Reliability).
+  const annotations = review
+    ? REVIEW_CATEGORIES.flatMap((category) =>
+        (Array.isArray(review[category.key]) ? review[category.key] : []).map((title: string, index: number) => ({
+          id: `${category.key}-${index}`,
+          title,
+          explanation: review.summary,
+          severity: category.severity,
+          type: category.label,
+          variant: category.variant,
+        })),
+      )
+    : [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -162,6 +183,13 @@ export const DiagramStudioView: React.FC = () => {
               <div className="flex items-center gap-2 font-mono text-xs text-[#0a0a0f]">
                 <Layers size={15} className="text-[#6b38d4]" />
               <span className="font-semibold">{diagram?.title || 'Generated topology'}</span>
+                {diagram?.aiProvider && (
+                  <span title={`Model: ${diagram.aiModel}`}>
+                    <Badge variant={diagram.aiProvider === 'deterministic-fallback' ? 'warning' : 'primary'}>
+                      {diagram.aiProvider === 'deterministic-fallback' ? 'LOCAL SAMPLE' : `AI // ${diagram.aiProvider}`}
+                    </Badge>
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -185,6 +213,11 @@ export const DiagramStudioView: React.FC = () => {
 
             {/* Architecture Node Visual */}
             {requestError && <p role="alert" className="mb-3 text-sm text-red-700">{requestError}</p>}
+            {diagram?.aiProvider === 'deterministic-fallback' && (
+              <p className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-[#b45309]">
+                No live AI provider is configured — this is the built-in sample topology. Set GEMINI_API_KEY or GROQ_API_KEY in your backend .env to generate real AI diagrams.
+              </p>
+            )}
             <pre className="my-auto max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-5 font-mono text-xs text-[#0a0a0f]">{diagram?.diagramCode || 'Generate a diagram to see the Mermaid architecture returned by the backend.'}</pre>
 
             {/* Bottom Sizing */}
@@ -203,10 +236,23 @@ export const DiagramStudioView: React.FC = () => {
           <Card padding="lg">
             <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">
               AI Review Findings {review ? `(${annotations.length})` : ''}
+              {review?.aiProvider && (
+                <Badge
+                  variant={review.aiProvider === 'deterministic-fallback' ? 'warning' : 'primary'}
+                  className="ml-2 align-middle"
+                >
+                  {review.aiProvider === 'deterministic-fallback' ? 'LOCAL SAMPLE' : `AI // ${review.aiProvider}`}
+                </Badge>
+              )}
             </h3>
             <p className="text-xs text-[#5e5e6e] mb-6">Review the currently saved topology for single points of failure, security, scalability, and reliability risks.</p>
             {requestError && <p role="alert" className="mb-3 text-sm text-red-700">{requestError}</p>}
             {review && <p className="mb-4 rounded-xl bg-[#f3f0ff] p-4 text-sm text-[#5e5e6e]">Completeness: <strong>{review.completenessScore}/100.</strong> {review.summary}</p>}
+            {review?.aiProvider === 'deterministic-fallback' && (
+              <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-[#b45309]">
+                Built-in sample results shown — set GEMINI_API_KEY or GROQ_API_KEY in your backend .env to run live AI audits.
+              </p>
+            )}
             {!review && <Button variant="dark" size="sm" loading={isGenerating} className="mb-4" onClick={reviewDiagram}>Run AI review</Button>}
 
             <div className="space-y-4">
