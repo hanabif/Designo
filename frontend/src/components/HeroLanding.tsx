@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Play, Check, Sparkles, Cpu, Zap, Activity, Layers, Award } from 'lucide-react';
-import { Button, Card, Badge } from './ui';
+import { ArrowRight, Play, Check, Sparkles, Cpu } from 'lucide-react';
+import { Button, Badge } from './ui';
 import { useLenisScroll } from '../hooks/useLenisScroll';
 import GridRise from './GridRise';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
+import { motion } from 'motion/react';
+import { LandingHowItWorks } from './LandingHowItWorks';
+import { LandingFeatures } from './LandingFeatures';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 interface HeroLandingProps {
   onStartInterview?: () => void;
@@ -22,9 +30,100 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
   const { scrollTo } = useLenisScroll();
   const onStartInterview = propOnStartInterview || (() => navigate('/dashboard'));
   const onExploreQuestions = propOnExploreQuestions || (() => navigate('/questions'));
-  void (propOnSelectPricing || (() => navigate('/billing')));
+  const onSelectPricing = propOnSelectPricing || (() => navigate('/billing'));
+
+  // Transparent at the top so the GridRise background blends through the
+  // header; a soft frosted surface only kicks in once the user scrolls past
+  // the hero so overlapping content stays readable.
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setIsHeaderScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      // Under prefers-reduced-motion none of this runs and the page simply
+      // renders in its final, static state (all tweens are gsap.from()).
+      mm.add('(prefers-reduced-motion: no-preference)', () => {
+        // 1. Hero entrance — badge → headline lines → copy/CTAs → terminal card
+        gsap
+          .timeline({ defaults: { ease: 'power3.out' } })
+          .from('[data-hero-badge]', { y: 14, autoAlpha: 0, duration: 0.45 })
+          .from('[data-hero-line]', { y: 46, autoAlpha: 0, duration: 0.75, stagger: 0.08 }, '-=0.2')
+          .from('[data-hero-aside]', { y: 22, autoAlpha: 0, duration: 0.6, stagger: 0.08 }, '-=0.5')
+          .from('[data-hero-card]', { y: 56, autoAlpha: 0, scale: 0.985, duration: 0.9 }, '-=0.35');
+
+        // 2. Terminal card contents settle in as it scrolls into view
+        gsap.from('[data-sim-reveal]', {
+          y: 14,
+          autoAlpha: 0,
+          duration: 0.5,
+          stagger: 0.08,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: '#simulation', start: 'top 85%', once: true },
+        });
+
+        // 3. Benchmark figures count up when the strip enters the viewport
+        gsap.utils.toArray<HTMLElement>('[data-counter]').forEach((el) => {
+          const end = Number(el.dataset.counter ?? '0');
+          const decimals = Number(el.dataset.decimals ?? '0');
+          const suffix = el.dataset.suffix ?? '';
+          const format = (value: number) =>
+            `${value.toLocaleString('en-US', {
+              minimumFractionDigits: decimals,
+              maximumFractionDigits: decimals,
+            })}${suffix}`;
+          const counter = { value: 0 };
+          el.textContent = format(0);
+          gsap.fromTo(
+            counter,
+            { value: 0 },
+            {
+              value: end,
+              duration: 1.6,
+              ease: 'power2.out',
+              onUpdate: () => {
+                el.textContent = format(counter.value);
+              },
+              scrollTrigger: { trigger: el, start: 'top 92%', once: true },
+            }
+          );
+        });
+
+        gsap.from('[data-bench-item]', {
+          y: 20,
+          autoAlpha: 0,
+          duration: 0.6,
+          stagger: 0.08,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: '#benchmarks', start: 'top 88%', once: true },
+        });
+
+        // 4. Closing CTA banner
+        gsap.from('[data-cta]', {
+          y: 30,
+          autoAlpha: 0,
+          duration: 0.7,
+          ease: 'power2.out',
+          scrollTrigger: { trigger: '#start', start: 'top 88%', once: true },
+        });
+      });
+
+      ScrollTrigger.refresh();
+      return () => mm.revert();
+    },
+    { scope: rootRef }
+  );
+
   return (
-    <div className="bg-[#faf9fe] text-[#0a0a0f] pb-24 relative overflow-hidden">
+    <div ref={rootRef} className="bg-[#faf9fe] text-[#0a0a0f] pb-24 relative overflow-hidden">
       {/* ── Grid Rise WebGL background ── */}
       <div
         aria-hidden="true"
@@ -46,47 +145,33 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#ede9fe]/50 via-[#f4f1fb]/20 to-transparent blur-[120px] rounded-full z-0" />
       <div className="pointer-events-none absolute top-48 right-[-140px] w-[500px] h-[500px] rounded-full border-[50px] border-[#ede9fe]/40 blur-[40px] z-0" />
 
-      {/* Landing Top Nav */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#e5e1ea] bg-[#faf9fe]/80 backdrop-blur-md">
+      {/* Landing Top Nav — logo + auth actions only, blended over the grid */}
+      <header
+        className={`sticky top-0 z-50 w-full border-b transition-colors duration-300 ${
+          isHeaderScrolled
+            ? 'border-[#e5e1ea] bg-[#faf9fe]/80 backdrop-blur-md'
+            : 'border-transparent bg-transparent'
+        }`}
+      >
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6b38d4] to-[#8b5cf6] flex items-center justify-center shadow-sm">
+            <motion.div
+              whileHover={{ rotate: -8, scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+              className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6b38d4] to-[#8b5cf6] flex items-center justify-center shadow-sm"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" fillOpacity="0.9" />
                 <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-            </div>
+            </motion.div>
             <span className="font-display font-extrabold text-[18px] tracking-tight text-[#0a0a0f]">
               Designo
             </span>
           </div>
-
-          {/* Smooth Lenis Anchor Navigation */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-semibold text-[#5e5e6e]">
-            <button
-              type="button"
-              onClick={() => scrollTo('#simulation', { offset: -80 })}
-              className="hover:text-[#6b38d4] transition-colors cursor-pointer"
-            >
-              Simulation Demo
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo('#benchmarks', { offset: -80 })}
-              className="hover:text-[#6b38d4] transition-colors cursor-pointer"
-            >
-              Benchmarks
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollTo('#capabilities', { offset: -80 })}
-              className="hover:text-[#6b38d4] transition-colors cursor-pointer"
-            >
-              Capabilities
-            </button>
-          </nav>
 
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
@@ -114,21 +199,23 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
         {/* Editorial Headline Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-16">
           <div className="lg:col-span-8">
-            <Badge variant="primary" icon={<Sparkles size={13} />} className="mb-6">
-              AUTONOMOUS ARCHITECTURE LOOPS
-            </Badge>
+            <div data-hero-badge className="mb-6 inline-block">
+              <Badge variant="primary" icon={<Sparkles size={13} />}>
+                AUTONOMOUS ARCHITECTURE LOOPS
+              </Badge>
+            </div>
             <h1 className="font-display font-extrabold text-[44px] sm:text-[68px] lg:text-[80px] leading-[0.96] tracking-[-0.035em] text-[#0a0a0f]">
-              SYSTEMS <br />
-              <span className="italic font-light text-[#6b38d4]">ARCHITECTED</span> <br />
-              AT SCALE.
+              <span data-hero-line className="block">SYSTEMS</span>
+              <span data-hero-line className="block italic font-light text-[#6b38d4]">ARCHITECTED</span>
+              <span data-hero-line className="block">AT SCALE.</span>
             </h1>
           </div>
 
           <div className="lg:col-span-4 flex flex-col justify-end space-y-6 pb-2">
-            <p className="font-sans text-base md:text-lg text-[#5e5e6e] leading-relaxed">
+            <p data-hero-aside className="font-sans text-base md:text-lg text-[#5e5e6e] leading-relaxed">
               Practice System Design with AI before your Big Tech interview
             </p>
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            <div data-hero-aside className="flex flex-wrap items-center gap-3 pt-2">
               <Button
                 variant="dark"
                 size="lg"
@@ -153,7 +240,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 Explore Library
               </Button>
             </div>
-            <div className="flex items-center gap-3 text-xs font-mono text-[#8e8ea0] pt-2">
+            <div data-hero-aside className="flex items-center gap-3 text-xs font-mono text-[#8e8ea0] pt-2">
               <span>CALIBRATED FOR:</span>
               <span className="text-[#0a0a0f] font-semibold">GOOGLE</span>
               <span>•</span>
@@ -167,7 +254,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
         </div>
 
         {/* Floating Architecture Terminal Card */}
-        <div id="simulation" className="relative w-full rounded-2xl md:rounded-[2rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.14)] border border-[#e5e1ea] scroll-mt-24">
+        <div id="simulation" data-hero-card className="relative w-full rounded-2xl md:rounded-[2rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.14)] border border-[#e5e1ea] scroll-mt-24">
           {/* Header Bar */}
           <div className="flex flex-wrap items-center justify-between px-4 py-3 rounded-xl bg-[#f7f5fa] border border-[#e5e1ea] mb-3">
             <div className="flex items-center gap-3">
@@ -200,7 +287,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                   <div className="w-8 h-8 rounded-full bg-[#ede9fe] border border-[#8b5cf6]/30 flex items-center justify-center shrink-0 text-[#6b38d4] font-bold text-xs">
                     AI
                   </div>
-                  <div className="rounded-2xl rounded-tl-sm p-4 bg-white border border-[#e5e1ea] shadow-xs">
+                  <div data-sim-reveal className="rounded-2xl rounded-tl-sm p-4 bg-white border border-[#e5e1ea] shadow-xs">
                     <div className="flex items-center justify-between mb-1.5 font-mono text-[10px] text-[#6b38d4] font-semibold tracking-wider">
                       <span>ARCHITECT AI</span>
                       <span className="text-[#8e8ea0] font-normal">14:02:18</span>
@@ -213,7 +300,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
                 {/* Candidate Answer */}
                 <div className="flex items-start gap-3 justify-end">
-                  <div className="rounded-2xl rounded-tr-sm p-4 bg-[#f3f0ff] border border-[#8b5cf6]/20 shadow-xs max-w-[92%]">
+                  <div data-sim-reveal className="rounded-2xl rounded-tr-sm p-4 bg-[#f3f0ff] border border-[#8b5cf6]/20 shadow-xs max-w-[92%]">
                     <div className="flex items-center justify-between mb-1.5 font-mono text-[10px] gap-4">
                       <span className="text-[#5e5e6e] font-medium">YOU (L6 TRACK)</span>
                       <span className="text-emerald-600 font-semibold">+18pts Score Impact</span>
@@ -232,7 +319,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 </div>
 
                 {/* Live Metric */}
-                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
+                <div data-sim-reveal className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Check size={16} className="text-emerald-600" />
                     <span className="text-xs text-[#0a0a0f]">
@@ -266,7 +353,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
               </div>
 
               {/* Diagram Flow Visual */}
-              <div className="grid grid-cols-3 gap-3 my-auto py-4">
+              <div data-sim-reveal className="grid grid-cols-3 gap-3 my-auto py-4">
                 <div className="p-4 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
                   <div className="font-mono text-[10px] text-[#8e8ea0] uppercase">Ingestion</div>
                   <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Postgres 16</div>
@@ -290,7 +377,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
               </div>
 
               {/* Bottom Metrics Bar */}
-              <div className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
+              <div data-sim-reveal className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
                 <span>Throughput: <strong>250,000 QPS</strong></span>
                 <span>Active Shards: <strong>32</strong></span>
                 <span>Tail Latency: <strong className="text-emerald-600">4.1ms</strong></span>
@@ -303,85 +390,33 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       {/* Numerical Benchmark Strip */}
       <section id="benchmarks" className="border-y border-[#e5e1ea] bg-white py-10 mb-20 scroll-mt-24">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]">42ms</div>
+          <div data-bench-item>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]" data-counter="42" data-suffix="ms">42ms</div>
             <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Evaluation Latency</div>
           </div>
-          <div>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#6b38d4]">98.4%</div>
+          <div data-bench-item>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#6b38d4]" data-counter="98.4" data-decimals="1" data-suffix="%">98.4%</div>
             <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Staff+ Calibration</div>
           </div>
-          <div>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]">1,200+</div>
+          <div data-bench-item>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]" data-counter="1200" data-suffix="+">1,200+</div>
             <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Architecture Components</div>
           </div>
-          <div>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#10b981]">14,800+</div>
+          <div data-bench-item>
+            <div className="font-display font-bold text-3xl md:text-4xl text-[#10b981]" data-counter="14800" data-suffix="+">14,800+</div>
             <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Simulations Completed</div>
           </div>
         </div>
       </section>
 
-      {/* 4 Pillars Section */}
-      <section id="capabilities" className="max-w-7xl mx-auto px-6 md:px-12 py-12 scroll-mt-24">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <Badge variant="primary" className="mb-4">
-            CORE PLATFORM CAPABILITIES
-          </Badge>
-          <h2 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
-            Engineered for High-Stakes Technical Loops
-          </h2>
-          <p className="font-sans text-[#5e5e6e] mt-3">
-            Traditional interview prep gives you generic flashcards. Designo subjects your architecture to real-time stress testing.
-          </p>
-        </div>
+      {/* ── How it works + full feature breakdown ── */}
+      <LandingHowItWorks />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card padding="md" hover>
-            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
-              <Zap size={20} />
-            </div>
-            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">AI Interviewer</h3>
-            <p className="text-xs text-[#5e5e6e] leading-relaxed">
-              Dynamically probes requirements, asks challenging trade-off questions, and tests failure scenarios.
-            </p>
-          </Card>
-
-          <Card padding="md" hover>
-            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
-              <Layers size={20} />
-            </div>
-            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">Diagram Evaluator</h3>
-            <p className="text-xs text-[#5e5e6e] leading-relaxed">
-              Analyzes Mermaid &amp; SVG architecture diagrams, flagging Single Points of Failure and concurrency bottlenecks.
-            </p>
-          </Card>
-
-          <Card padding="md" hover>
-            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
-              <Activity size={20} />
-            </div>
-            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">Objective Scoring</h3>
-            <p className="text-xs text-[#5e5e6e] leading-relaxed">
-              Multi-dimensional scoring across Scope, High-Level Design, Bottlenecks, and Fault Tolerance with actionable feedback.
-            </p>
-          </Card>
-
-          <Card padding="md" hover>
-            <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center mb-4">
-              <Award size={20} />
-            </div>
-            <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2">Adaptive Roadmap</h3>
-            <p className="text-xs text-[#5e5e6e] leading-relaxed">
-              Creates a tailored learning path targeting your specific gaps (e.g. Raft consensus, DB partitioning, or rate limiters).
-            </p>
-          </Card>
-        </div>
-      </section>
+      <LandingFeatures />
 
       {/* CTA Banner */}
       <section id="start" className="max-w-7xl mx-auto px-6 md:px-12 mt-16 scroll-mt-24">
-        <div className="rounded-3xl bg-gradient-to-r from-[#0a0a0f] via-[#1a1528] to-[#0a0a0f] text-white p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
+        <div data-cta className="rounded-3xl bg-gradient-to-r from-[#0a0a0f] via-[#1a1528] to-[#0a0a0f] text-white p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
           <div className="max-w-xl">
             <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white mb-3">
               Ready to crush your next System Design loop?
@@ -391,15 +426,30 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
             </p>
           </div>
           <div className="flex items-center gap-4 shrink-0">
-            <Button
-              variant="primary"
-              size="lg"
-              className="shadow-lg"
-              iconRight={<ArrowRight size={16} />}
-              onClick={onStartInterview}
+            <motion.div
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 24 }}
             >
-              Launch Mock Interview
-            </Button>
+              <Button
+                variant="primary"
+                size="lg"
+                className="shadow-lg"
+                iconRight={<ArrowRight size={16} />}
+                onClick={onStartInterview}
+              >
+                Launch Mock Interview
+              </Button>
+            </motion.div>
+            <motion.div
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 24 }}
+            >
+              <Button variant="outline" size="lg" onClick={onSelectPricing}>
+                View Plans
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>

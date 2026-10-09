@@ -18,6 +18,13 @@ void main() {
   gl_Position = vec4(a_position, 0.0, 1.0);
 }`;
 
+/**
+ * Fragment shader.
+ *
+ * NOTE: `half` is a reserved word in GLSL ES, so the box half-width in
+ * `mapScene` must not be called `half` — doing so fails compilation silently
+ * (the canvas simply renders nothing).
+ */
 const FRAG = `#version 300 es
 precision highp float;
 
@@ -48,11 +55,11 @@ float tileHeight(vec2 cell, vec2 cw, float t) {
 float mapScene(vec3 p, vec2 cw, float t, out vec2 cell) {
   cell       = floor(p.xz / TILE + 0.5);
   vec2 local = p.xz - cell * TILE;
-  float half = (TILE - GAP) * 0.5;
+  float halfW = (TILE - GAP) * 0.5;
   float h    = tileHeight(cell, cw, t);
   float cy   = h * 0.5 - 0.04;
   float ch   = max(0.05, h * 0.5 + 0.04);
-  return sdBox(vec3(local.x, p.y - cy, local.y), vec3(half, ch, half));
+  return sdBox(vec3(local.x, p.y - cy, local.y), vec3(halfW, ch, halfW));
 }
 
 const int   MAX_STEPS = 80;
@@ -155,7 +162,10 @@ export default function GridRise({
     if (!canvas) return;
 
     const gl = canvas.getContext('webgl2');
-    if (!gl) return;
+    if (!gl) {
+      console.warn('[GridRise] WebGL2 context unavailable — background disabled.');
+      return;
+    }
 
     const compile = (type: number, src: string) => {
       const s = gl.createShader(type)!;
@@ -170,6 +180,10 @@ export default function GridRise({
     gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
     gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
     gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('[GridRise] program link failed', gl.getProgramInfoLog(prog));
+      return;
+    }
 
     const buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
