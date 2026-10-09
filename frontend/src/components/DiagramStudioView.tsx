@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu, Code } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
 import { api } from '../services/api';
+import { MermaidDiagram } from './MermaidDiagram';
 
 // Risk categories surfaced by the AI review, in display order.
 const REVIEW_CATEGORIES = [
@@ -23,6 +24,36 @@ export const DiagramStudioView: React.FC = () => {
   const [diagram, setDiagram] = useState<any>(null);
   const [review, setReview] = useState<any>(null);
   const [requestError, setRequestError] = useState('');
+  // Canvas state: rendered SVG vs raw Mermaid source, plus toolbar zoom.
+  const [viewMode, setViewMode] = useState<'rendered' | 'source'>('rendered');
+  const [zoom, setZoom] = useState(1);
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  const changeZoom = (delta: number) =>
+    setZoom((z) => Math.min(2, Math.max(0.4, Math.round((z + delta) * 100) / 100)));
+
+  /** Download the on-screen SVG (rendered view) or the Mermaid source (source view). */
+  const exportDiagram = () => {
+    if (!diagram?.diagramCode) return;
+    let blob: Blob;
+    let filename: string;
+    const svgEl = canvasRef.current?.querySelector('svg');
+    if (viewMode === 'rendered' && svgEl) {
+      const clone = svgEl.cloneNode(true) as SVGSVGElement;
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' });
+      filename = `${(diagram.title || 'diagram').replace(/[^\w-]+/g, '-').toLowerCase()}.svg`;
+    } else {
+      blob = new Blob([diagram.diagramCode], { type: 'text/plain' });
+      filename = `${(diagram.title || 'diagram').replace(/[^\w-]+/g, '-').toLowerCase()}.mmd`;
+    }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
   useEffect(() => {
     api.getDiagrams().then((items) => { if (items.length) setDiagram(items[0]); }).catch((error: Error) => setRequestError(error.message));
   }, []);
@@ -193,19 +224,45 @@ export const DiagramStudioView: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 rounded-lg border border-[#e5e1ea] p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('rendered')}
+                    aria-pressed={viewMode === 'rendered'}
+                    className={`rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer ${
+                      viewMode === 'rendered' ? 'bg-[#ede9fe] text-[#6b38d4]' : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+                    }`}
+                  >
+                    Rendered
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('source')}
+                    aria-pressed={viewMode === 'source'}
+                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer ${
+                      viewMode === 'source' ? 'bg-[#ede9fe] text-[#6b38d4]' : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+                    }`}
+                  >
+                    <Code size={12} /> Source
+                  </button>
+                </div>
                 <button
-                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer"
+                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer disabled:opacity-40"
                   aria-label="Zoom in"
+                  onClick={() => changeZoom(0.15)}
+                  disabled={viewMode !== 'rendered' || zoom >= 2}
                 >
                   <ZoomIn size={14} />
                 </button>
                 <button
-                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer"
+                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer disabled:opacity-40"
                   aria-label="Zoom out"
+                  onClick={() => changeZoom(-0.15)}
+                  disabled={viewMode !== 'rendered' || zoom <= 0.4}
                 >
                   <ZoomOut size={14} />
                 </button>
-                <Button variant="outline" size="sm" iconLeft={<Download size={13} />}>
+                <Button variant="outline" size="sm" iconLeft={<Download size={13} />} onClick={exportDiagram} disabled={!diagram?.diagramCode}>
                   Export
                 </Button>
               </div>
@@ -218,7 +275,19 @@ export const DiagramStudioView: React.FC = () => {
                 No live AI provider is configured — this is the built-in sample topology. Set GEMINI_API_KEY or GROQ_API_KEY in your backend .env to generate real AI diagrams.
               </p>
             )}
-            <pre className="my-auto max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-5 font-mono text-xs text-[#0a0a0f]">{diagram?.diagramCode || 'Generate a diagram to see the Mermaid architecture returned by the backend.'}</pre>
+            {viewMode === 'rendered' ? (
+              <div ref={canvasRef} className="my-auto max-h-[420px] overflow-auto rounded-xl border border-[#e5e1ea] bg-white p-5">
+                {diagram?.diagramCode ? (
+                  <MermaidDiagram code={diagram.diagramCode} zoom={zoom} />
+                ) : (
+                  <p className="py-10 text-center text-xs text-[#8e8ea0]">
+                    Generate a diagram to see the rendered architecture.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <pre className="my-auto max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-5 font-mono text-xs text-[#0a0a0f]">{diagram?.diagramCode || 'Generate a diagram to see the Mermaid architecture returned by the backend.'}</pre>
+            )}
 
             {/* Bottom Sizing */}
             <div className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
