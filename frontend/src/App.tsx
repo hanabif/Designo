@@ -140,7 +140,18 @@ export function App() {
 
           <Route path="/analytics" element={<AnalyticsDashboardView />} />
 
-          <Route path="/roadmap" element={<LearningRoadmapView />} />
+          <Route
+            path="/roadmap"
+            element={
+              <LearningRoadmapView
+                user={user}
+                onOpenAuth={() => {
+                  setAuthInitialMode('login');
+                  setIsAuthOpen(true);
+                }}
+              />
+            }
+          />
 
           <Route path="/billing" element={<BillingView user={user} />} />
 

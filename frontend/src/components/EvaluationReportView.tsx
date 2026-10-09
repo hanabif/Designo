@@ -15,7 +15,6 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
 }) => {
   const navigate = useNavigate();
   const { evaluationId } = useParams();
-  const onNavigateRoadmap = propOnNavigateRoadmap || (() => navigate('/roadmap'));
   const [report, setReport] = useState<any>(null);
   const [reportError, setReportError] = useState('');
   // Replay the exact conversation this report evaluated. Fall back to the bare
@@ -44,6 +43,20 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
   ].map(([name, key]) => ({ name, weight: '—', score: report[key] ?? 0, status: (report[key] ?? 0) >= 85 ? 'Strong' : (report[key] ?? 0) >= 70 ? 'Developing' : 'Needs Practice' })) : [];
   const strengths: string[] = report?.strengths || [];
   const areasToImprove: string[] = report?.weaknesses || report?.recommendations || [];
+
+  // Hand the weaknesses straight to the roadmap so "Sync Gaps to Roadmap"
+  // actually imports them — LearningRoadmapView reads this router state.
+  const onNavigateRoadmap =
+    propOnNavigateRoadmap ||
+    (() =>
+      navigate('/roadmap', {
+        state: {
+          weaknesses: areasToImprove,
+          evaluationId: report?.id,
+          score: typeof report?.overallScore === 'number' ? report.overallScore : undefined,
+          questionTitle: report?.interview?.question?.title,
+        },
+      }));
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">

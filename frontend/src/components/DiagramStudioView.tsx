@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu, Code } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu, Code, Terminal, Maximize2, Minimize2 } from 'lucide-react';
 import { Button, Card, Badge } from './ui';
 import { api } from '../services/api';
 import { MermaidDiagram } from './MermaidDiagram';
+import { mermaidToAscii } from '../lib/mermaidAscii';
 
 // Risk categories surfaced by the AI review, in display order.
 const REVIEW_CATEGORIES = [
@@ -24,28 +25,54 @@ export const DiagramStudioView: React.FC = () => {
   const [diagram, setDiagram] = useState<any>(null);
   const [review, setReview] = useState<any>(null);
   const [requestError, setRequestError] = useState('');
-  // Canvas state: rendered SVG vs raw Mermaid source, plus toolbar zoom.
-  const [viewMode, setViewMode] = useState<'rendered' | 'source'>('rendered');
+  // Canvas state: rendered SVG vs ASCII art vs raw Mermaid source, plus
+  // toolbar zoom and a fullscreen overlay.
+  const [viewMode, setViewMode] = useState<'rendered' | 'ascii' | 'source'>('rendered');
   const [zoom, setZoom] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const changeZoom = (delta: number) =>
     setZoom((z) => Math.min(2, Math.max(0.4, Math.round((z + delta) * 100) / 100)));
 
-  /** Download the on-screen SVG (rendered view) or the Mermaid source (source view). */
+  // ASCII derivation never mutates state, so useMemo is the right tool; a
+  // failed conversion falls back to the raw source with a note.
+  const diagramCode = diagram?.diagramCode;
+  const asciiResult = useMemo(() => {
+    if (!diagramCode) return null;
+    try {
+      return { art: mermaidToAscii(diagramCode), error: '' };
+    } catch (err) {
+      return { art: '', error: err instanceof Error ? err.message : 'ASCII conversion failed.' };
+    }
+  }, [diagramCode]);
+
+  // Escape exits fullscreen while the overlay is open.
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setIsFullscreen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isFullscreen]);
+
+  /** Download the current view: .svg / .txt / .mmd. */
   const exportDiagram = () => {
     if (!diagram?.diagramCode) return;
+    const base = (diagram.title || 'diagram').replace(/[^\w-]+/g, '-').toLowerCase();
     let blob: Blob;
     let filename: string;
     const svgEl = canvasRef.current?.querySelector('svg');
-    if (viewMode === 'rendered' && svgEl) {
+    if (viewMode === 'ascii' && asciiResult?.art) {
+      blob = new Blob([asciiResult.art], { type: 'text/plain' });
+      filename = `${base}.txt`;
+    } else if (viewMode === 'rendered' && svgEl) {
       const clone = svgEl.cloneNode(true) as SVGSVGElement;
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: 'image/svg+xml' });
-      filename = `${(diagram.title || 'diagram').replace(/[^\w-]+/g, '-').toLowerCase()}.svg`;
+      filename = `${base}.svg`;
     } else {
       blob = new Blob([diagram.diagramCode], { type: 'text/plain' });
-      filename = `${(diagram.title || 'diagram').replace(/[^\w-]+/g, '-').toLowerCase()}.mmd`;
+      filename = `${base}.mmd`;
     }
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -162,7 +189,13 @@ export const DiagramStudioView: React.FC = () => {
                     <button
                       key={fmt}
                       type="button"
-                      onClick={() => setSelectedFormat(fmt)}
+                      onClick={() => {
+                        setSelectedFormat(fmt);
+                        // The chosen export format also selects how the
+                        // canvas presents it: SVG Topology and Mermaid show
+                        // the rendered graph; ASCII switches to box art.
+                        setViewMode(fmt === 'ASCII' ? 'ascii' : 'rendered');
+                      }}
                       className={`flex-1 py-2 rounded-xl text-xs font-semibold border transition-all text-center cursor-pointer ${
                         selectedFormat === fmt
                           ? 'bg-[#ede9fe] text-[#6b38d4] border-[#6b38d4]'
@@ -207,8 +240,15 @@ export const DiagramStudioView: React.FC = () => {
             </Button>
           </Card>
 
-          {/* Right Canvas (8 cols) */}
-          <Card padding="md" className="lg:col-span-8 flex flex-col justify-between min-h-[500px]">
+          {/* Right Canvas (8 cols) — doubles as the fullscreen overlay */}
+          <Card
+            padding="md"
+            className={`flex flex-col justify-between ${
+              isFullscreen
+                ? 'fixed inset-2 z-[60] min-h-0 overflow-auto shadow-[0_20px_60px_rgba(10,10,15,0.4)]'
+                : 'lg:col-span-8 min-h-[500px]'
+            }`}
+          >
             {/* Canvas Toolbar */}
             <div className="flex items-center justify-between pb-4 border-b border-[#e5e1ea]">
               <div className="flex items-center gap-2 font-mono text-xs text-[#0a0a0f]">
@@ -237,6 +277,16 @@ export const DiagramStudioView: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setViewMode('ascii')}
+                    aria-pressed={viewMode === 'ascii'}
+                    className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer ${
+                      viewMode === 'ascii' ? 'bg-[#ede9fe] text-[#6b38d4]' : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
+                    }`}
+                  >
+                    <Terminal size={12} /> ASCII
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setViewMode('source')}
                     aria-pressed={viewMode === 'source'}
                     className={`flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer ${
@@ -262,8 +312,16 @@ export const DiagramStudioView: React.FC = () => {
                 >
                   <ZoomOut size={14} />
                 </button>
+                <button
+                  className="p-1.5 rounded-lg border border-[#e5e1ea] text-[#5e5e6e] hover:bg-[#faf9fc] cursor-pointer"
+                  aria-label={isFullscreen ? 'Exit fullscreen' : 'Open fullscreen'}
+                  aria-pressed={isFullscreen}
+                  onClick={() => setIsFullscreen((v) => !v)}
+                >
+                  {isFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                </button>
                 <Button variant="outline" size="sm" iconLeft={<Download size={13} />} onClick={exportDiagram} disabled={!diagram?.diagramCode}>
-                  Export
+                  {viewMode === 'ascii' ? 'Export TXT' : viewMode === 'rendered' ? 'Export SVG' : 'Export MMD'}
                 </Button>
               </div>
             </div>
@@ -276,7 +334,12 @@ export const DiagramStudioView: React.FC = () => {
               </p>
             )}
             {viewMode === 'rendered' ? (
-              <div ref={canvasRef} className="my-auto max-h-[420px] overflow-auto rounded-xl border border-[#e5e1ea] bg-white p-5">
+              <div
+                ref={canvasRef}
+                className={`overflow-auto rounded-xl border border-[#e5e1ea] bg-white p-5 ${
+                  isFullscreen ? 'flex-1 min-h-0' : 'my-auto max-h-[420px]'
+                }`}
+              >
                 {diagram?.diagramCode ? (
                   <MermaidDiagram code={diagram.diagramCode} zoom={zoom} />
                 ) : (
@@ -285,15 +348,40 @@ export const DiagramStudioView: React.FC = () => {
                   </p>
                 )}
               </div>
+            ) : viewMode === 'ascii' ? (
+              <div className={`overflow-auto rounded-xl border border-[#e5e1ea] bg-[#0a0a0f] p-5 ${
+                isFullscreen ? 'flex-1 min-h-0' : 'my-auto max-h-[420px]'
+              }`}>
+                {asciiResult?.art ? (
+                  <pre className="whitespace-pre font-mono text-xs leading-[1.4] text-[#a7f3d0]">{asciiResult.art}</pre>
+                ) : (
+                  <pre className="whitespace-pre-wrap font-mono text-xs text-[#8e8ea0]">
+                    {asciiResult?.error
+                      ? `ASCII view unavailable: ${asciiResult.error}\n\n${diagram?.diagramCode ?? ''}`
+                      : 'Generate a diagram to see its ASCII topology.'}
+                  </pre>
+                )}
+              </div>
             ) : (
-              <pre className="my-auto max-h-[420px] overflow-auto whitespace-pre-wrap rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-5 font-mono text-xs text-[#0a0a0f]">{diagram?.diagramCode || 'Generate a diagram to see the Mermaid architecture returned by the backend.'}</pre>
+              <pre className={`overflow-auto whitespace-pre-wrap rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-5 font-mono text-xs text-[#0a0a0f] ${
+                isFullscreen ? 'flex-1 min-h-0' : 'my-auto max-h-[420px]'
+              }`}>{diagram?.diagramCode || 'Generate a diagram to see the Mermaid architecture returned by the backend.'}</pre>
             )}
 
             {/* Bottom Sizing */}
             <div className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
               <span>Format: <strong>{diagram?.format || '—'}</strong></span>
-              <span>Saved: <strong>{diagram ? new Date(diagram.createdAt).toLocaleString() : '—'}</strong></span>
-              <Button variant="outline" size="sm" loading={isGenerating} onClick={reviewDiagram}>Review diagram</Button>
+              <span className="hidden sm:inline">
+                {isFullscreen ? 'Press Esc to exit fullscreen' : `Saved: ${diagram ? new Date(diagram.createdAt).toLocaleString() : '—'}`}
+              </span>
+              <div className="flex items-center gap-2">
+                {isFullscreen && (
+                  <Button variant="outline" size="sm" iconLeft={<Minimize2 size={13} />} onClick={() => setIsFullscreen(false)}>
+                    Exit fullscreen
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" loading={isGenerating} onClick={reviewDiagram}>Review diagram</Button>
+              </div>
             </div>
           </Card>
         </div>
