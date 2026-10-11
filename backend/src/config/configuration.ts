@@ -19,6 +19,11 @@ export default () => ({
       model: process.env.OPENROUTER_MODEL ?? 'meta-llama/llama-3.3-70b-instruct:free',
       baseUrl: process.env.OPENROUTER_BASE_URL ?? 'https://openrouter.ai/api/v1',
     },
+    nvidia: {
+      apiKey: process.env.NVIDIA_API_KEY?.trim(),
+      model: process.env.NVIDIA_MODEL ?? 'openai/gpt-oss-20b',
+      baseUrl: process.env.NVIDIA_BASE_URL ?? 'https://integrate.api.nvidia.com/v1',
+    },
     openai: {
       apiKey: process.env.OPENAI_API_KEY,
       model: process.env.OPENAI_MODEL ?? 'gpt-5.6-mini',

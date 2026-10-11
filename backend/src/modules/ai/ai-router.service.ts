@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { GeminiProvider } from './providers/gemini.provider.js';
 import { GroqProvider } from './providers/groq.provider.js';
 import { OpenRouterProvider } from './providers/openrouter.provider.js';
+import { NvidiaProvider } from './providers/nvidia.provider.js';
 import { DeterministicFallbackProvider } from './providers/deterministic-fallback.provider.js';
 import {
   AiCompletionOptions,
@@ -20,6 +21,7 @@ export class AiRouterService {
     private readonly groq: GroqProvider,
     private readonly openRouter: OpenRouterProvider,
     private readonly deterministicFallback: DeterministicFallbackProvider,
+    @Optional() private readonly nvidia?: NvidiaProvider,
   ) {}
 
   selectProviderChain(useCase: AiUseCase): AiProvider[] {
@@ -30,11 +32,13 @@ export class AiRouterService {
       if (this.groq.isConfigured()) providers.push(this.groq);
       if (this.gemini.isConfigured()) providers.push(this.gemini);
       if (this.openRouter.isConfigured()) providers.push(this.openRouter);
+      if (this.nvidia?.isConfigured()) providers.push(this.nvidia);
     } else {
       // Prioritize Gemini for large context (evaluations, diagram review, recommendation)
       if (this.gemini.isConfigured()) providers.push(this.gemini);
       if (this.groq.isConfigured()) providers.push(this.groq);
       if (this.openRouter.isConfigured()) providers.push(this.openRouter);
+      if (this.nvidia?.isConfigured()) providers.push(this.nvidia);
     }
 
     // Always append deterministic fallback to guarantee system reliability

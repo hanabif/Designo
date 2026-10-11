@@ -136,7 +136,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
           riseStrength={1.15}
         />
         {/* fade-out at the bottom so the grid blends into the page */}
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-[#faf9fe] to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-[#faf9fe] via-[#faf9fe]/70 to-transparent" />
         {/* side vignettes */}
         <div className="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-[#faf9fe] to-transparent" />
         <div className="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-[#faf9fe] to-transparent" />
@@ -197,24 +197,17 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-12 md:pt-16 pb-16">
 
         {/* Editorial Headline Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-20 md:mb-28">
           <div className="lg:col-span-8">
-            <div data-hero-badge className="mb-6 inline-block">
-              <Badge variant="primary" icon={<Sparkles size={13} />}>
-                AUTONOMOUS ARCHITECTURE LOOPS
-              </Badge>
-            </div>
+
             <h1 className="font-display font-extrabold text-[44px] sm:text-[68px] lg:text-[80px] leading-[0.96] tracking-[-0.035em] text-[#0a0a0f]">
-              <span data-hero-line className="block">SYSTEMS</span>
-              <span data-hero-line className="block italic font-light text-[#6b38d4]">ARCHITECTED</span>
-              <span data-hero-line className="block">AT SCALE.</span>
+              <span data-hero-line className="block">Practice</span>
+              <span data-hero-line className="block italic font-light text-[#6b38d4]">System Design</span>
+              <span data-hero-line className="block">with AI.</span>
             </h1>
           </div>
 
           <div className="lg:col-span-4 flex flex-col justify-end space-y-6 pb-2">
-            <p data-hero-aside className="font-sans text-base md:text-lg text-[#5e5e6e] leading-relaxed">
-              Practice System Design with AI before your Big Tech interview
-            </p>
             <div data-hero-aside className="flex flex-wrap items-center gap-3 pt-2">
               <Button
                 variant="dark"
@@ -240,21 +233,25 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 Explore Library
               </Button>
             </div>
-            <div data-hero-aside className="flex items-center gap-3 text-xs font-mono text-[#8e8ea0] pt-2">
-              <span>CALIBRATED FOR:</span>
-              <span className="text-[#0a0a0f] font-semibold">GOOGLE</span>
-              <span>•</span>
-              <span className="text-[#0a0a0f] font-semibold">META</span>
-              <span>•</span>
-              <span className="text-[#0a0a0f] font-semibold">AMAZON</span>
-              <span>•</span>
-              <span className="text-[#0a0a0f] font-semibold">STRIPE</span>
-            </div>
+            
           </div>
         </div>
 
-        {/* Floating Architecture Terminal Card */}
-        <div id="simulation" data-hero-card className="relative w-full rounded-2xl md:rounded-[2rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_20px_50px_-15px_rgba(139,92,246,0.14)] border border-[#e5e1ea] scroll-mt-24">
+        {/* Dedicated product-preview surface */}
+        <div className="relative isolate overflow-hidden rounded-[2rem] border border-[#e5e1ea] bg-gradient-to-br from-[#f4f1fb] via-[#ede9fe] to-[#f7f5fa] px-4 py-8 sm:px-8 sm:py-10 md:px-12 md:py-14">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-24 -top-32 h-96 w-96 rounded-full bg-[#8b5cf6]/10 blur-3xl" />
+          <div aria-hidden="true" className="pointer-events-none absolute -bottom-40 -left-20 h-96 w-96 rounded-full bg-white/80 blur-3xl" />
+          <div className="relative mx-auto max-w-6xl">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3 px-1 sm:mb-8">
+              <div>
+                <div className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6b38d4]">Inside a live session</div>
+                <h2 className="font-display text-xl font-bold tracking-tight text-[#0a0a0f] sm:text-2xl">Think out loud. Design with confidence.</h2>
+              </div>
+              <span className="font-mono text-[11px] text-[#5e5e6e]">A realistic interview, from prompt to evaluation</span>
+            </div>
+
+        {/* Live interview workspace */}
+        <div id="simulation" data-hero-card className="relative w-full rounded-2xl md:rounded-[1.75rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_24px_70px_-20px_rgba(67,42,117,0.28)] border border-white/90 scroll-mt-24">
           {/* Header Bar */}
           <div className="flex flex-wrap items-center justify-between px-4 py-3 rounded-xl bg-[#f7f5fa] border border-[#e5e1ea] mb-3">
             <div className="flex items-center gap-3">
@@ -264,7 +261,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                 <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
               </div>
               <span className="font-mono text-xs text-[#0a0a0f] font-medium pl-2 border-l border-[#dcd7e5]">
-                SESSION #DES-9104 // Distributed Cache Invalidation &amp; Fan-out
+                DESIGNO / INTERVIEW ROOM <span className="text-[#8e8ea0]">·</span> Distributed Cache Invalidation
               </span>
             </div>
             <div className="flex items-center gap-3 sm:gap-4">
@@ -274,6 +271,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
               <Badge variant="primary">
                 STAGE 4 OF 9
               </Badge>
+              <span className="hidden rounded-full border border-[#e5e1ea] bg-white px-3 py-1 font-mono text-[10px] text-[#5e5e6e] sm:inline-flex">32:18 remaining</span>
             </div>
           </div>
 
@@ -326,7 +324,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
                       <strong>Vector:</strong> Fault Tolerance &amp; Concurrency
                     </span>
                   </div>
-                  <span className="font-mono text-xs font-semibold text-emerald-700">STRONG HIRE (94%)</span>
+                  <span className="font-mono text-xs font-semibold text-emerald-700">SIGNAL: STRONG (94%)</span>
                 </div>
               </div>
 
@@ -385,29 +383,10 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Numerical Benchmark Strip */}
-      <section id="benchmarks" className="border-y border-[#e5e1ea] bg-white py-10 mb-20 scroll-mt-24">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <div data-bench-item>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]" data-counter="42" data-suffix="ms">42ms</div>
-            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Evaluation Latency</div>
-          </div>
-          <div data-bench-item>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#6b38d4]" data-counter="98.4" data-decimals="1" data-suffix="%">98.4%</div>
-            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Staff+ Calibration</div>
-          </div>
-          <div data-bench-item>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#0a0a0f]" data-counter="1200" data-suffix="+">1,200+</div>
-            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Architecture Components</div>
-          </div>
-          <div data-bench-item>
-            <div className="font-display font-bold text-3xl md:text-4xl text-[#10b981]" data-counter="14800" data-suffix="+">14,800+</div>
-            <div className="font-mono text-xs text-[#5e5e6e] uppercase tracking-wider mt-1">Simulations Completed</div>
           </div>
         </div>
       </section>
+
 
       {/* ── How it works + full feature breakdown ── */}
       <LandingHowItWorks />

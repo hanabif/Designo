@@ -13,6 +13,10 @@ interface DashboardViewProps {
   onOpenSetupModal?: () => void;
 }
 
+const SkeletonBlock: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <span aria-hidden="true" className={`block animate-pulse rounded-md bg-[#e9e5ef] ${className}`} />
+);
+
 export const DashboardView: React.FC<DashboardViewProps> = ({
   user,
   onNavigateTab: propOnNavigateTab,
@@ -36,6 +40,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [recommendedTopics, setRecommendedTopics] = useState<Array<{ title: string; progress: number; est: string; category: string }>>([]);
   const [topCompetency, setTopCompetency] = useState<{ name: string; score: number } | null>(null);
   const [loadError, setLoadError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     Promise.all([api.getInterviewHistory(), api.getAnalyticsDashboard(), api.getRecommendations()]).then(([history, analytics, recommendations]) => {
       setInterviewCount(analytics.interviewMetrics?.totalInterviews ?? history.length);
@@ -52,7 +57,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         const trackedSeconds = getPracticeSeconds(item.id);
         return { id: item.id, evaluationId: item.evaluation?.id, status: item.status, title: item.question?.title ?? 'Interview session', track: `${item.companyTrack} Track`, difficulty: item.difficulty, score: score == null ? (inProgress ? '—' : 'Pending') : `${score}/100`, verdict: score == null ? (inProgress ? 'In Progress' : item.status) : score >= 85 ? 'Strong Hire' : score >= 75 ? 'Hire' : 'Needs Practice', date: new Date(item.createdAt).toLocaleDateString(), duration: trackedSeconds > 0 ? formatDuration(trackedSeconds) : '—' };
       }));
-    }).catch((error: Error) => setLoadError(error.message));
+    }).catch((error: Error) => setLoadError(error.message)).finally(() => setIsLoading(false));
   }, []);
 
   return (
@@ -91,7 +96,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       </div>
 
       {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10" aria-busy={isLoading}>
+        {isLoading ? Array.from({ length: 4 }, (_, index) => (
+          <Card key={`stat-skeleton-${index}`} padding="md" className="min-h-[142px]">
+            <div className="mb-4 flex items-center justify-between">
+              <SkeletonBlock className="h-3 w-28" />
+              <SkeletonBlock className="h-4 w-4 rounded-full" />
+            </div>
+            <SkeletonBlock className="h-8 w-20" />
+            <SkeletonBlock className="mt-3 h-3 w-36" />
+          </Card>
+        )) : <>
         <Card padding="md">
           <div className="flex items-center justify-between text-xs text-[#5e5e6e] font-mono uppercase mb-2">
             <span>Interviews Completed</span>
@@ -136,6 +151,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             {topCompetency ? `${topCompetency.score}% average score` : 'Complete an interview to see your strongest area.'}
           </div>
         </Card>
+        </>}
       </div>
 
       {/* Main Grid: Recent Interviews (Left) + Roadmap & Drills (Right) */}
@@ -158,8 +174,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </button>
             </div>
 
-            <div className="divide-y divide-[#e5e1ea]">
-              {!recentInterviews.length && <p className="py-5 text-sm text-[#5e5e6e]">Your interview history will appear here when you finish a session.</p>}
+            <div className="divide-y divide-[#e5e1ea]" aria-busy={isLoading}>
+              {isLoading && Array.from({ length: 3 }, (_, index) => (
+                <div key={`interview-skeleton-${index}`} className="flex flex-col items-start justify-between gap-4 py-4 sm:flex-row sm:items-center">
+                  <div className="w-full space-y-2">
+                    <SkeletonBlock className="h-4 w-2/3 max-w-64" />
+                    <SkeletonBlock className="h-3 w-1/2 max-w-48" />
+                  </div>
+                  <SkeletonBlock className="h-8 w-24 self-end sm:self-auto" />
+                </div>
+              ))}
+              {!isLoading && !recentInterviews.length && <p className="py-5 text-sm text-[#5e5e6e]">Your interview history will appear here when you finish a session.</p>}
               {recentInterviews.map((session) => (
                 <div key={session.id} className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div>
@@ -252,7 +277,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               Targeted exercises derived from your missed trade-offs in recent mock loops.
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-4" aria-busy={isLoading}>
+              {isLoading && Array.from({ length: 3 }, (_, index) => (
+                <div key={`drill-skeleton-${index}`} className="space-y-3 rounded-xl border border-[#e5e1ea] bg-[#faf9fc] p-3.5">
+                  <SkeletonBlock className="h-3.5 w-3/4" />
+                  <div className="flex justify-between">
+                    <SkeletonBlock className="h-4 w-20" />
+                    <SkeletonBlock className="h-3 w-12" />
+                  </div>
+                </div>
+              ))}
               {recommendedTopics.map((topic, i) => (
                 <div key={i} className="p-3.5 rounded-xl bg-[#faf9fc] border border-[#e5e1ea]">
                   <div className="flex items-center justify-between text-xs mb-1.5">
@@ -266,7 +300,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 </div>
               ))}
             </div>
-            {!recommendedTopics.length && <p className="text-xs text-[#8e8ea0]">Recommendations will appear after interview evaluations are available.</p>}
+            {!isLoading && !recommendedTopics.length && <p className="text-xs text-[#8e8ea0]">Recommendations will appear after interview evaluations are available.</p>}
 
             <Button
               variant="outline"

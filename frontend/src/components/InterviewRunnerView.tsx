@@ -44,6 +44,121 @@ const stageIndexOf = (backendStage?: string) => {
   return Math.min(Math.floor((index * stages.length) / BACKEND_STAGE_SEQUENCE.length), stages.length - 1);
 };
 
+const renderInlineMarkdown = (text: string, keyPrefix: string): React.ReactNode[] => {
+  const parts = text.split(/(\*\*[\s\S]+?\*\*|__[\s\S]+?__|`[^`]+`|\*[^*\n]+\*|_[^_\n]+_)/g);
+
+  return parts.map((part, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if ((part.startsWith('**') && part.endsWith('**')) || (part.startsWith('__') && part.endsWith('__'))) {
+      return <strong key={key} className="font-semibold">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return <code key={key} className="rounded bg-[#f4f1fb] px-1 py-0.5 font-mono text-[0.9em]">{part.slice(1, -1)}</code>;
+    }
+    if ((part.startsWith('*') && part.endsWith('*')) || (part.startsWith('_') && part.endsWith('_'))) {
+      return <em key={key}>{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+};
+
+const FormattedMessage: React.FC<{ content: string }> = ({ content }) => {
+  const blocks: React.ReactNode[] = [];
+  let paragraph: string[] = [];
+  let listItems: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+  let codeLines: string[] = [];
+  let inCodeBlock = false;
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    const lines = paragraph;
+    paragraph = [];
+    blocks.push(
+      <p key={`p-${blocks.length}`}>
+        {lines.map((line, index) => (
+          <React.Fragment key={`line-${index}`}>
+            {index > 0 && <br />}
+            {renderInlineMarkdown(line, `p-${blocks.length}-line-${index}`)}
+          </React.Fragment>
+        ))}
+      </p>,
+    );
+  };
+
+  const flushList = () => {
+    if (!listType || !listItems.length) return;
+    const items = listItems;
+    const type = listType;
+    listItems = [];
+    listType = null;
+    const children = items.map((item, index) => <li key={`item-${index}`}>{renderInlineMarkdown(item, `list-${blocks.length}-${index}`)}</li>);
+    blocks.push(type === 'ul'
+      ? <ul key={`list-${blocks.length}`} className="list-disc space-y-1 pl-5">{children}</ul>
+      : <ol key={`list-${blocks.length}`} className="list-decimal space-y-1 pl-5">{children}</ol>);
+  };
+
+  for (const line of content.replace(/\r\n?/g, '\n').split('\n')) {
+    if (line.trim().startsWith('```')) {
+      flushParagraph();
+      flushList();
+      if (inCodeBlock) {
+        blocks.push(<pre key={`code-${blocks.length}`} className="overflow-x-auto rounded-lg bg-[#f4f1fb] p-3 font-mono text-[0.9em]"><code>{codeLines.join('\n')}</code></pre>);
+        codeLines = [];
+      }
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (inCodeBlock) {
+      codeLines.push(line);
+      continue;
+    }
+
+    if (!line.trim()) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const heading = line.match(/^\s{0,3}(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      flushList();
+      blocks.push(<h4 key={`heading-${blocks.length}`} className="font-display font-bold">{renderInlineMarkdown(heading[2], `heading-${blocks.length}`)}</h4>);
+      continue;
+    }
+
+    const unorderedItem = line.match(/^\s*[-*+]\s+(.+)$/);
+    const orderedItem = line.match(/^\s*\d+[.)]\s+(.+)$/);
+    const item = unorderedItem?.[1] ?? orderedItem?.[1];
+    const nextListType = unorderedItem ? 'ul' : orderedItem ? 'ol' : null;
+    if (item && nextListType) {
+      flushParagraph();
+      if (listType && listType !== nextListType) flushList();
+      listType = nextListType;
+      listItems.push(item);
+      continue;
+    }
+
+    flushList();
+    const quote = line.match(/^\s*>\s?(.*)$/);
+    if (quote) {
+      flushParagraph();
+      blocks.push(<blockquote key={`quote-${blocks.length}`} className="border-l-2 border-[#c4b5fd] pl-3 text-[#5e5e6e]">{renderInlineMarkdown(quote[1], `quote-${blocks.length}`)}</blockquote>);
+      continue;
+    }
+    paragraph.push(line);
+  }
+
+  if (inCodeBlock) {
+    blocks.push(<pre key={`code-${blocks.length}`} className="overflow-x-auto rounded-lg bg-[#f4f1fb] p-3 font-mono text-[0.9em]"><code>{codeLines.join('\n')}</code></pre>);
+  }
+  flushParagraph();
+  flushList();
+
+  return <div className="space-y-2.5 break-words">{blocks}</div>;
+};
+
 export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
   interviewId: propInterviewId,
   onFinish: propOnFinish,
@@ -63,6 +178,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
   const [timerSeconds, setTimerSeconds] = useState<number>(2450);
   // Non-null while "End & Evaluate Session" is running (finish + evaluation).
   const [finishPhase, setFinishPhase] = useState<'finishing' | 'evaluating' | null>(null);
+  const [isAiThinking, setIsAiThinking] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const onFinish = async (id: string) => {
@@ -146,7 +262,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
   // Keep the newest turn in view whenever a session is reopened or a reply lands.
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages, isLoadingSession]);
+  }, [messages, isLoadingSession, isAiThinking]);
 
   const formatTimer = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -155,7 +271,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
   };
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isAiThinking) return;
     if (!interviewId) { setRequestError('Start an interview from the dashboard or question library first.'); return; }
     if (interviewStatus !== 'IN_PROGRESS') { setRequestError('This session has already ended. Start a new interview from the dashboard to keep practicing.'); return; }
 
@@ -170,6 +286,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
     const currentInput = inputMessage;
     setInputMessage('');
     setRequestError('');
+    setIsAiThinking(true);
 
     try {
       const res: any = await api.sendInterviewMessage(interviewId, currentInput);
@@ -182,6 +299,8 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
     } catch (error) {
       setMessages((prev) => prev.filter((message) => message.id !== userMsg.id));
       setRequestError(error instanceof Error ? error.message : 'Message could not be sent.');
+    } finally {
+      setIsAiThinking(false);
     }
   };
 
@@ -380,7 +499,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
                   >
                     <div className="flex items-center justify-between gap-4 mb-1.5 font-mono text-[10px]">
                       <span className={isAi ? 'text-[#6b38d4] font-semibold' : 'text-[#5e5e6e]'}>
-                        {isAi ? `ARCHITECT AI // ${m.stage || 'Live Prompt'}` : 'YOU (CANDIDATE)'}
+                        {isAi ? `DESIGNO // ${m.stage || 'Live Prompt'}` : 'YOU (CANDIDATE)'}
                       </span>
                       <div className="flex items-center gap-2">
                         {m.scoreDelta && (
@@ -390,9 +509,13 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
                       </div>
                     </div>
 
-                    <p className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-line font-sans">
-                      {m.content}
-                    </p>
+                    {isAi ? (
+                      <div className="text-xs sm:text-[13px] leading-relaxed font-sans">
+                        <FormattedMessage content={String(m.content ?? '')} />
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-[13px] leading-relaxed whitespace-pre-line font-sans">{m.content}</p>
+                    )}
                   </div>
 
                   {!isAi && (
@@ -404,7 +527,22 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
               );
             })}
 
-            {messages.length > 0 && interviewStatus === 'IN_PROGRESS' && <p className="rounded-xl border border-[#e5e1ea] bg-white p-3 text-xs text-[#5e5e6e]">Your evaluation is generated after you finish this session.</p>}
+            {isAiThinking && (
+              <div className="flex items-start gap-3" role="status" aria-live="polite" aria-label="Designo is thinking">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#8b5cf6]/30 bg-[#ede9fe] text-[10px] font-bold text-[#6b38d4]">D</div>
+                <div className="rounded-2xl rounded-tl-sm border border-[#e5e1ea] bg-white px-4 py-3 shadow-xs">
+                  <div className="mb-1.5 font-mono text-[10px] font-semibold text-[#6b38d4]">DESIGNO</div>
+                  <div className="flex items-center gap-1.5" aria-hidden="true">
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8b5cf6] [animation-delay:-0.3s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8b5cf6] [animation-delay:-0.15s]" />
+                    <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[#8b5cf6]" />
+                    <span className="ml-1 text-[11px] text-[#8e8ea0]">Thinking</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            
             <div ref={chatEndRef} />
           </div>
 
@@ -447,7 +585,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
               />
               <button
                 onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || interviewStatus !== 'IN_PROGRESS'}
+                disabled={!inputMessage.trim() || interviewStatus !== 'IN_PROGRESS' || isAiThinking}
                 className="p-3 rounded-xl bg-[#0a0a0f] hover:bg-neutral-800 disabled:opacity-40 text-white transition-all shadow-xs"
               >
                 <Send size={16} />
