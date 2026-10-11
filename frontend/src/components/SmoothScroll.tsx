@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ReactLenis, useLenis } from 'lenis/react';
 import { ArrowUp } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 interface SmoothScrollProps {
   children: React.ReactNode;
@@ -24,6 +28,19 @@ function ScrollManager() {
     // Show back-to-top button after 18% scroll or > 250px
     setShowTopBtn(lenisInstance.scroll > 250);
   });
+
+  // Keep GSAP's ScrollTrigger in lock-step with Lenis' animated scroll
+  // position so scrubbed and triggered animations land exactly where the
+  // user expects while the smooth scroll is easing towards its target.
+  useEffect(() => {
+    if (!lenis) return;
+    const syncScrollTrigger = () => ScrollTrigger.update();
+    lenis.on('scroll', syncScrollTrigger);
+    ScrollTrigger.refresh();
+    return () => {
+      lenis.off('scroll', syncScrollTrigger);
+    };
+  }, [lenis]);
 
   // Handle route changes and anchor hashes seamlessly
   useEffect(() => {

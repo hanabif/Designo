@@ -301,3 +301,29 @@ h1, h2, h3, h4, h5, .display-mega, .display-h1, .display-h2 {
 ::-webkit-scrollbar-thumb:hover {
   background: #b5adc4;
 }
+
+/* ── Landing "How it works" ambient micro-animations ── */
+@keyframes hw-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes hw-typing-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+
+.hw-float {
+  animation: hw-float 3.2s ease-in-out infinite;
+}
+
+.hw-typing-dot {
+  animation: hw-typing-dot 1.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hw-float,
+  .hw-typing-dot {
+    animation: none;
+  }
+}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Play, Check, Sparkles, Cpu } from 'lucide-react';
+import { ArrowRight, Play, Check, Cpu } from 'lucide-react';
 import { Button, Badge } from './ui';
 import { useLenisScroll } from '../hooks/useLenisScroll';
 import GridRise from './GridRise';
