@@ -1,203 +1,411 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
-import { motion } from 'motion/react';
+import { ArrowRight, ChartColumn, Check, Library, MessagesSquare, Route, Workflow } from 'lucide-react';
 import {
-  Bell,
-  ChartColumn,
-  CreditCard,
-  Library,
-  MessagesSquare,
-  Route,
-  Target,
-  UserRound,
-  Workflow,
-} from 'lucide-react';
-import { Badge, Card } from './ui';
+  DiagramStudioMock,
+  EvaluationReportMock,
+  LiveInterviewMock,
+  QuestionBankMock,
+  RoadmapMock,
+} from './features/FeatureMocks';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 interface Feature {
-  title: string;
-  text: string;
-  tag: string;
+  /** Slug used for the real screenshot drop-in: /screenshots/features/<id>.png */
+  id: string;
   icon: React.ElementType;
+  tabTitle: string;
+  tabBlurb: string;
+  eyebrow: string;
+  heading: string;
+  body: string;
+  bullets: string[];
+  ctaLabel: string;
+  ctaTo: string;
+  Mock: React.FC;
 }
 
-const ENGINES = ['AI Interviewer', 'AI Evaluator', 'AI Mentor', 'AI Progress Tracker'];
-
-/** Every feature of the platform — mirrors FR-01 … FR-11 in Designo.md. */
+/**
+ * The five feature demos. Each tab shows a copy column on the left and the
+ * feature's screen on the right. The built-in SVG mock is the default visual;
+ * dropping a real screenshot at  frontend/public/screenshots/features/<id>.png
+ * automatically replaces it (no code changes) — the <img> layers on top and
+ * hides itself on 404.
+ */
 const FEATURES: Feature[] = [
   {
-    icon: UserRound,
-    tag: 'Profile',
-    title: 'Onboarding & Profiles',
-    text: 'A short setup captures your experience level, role, years and target company/level — everything downstream adapts to it.',
-  },
-  {
-    icon: Library,
-    tag: 'FR-03',
-    title: 'Question Bank',
-    text: 'A tiered library from Beginner (URL Shortener, Parking Lot) to Staff (Global CDN, Event Streaming), filterable by tag, difficulty and company track.',
-  },
-  {
+    id: 'live-ai-interview',
     icon: MessagesSquare,
-    tag: 'FR-04',
-    title: 'Live AI Interviews',
-    text: 'Multi-stage mock sessions where the AI probes requirements, challenges trade-offs and stress-tests failure scenarios in a live chat.',
+    tabTitle: 'Live AI Interview',
+    tabBlurb: 'Real-time mock sessions',
+    eyebrow: 'LIVE AI INTERVIEW',
+    heading: 'An examiner that pushes back.',
+    body: 'Multi-stage mock sessions where the AI probes requirements, challenges your trade-offs and stress-tests failure plans — out loud, in real time.',
+    bullets: ['Four-stage loop: requirements → design → deep dive → retro', 'Follow-ups adapt to every answer you give', 'Score ticker updates while you talk'],
+    ctaLabel: 'Start a session',
+    ctaTo: '/interview',
+    Mock: LiveInterviewMock,
   },
   {
-    icon: Target,
-    tag: 'FR-05',
-    title: 'Evaluation Reports',
-    text: 'Weighted scoring across Scope, High-Level Design, Bottlenecks and Fault Tolerance, with per-dimension feedback and hire-signal ratings.',
+    id: 'question-bank',
+    icon: Library,
+    tabTitle: 'Question Bank',
+    tabBlurb: 'Tiered scenario library',
+    eyebrow: 'QUESTION BANK',
+    heading: 'A library that levels with you.',
+    body: 'Tiered system-design scenarios — from URL Shorteners to Global CDNs — filterable by difficulty, tag and company track.',
+    bullets: ['Beginner → Staff difficulty tiers', 'Filter by tag, track and interview format', 'One click launches a tuned live session'],
+    ctaLabel: 'Browse questions',
+    ctaTo: '/questions',
+    Mock: QuestionBankMock,
   },
   {
-    icon: Workflow,
-    tag: 'FR-06 / 07',
-    title: 'Diagram Studio',
-    text: 'Generate and edit Mermaid & SVG architecture diagrams, then let the evaluator flag Single Points of Failure and concurrency bottlenecks.',
-  },
-  {
+    id: 'evaluation-reports',
     icon: ChartColumn,
-    tag: 'FR-08',
-    title: 'Analytics Dashboard',
-    text: 'Track attempts, accuracy, response time and weak-area trends over time so you always know what to practise next.',
+    tabTitle: 'Evaluation Reports',
+    tabBlurb: 'Weighted scoring & feedback',
+    eyebrow: 'EVALUATION REPORTS',
+    heading: 'Feedback with teeth.',
+    body: 'Every session is scored on a weighted rubric — scope, high-level design, bottlenecks and fault tolerance — with per-dimension notes and a hire-signal rating.',
+    bullets: ['Weighted rubric across four dimensions', 'Strengths and fix-first improvements', 'Hire-signal rating per session'],
+    ctaLabel: 'See a report',
+    ctaTo: '/report',
+    Mock: EvaluationReportMock,
   },
   {
+    id: 'diagram-studio',
+    icon: Workflow,
+    tabTitle: 'Diagram Studio',
+    tabBlurb: 'Mermaid & SVG canvas',
+    eyebrow: 'DIAGRAM STUDIO',
+    heading: 'Draw it. Then defend it.',
+    body: 'Sketch architecture mid-interview on an infinite canvas — generate Mermaid from plain English and let the evaluator flag single points of failure.',
+    bullets: ['AI-generated Mermaid & SVG output', 'SPF and concurrency bottleneck detection', 'Export to Mermaid, SVG or PNG'],
+    ctaLabel: 'Open the studio',
+    ctaTo: '/diagrams',
+    Mock: DiagramStudioMock,
+  },
+  {
+    id: 'adaptive-roadmap',
     icon: Route,
-    tag: 'FR-09',
-    title: 'Adaptive Roadmaps',
-    text: 'A personalised learning path targeting your specific gaps — Raft consensus, DB partitioning, rate limiters — with progress tracked per concept.',
-  },
-  {
-    icon: Bell,
-    tag: 'FR-10',
-    title: 'Notifications',
-    text: 'In-app notifications for evaluation results, roadmap recommendations and system updates, all managed from your notification centre.',
-  },
-  {
-    icon: CreditCard,
-    tag: 'FR-11',
-    title: 'Plans, Roles & Admin',
-    text: 'Start free and upgrade when ready. Pro unlocks deeper reports and analytics, while the admin console manages users, content and roles.',
+    tabTitle: 'Adaptive Roadmap',
+    tabBlurb: 'Gap-targeted learning path',
+    eyebrow: 'ADAPTIVE ROADMAP',
+    heading: 'Your syllabus, rewritten weekly.',
+    body: 'Scores feed a personalised path that targets your exact gaps — Raft, partitioning, rate limiting — and recalibrates after every report.',
+    bullets: ['Gap-targeted concept sequence', 'Progress tracked per concept', 'Re-sorts after every evaluation'],
+    ctaLabel: 'View roadmap',
+    ctaTo: '/roadmap',
+    Mock: RoadmapMock,
   },
 ];
 
+/** Idle seconds before the showcase advances itself to the next tab. */
+const AUTOPLAY_SECONDS = 6.5;
+
 /**
- * Landing "full feature set" section.
- * GSAP staggers the cards in on scroll; Motion provides the hover lift and
- * icon nudge micro-interactions.
+ * Landing "Everything included" showcase (inspired by tabbed product tours).
+ *
+ * - Five feature tabs; clicking one crossfades the screen and restages copy.
+ * - If the user leaves it alone for AUTOPLAY_SECONDS the tour advances itself
+ *   (GSAP progress bar on the active tab); it pauses on hover/focus and while
+ *   scrolled out of view, and is disabled entirely for reduced-motion users.
+ * - Lenis (global SmoothScroll) drives the page; ScrollTrigger stays in sync
+ *   via the lenis→ScrollTrigger bridge, so entrance reveals and the ambient
+ *   blob parallax land smoothly.
  */
 export const LandingFeatures: React.FC = () => {
   const rootRef = useRef<HTMLElement>(null);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const copyRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const progressRef = useRef<HTMLSpanElement | null>(null);
+  const progressTweenRef = useRef<gsap.core.Tween | null>(null);
 
+  const [active, setActive] = useState(0);
+  const [hovering, setHovering] = useState(false);
+  const [inView, setInView] = useState(false);
+  const [failedShots, setFailedShots] = useState<Record<string, boolean>>({});
+
+  const reduceMotion = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    [],
+  );
+
+  /* Scroll choreography: staged entrance, blob parallax, in-view tracking. */
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
       mm.add('(prefers-reduced-motion: no-preference)', () => {
-        gsap.from('[data-features-header]', {
-          y: 24,
-          autoAlpha: 0,
-          duration: 0.6,
-          ease: 'power2.out',
+        gsap.from('[data-feat-reveal]', {
+          y: 28, autoAlpha: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out',
           scrollTrigger: { trigger: rootRef.current, start: 'top 80%', once: true },
         });
-        gsap.from('[data-engines] > *', {
-          y: 12,
-          autoAlpha: 0,
-          duration: 0.5,
-          stagger: 0.06,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: '[data-engines]', start: 'top 88%', once: true },
+        gsap.from('[data-feat-tab]', {
+          y: 20, autoAlpha: 0, duration: 0.55, stagger: 0.06, ease: 'power2.out',
+          scrollTrigger: { trigger: '[data-feat-tablist]', start: 'top 88%', once: true },
         });
-        gsap.from('[data-feature]', {
-          y: 32,
-          autoAlpha: 0,
-          duration: 0.65,
-          stagger: 0.07,
-          ease: 'power2.out',
-          scrollTrigger: { trigger: '[data-feature-grid]', start: 'top 85%', once: true },
+        gsap.from('[data-feat-stage]', {
+          y: 44, autoAlpha: 0, duration: 0.85, ease: 'power3.out',
+          scrollTrigger: { trigger: '[data-feat-stage]', start: 'top 88%', once: true },
+        });
+        gsap.to('[data-feat-blob]', {
+          yPercent: -18, ease: 'none',
+          scrollTrigger: { trigger: rootRef.current, start: 'top bottom', end: 'bottom top', scrub: 0.8 },
         });
       });
-      return () => mm.revert();
+
+      const viewTrigger = ScrollTrigger.create({
+        trigger: rootRef.current,
+        start: 'top 75%',
+        end: 'bottom 25%',
+        onToggle: (self) => setInView(self.isActive),
+      });
+      return () => {
+        viewTrigger.kill();
+        mm.revert();
+      };
     },
-    { scope: rootRef }
+    { scope: rootRef },
   );
+
+  /* Tab switching: crossfade stage panels, restage the copy column. */
+  useGSAP(
+    () => {
+      panelRefs.current.forEach((panel, i) => {
+        if (!panel) return;
+        if (i === active) {
+          gsap.fromTo(
+            panel,
+            { autoAlpha: 0, y: 24, scale: 0.985 },
+            { autoAlpha: 1, y: 0, scale: 1, duration: 0.55, ease: 'power3.out', overwrite: 'auto' },
+          );
+        } else {
+          gsap.to(panel, { autoAlpha: 0, y: -12, scale: 0.99, duration: 0.35, ease: 'power2.out', overwrite: 'auto' });
+        }
+      });
+      copyRefs.current.forEach((block, i) => {
+        if (!block) return;
+        if (i === active) {
+          gsap.set(block, { autoAlpha: 1, y: 0 });
+          gsap.fromTo(
+            Array.from(block.children),
+            { autoAlpha: 0, y: 16 },
+            { autoAlpha: 1, y: 0, duration: 0.45, stagger: 0.06, ease: 'power2.out', overwrite: 'auto' },
+          );
+        } else {
+          gsap.to(block, { autoAlpha: 0, duration: 0.25, ease: 'power1.out', overwrite: 'auto' });
+        }
+      });
+    },
+    { dependencies: [active], scope: rootRef, revertOnUpdate: true },
+  );
+
+  /* Idle autoplay: advance tabs when the user leaves the tour alone. */
+  useEffect(() => {
+    progressTweenRef.current?.kill();
+    progressTweenRef.current = null;
+    const bar = progressRef.current;
+    if (!bar) return undefined;
+    gsap.set(bar, { scaleX: 0, transformOrigin: 'left center' });
+    if (reduceMotion || !inView) return undefined;
+    const tween = gsap.to(bar, {
+      scaleX: 1,
+      duration: AUTOPLAY_SECONDS,
+      ease: 'none',
+      onComplete: () => setActive((current) => (current + 1) % FEATURES.length),
+    });
+    progressTweenRef.current = tween;
+    return () => {
+      tween.kill();
+      progressTweenRef.current = null;
+    };
+  }, [active, inView, reduceMotion]);
+
+  /* Pause the countdown while the user is hovering/focusing inside the section. */
+  useEffect(() => {
+    progressTweenRef.current?.paused(hovering);
+  }, [hovering]);
+
+  const handleTablistKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const dir = event.key === 'ArrowRight' ? 1 : -1;
+    const next = (active + dir + FEATURES.length) % FEATURES.length;
+    setActive(next);
+    tabRefs.current[next]?.focus();
+  };
 
   return (
     <section
       id="features"
       ref={rootRef}
-      className="max-w-7xl mx-auto px-6 md:px-12 py-14 md:py-20 scroll-mt-24"
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
+      onFocusCapture={() => setHovering(true)}
+      onBlurCapture={() => setHovering(false)}
+      className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-24 scroll-mt-24"
     >
-      <div data-features-header className="text-center max-w-2xl mx-auto mb-8">
-        <Badge variant="primary" className="mb-4">
-          EVERYTHING INCLUDED
-        </Badge>
-        <h2 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
-          One platform, the whole interview loop
+      {/* Section header */}
+      <div data-feat-reveal className="mb-10 text-center max-w-2xl mx-auto">
+        <span className="mb-4 inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b38d4]">
+          <span className="h-2 w-2 bg-[#6b38d4]" />
+          Everything included
+        </span>
+        <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-[44px] leading-[1.08] text-[#0a0a0f]">
+          The whole interview loop, one workspace
         </h2>
-        <p className="font-sans text-[#5e5e6e] mt-3">
-          Practice questions, live AI sessions, diagram tooling, scored reports, analytics and
-          an adaptive roadmap — all driven by the same profile.
+        <p className="mt-4 font-sans text-[15px] leading-relaxed text-[#5e5e6e]">
+          Five tools that feed each other — practise, get scored, fix the gap, repeat.
+          Pick a tab, or let the tour itself.
         </p>
       </div>
 
-      {/* Four AI engines strip */}
+      {/* Feature tabs (bordered strip, inspiration-style cells) */}
       <div
-        data-engines
-        className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2 mb-12 font-mono text-[11px] uppercase tracking-widest text-[#5e5e6e]"
+        data-feat-tablist
+        role="tablist"
+        aria-label="Platform features"
+        onKeyDown={handleTablistKeyDown}
+        className="mb-10 flex snap-x snap-mandatory overflow-x-auto rounded-2xl border border-[#e5e1ea] bg-white lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {ENGINES.map((engine, index) => (
-          <React.Fragment key={engine}>
-            {index > 0 && <span className="text-[#cbc3d7]">/</span>}
-            <span className="px-2 py-0.5 rounded-full bg-[#f4f1fb] border border-[#e5e1ea] text-[#5e5e6e]">
-              {engine}
-            </span>
-          </React.Fragment>
-        ))}
-      </div>
-
-      <div data-feature-grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {FEATURES.map((feature) => {
+        {FEATURES.map((feature, i) => {
           const Icon = feature.icon;
+          const isActive = i === active;
           return (
-            <div key={feature.title} data-feature className="h-full">
-              <motion.div
-                whileHover={{ y: -6 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-                className="h-full"
-              >
-                <Card
-                  padding="md"
-                  className="h-full flex flex-col hover:border-[#cbc3d7] hover:shadow-[0_14px_34px_-10px_rgba(107,56,212,0.16)]"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <motion.div
-                      whileHover={{ rotate: -6, scale: 1.08 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-                      className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#6b38d4] flex items-center justify-center"
-                    >
-                      <Icon size={20} />
-                    </motion.div>
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#8e8ea0] pt-1.5">
-                      {feature.tag}
+            <button
+              key={feature.id}
+              ref={(el) => { tabRefs.current[i] = el; }}
+              data-feat-tab
+              role="tab"
+              type="button"
+              aria-selected={isActive}
+              aria-controls={`feature-panel-${feature.id}`}
+              id={`feature-tab-${feature.id}`}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => setActive(i)}
+              className={`relative min-w-[196px] flex-1 snap-start border-r border-[#e5e1ea] px-5 py-4 text-left transition-colors last:border-r-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#8b5cf6]/50 ${isActive ? 'bg-[#faf9fe]' : 'hover:bg-[#f4f1fb]/60'}`}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${isActive ? 'bg-[#ede9fe] text-[#6b38d4]' : 'bg-[#f4f1fb] text-[#8e8ea0]'}`}>
+                  <Icon size={16} />
+                </span>
+                <span className={`font-mono text-[10px] tracking-widest ${isActive ? 'text-[#6b38d4]' : 'text-[#cbc3d7]'}`}>
+                  0{i + 1}
+                </span>
+              </div>
+              <div className={`mt-2.5 text-[13px] font-bold ${isActive ? 'text-[#0a0a0f]' : 'text-[#5e5e6e]'}`}>
+                {feature.tabTitle}
+              </div>
+              <div className="mt-0.5 truncate font-sans text-[11px] text-[#8e8ea0]">{feature.tabBlurb}</div>
+
+              {isActive && (
+                <>
+                  {/* Corner ticks mark the active cell (inspiration detail) */}
+                  <span aria-hidden="true" className="pointer-events-none absolute left-1.5 top-1.5 h-2 w-2 border-l border-t border-[#6b38d4]" />
+                  <span aria-hidden="true" className="pointer-events-none absolute right-1.5 top-1.5 h-2 w-2 border-r border-t border-[#6b38d4]" />
+                  <span aria-hidden="true" className="pointer-events-none absolute bottom-1.5 left-1.5 h-2 w-2 border-b border-l border-[#6b38d4]" />
+                  <span aria-hidden="true" className="pointer-events-none absolute bottom-1.5 right-1.5 h-2 w-2 border-b border-r border-[#6b38d4]" />
+                  {/* Idle-autoplay countdown */}
+                  {!reduceMotion && (
+                    <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] overflow-hidden">
+                      <span ref={(el) => { progressRef.current = el; }} className="block h-full w-full origin-left scale-x-0 bg-gradient-to-r from-[#6b38d4] to-[#8b5cf6]" />
                     </span>
-                  </div>
-                  <h3 className="font-display font-bold text-[15px] text-[#0a0a0f] mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-xs text-[#5e5e6e] leading-relaxed">{feature.text}</p>
-                </Card>
-              </motion.div>
-            </div>
+                  )}
+                </>
+              )}
+            </button>
           );
         })}
+      </div>
+
+      {/* Split: copy left, feature screen right */}
+      <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-14">
+        {/* Copy column (one stacked block per feature) */}
+        <div className="relative min-h-[420px] lg:col-span-4">
+          {FEATURES.map((feature, i) => (
+            <div
+              key={feature.id}
+              ref={(el) => { copyRefs.current[i] = el; }}
+              aria-hidden={i !== active}
+              className={`absolute inset-x-0 top-0 ${i === active ? '' : 'invisible opacity-0'}`}
+            >
+              <div className="mb-3 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b38d4]">
+                <span className="mr-2 inline-block h-2 w-2 bg-[#6b38d4]" />
+                {String(i + 1).padStart(2, '0')} / 0{FEATURES.length} — {feature.eyebrow}
+              </div>
+              <h3 className="font-display text-[26px] font-bold leading-tight text-[#0a0a0f] lg:text-[30px]">
+                {feature.heading}
+              </h3>
+              <p className="mt-3 font-sans text-sm leading-relaxed text-[#5e5e6e]">{feature.body}</p>
+              <ul className="mt-5 space-y-2">
+                {feature.bullets.map((bullet) => (
+                  <li key={bullet} className="flex items-start gap-2.5 font-sans text-[13px] text-[#0a0a0f]">
+                    <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#ede9fe] text-[#6b38d4]">
+                      <Check size={11} strokeWidth={3} />
+                    </span>
+                    {bullet}
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to={feature.ctaTo}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#0a0a0f] px-5 py-2.5 font-sans text-[13px] font-semibold text-white transition-colors hover:bg-[#1f1f29]"
+              >
+                {feature.ctaLabel}
+                <ArrowRight size={14} />
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        {/* Stage: ambient blurred backdrop + white app frame */}
+        <div data-feat-stage className="relative lg:col-span-8">
+          <div aria-hidden="true" className="absolute inset-0 overflow-hidden rounded-[28px] bg-[#f4f1fb]">
+            <div data-feat-blob className="absolute -left-16 -top-20 h-72 w-72 rounded-full bg-[#8b5cf6]/30 blur-[70px]" />
+            <div data-feat-blob className="absolute -bottom-24 right-0 h-80 w-80 rounded-full bg-[#6b38d4]/25 blur-[80px]" />
+            <div data-feat-blob className="absolute right-1/4 top-1/3 h-60 w-60 rounded-full bg-[#d946ef]/15 blur-[70px]" />
+          </div>
+
+          <div className="relative overflow-hidden rounded-[20px] border border-white/70 bg-white shadow-[0_32px_64px_-24px_rgba(107,56,212,0.35)]">
+            <div className="relative aspect-[16/10] w-full">
+              {FEATURES.map((feature, i) => {
+                const Mock = feature.Mock;
+                const isActive = i === active;
+                return (
+                  <div
+                    key={feature.id}
+                    id={`feature-panel-${feature.id}`}
+                    role="tabpanel"
+                    aria-labelledby={`feature-tab-${feature.id}`}
+                    ref={(el) => { panelRefs.current[i] = el; }}
+                    aria-hidden={!isActive}
+                    className={`absolute inset-0 ${isActive ? '' : 'invisible opacity-0'}`}
+                  >
+                    <Mock />
+                    {!failedShots[feature.id] && (
+                      <img
+                        src={`/screenshots/features/${feature.id}.png`}
+                        alt={`${feature.tabTitle} screenshot`}
+                        loading="lazy"
+                        onError={() => setFailedShots((prev) => ({ ...prev, [feature.id]: true }))}
+                        className="absolute inset-0 h-full w-full object-cover object-top"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
 };
 
 export default LandingFeatures;
+

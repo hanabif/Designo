@@ -65,9 +65,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#e5e1ea]">
         <div>
-          <Badge variant="primary" icon={<Sparkles size={12} />} className="mb-3">
-            PERSONALIZED INTERVIEW PREP
-          </Badge>
+          
           <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
             Welcome back, {userName}
           </h1>
@@ -110,19 +108,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         <Card padding="md">
           <div className="flex items-center justify-between text-xs text-[#5e5e6e] font-mono uppercase mb-2">
             <span>Interviews Completed</span>
-            <Award size={16} className="text-[#6b38d4]" />
+            <Award size={20} className="text-[#6b38d4]" />
           </div>
-          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">{interviewCount}</div>
-          <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
-            <span>Completed practice sessions</span>
-          </div>
+          <div className="font-display font-extrabold text-5xl text-[#0a0a0f]">{interviewCount}</div>
+          
         </Card>
 
         <Card padding="md" className="flex items-center justify-between">
           <div>
             <div className="text-xs text-[#5e5e6e] font-mono uppercase mb-2">Average Score</div>
-            <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">{averageScore ?? '—'}<span className="text-lg font-normal text-[#8e8ea0]">{averageScore === null ? '' : '/100'}</span></div>
-            <div className="text-xs text-[#6b38d4] font-medium mt-2">Strong Hire Baseline</div>
+            <div className="font-display font-extrabold text-5xl text-[#0a0a0f]">{averageScore ?? '—'}<span className="text-lg font-normal text-[#8e8ea0]">{averageScore === null ? '' : '/100'}</span></div>
+            
           </div>
           <div className="w-14 h-14 rounded-full border-4 border-[#ede9fe] border-t-[#6b38d4] flex items-center justify-center font-display font-bold text-xs text-[#6b38d4]">
             {averageScore ?? '—'}{averageScore === null ? '' : '%'}
@@ -134,11 +130,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Practice Time</span>
             <Clock size={16} className="text-[#6b38d4]" />
           </div>
-          <div className="font-display font-extrabold text-3xl text-[#0a0a0f]">{practiceTime}</div>
-          <div className="text-xs text-[#10b981] font-medium mt-2 flex items-center gap-1">
-            <Flame size={13} className="text-amber-500 fill-amber-500" />
-            <span>{practiceTracked ? 'Counted live while you practice' : 'Launch an interview — time tracks automatically'}</span>
-          </div>
+          <div className="font-display font-extrabold text-5xl text-[#0a0a0f]">{practiceTime}</div>
+      
         </Card>
 
         <Card padding="md">
@@ -166,12 +159,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <h3 className="font-display font-bold text-lg text-[#0a0a0f]">Recent Mock Interviews</h3>
                 <p className="text-xs text-[#5e5e6e]">Turn-by-turn evaluations from your latest sessions</p>
               </div>
-              <button
-                onClick={() => { const latestReport = recentInterviews.find((session) => session.evaluationId); if (latestReport?.evaluationId) navigate(`/report/${latestReport.evaluationId}`); }}
-                className="text-xs text-[#6b38d4] font-semibold hover:underline cursor-pointer"
-              >
-                View Latest Report
-              </button>
+              
             </div>
 
             <div className="divide-y divide-[#e5e1ea]" aria-busy={isLoading}>
@@ -266,12 +254,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <Card padding="md">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-display font-bold text-base text-[#0a0a0f]">Recommended Next Drills</h3>
-              <button
-                onClick={() => onNavigateTab('roadmap')}
-                className="text-xs text-[#6b38d4] font-semibold hover:underline cursor-pointer"
-              >
-                Roadmap
-              </button>
+              
             </div>
             <p className="text-xs text-[#5e5e6e] mb-4">
               Targeted exercises derived from your missed trade-offs in recent mock loops.

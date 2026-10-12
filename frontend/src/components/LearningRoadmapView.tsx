@@ -250,9 +250,7 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Title */}
       <div className="mb-10 pb-6 border-b border-[#e5e1ea]">
-        <Badge variant="primary" icon={<Sparkles size={13} />} className="mb-2">
-          ADAPTIVE CURRICULUM // STAFF LOOP CALIBRATED
-        </Badge>
+        
         <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
           Personalized System Design Roadmap
         </h1>
