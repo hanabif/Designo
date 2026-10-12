@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Terminal } from 'lucide-react';
 import { api, saveAuthTokens } from '../services/api';
 import { Modal, Button } from './ui';
+import { LogoMark } from './Logo';
 import type { User } from '../types';
 
 interface AuthModalProps {
@@ -56,9 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
   const modalTitle = (
     <div className="flex items-center gap-2.5">
-      <div className="w-8 h-8 rounded-full bg-[#0a0a0f] flex items-center justify-center text-white shrink-0">
-        <Terminal size={16} />
-      </div>
+      <LogoMark size={26} className="shrink-0" />
       <div>
         <h2 className="font-display font-bold text-xl text-[#0a0a0f]">
           {mode === 'signup' && 'Create your account'}

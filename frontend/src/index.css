@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+/* Zodiak webfonts — installed per the official WEB README (css/zodiak.css → fonts/zodiak/) */
+@import './css/zodiak.css';
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 :root {
   /* Stitch Minimalist Royal Design Tokens */
@@ -35,9 +37,10 @@
   --color-info: #6366f1;
   --color-info-bg: #eef2ff;
 
-  /* Typography */
-  --font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Typography — Zodiak (serif) for display/headings, Plus Jakarta Sans for UI/body */
+  --font-display: 'Zodiak-Variable', 'Zodiak-Bold', Georgia, 'Times New Roman', serif;
+  --font-serif: 'Zodiak-Variable', 'Zodiak-Regular', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   /* Spacing */
@@ -87,18 +90,18 @@ code, pre, .font-mono {
   font-family: var(--font-mono);
 }
 
-/* Headings */
+/* Headings — Zodiak serif display */
 h1, h2, h3, h4, h5, .display-mega, .display-h1, .display-h2 {
   font-family: var(--font-display);
   font-weight: 700;
   color: var(--color-text);
-  letter-spacing: -0.025em;
+  letter-spacing: -0.015em;
 }
 
 .display-mega {
   font-size: 48px;
   line-height: 1.08;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.02em;
 }
 
 @media (min-width: 1024px) {

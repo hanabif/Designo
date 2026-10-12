@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Send, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
+import { LogoMark } from './Logo';
 import { addPracticeSeconds, getPracticeSeconds, formatDuration } from '../lib/practiceTime';
 
 
@@ -485,8 +486,8 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
                   className={`flex items-start gap-3 ${isAi ? '' : 'justify-end'}`}
                 >
                   {isAi && (
-                    <div className="w-8 h-8 rounded-full bg-[#ede9fe] border border-[#8b5cf6]/30 flex items-center justify-center shrink-0 font-bold text-xs text-[#6b38d4]">
-                      AI
+                    <div className="w-8 h-8 rounded-full bg-[#ede9fe] border border-[#8b5cf6]/30 flex items-center justify-center shrink-0">
+                      <LogoMark size={16} variant="mono" className="text-[#6b38d4]" />
                     </div>
                   )}
 
@@ -529,7 +530,7 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
 
             {isAiThinking && (
               <div className="flex items-start gap-3" role="status" aria-live="polite" aria-label="Designo is thinking">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#8b5cf6]/30 bg-[#ede9fe] text-[10px] font-bold text-[#6b38d4]">D</div>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#8b5cf6]/30 bg-[#ede9fe]"><LogoMark size={16} variant="mono" className="text-[#6b38d4]" /></div>
                 <div className="rounded-2xl rounded-tl-sm border border-[#e5e1ea] bg-white px-4 py-3 shadow-xs">
                   <div className="mb-1.5 font-mono text-[10px] font-semibold text-[#6b38d4]">DESIGNO</div>
                   <div className="flex items-center gap-1.5" aria-hidden="true">

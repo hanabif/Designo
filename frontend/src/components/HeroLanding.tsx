@@ -8,6 +8,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { motion } from 'motion/react';
+import { Logo } from './Logo';
 import { LandingHowItWorks } from './LandingHowItWorks';
 import { LandingFeatures } from './LandingFeatures';
 
@@ -155,23 +156,13 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center gap-2.5">
-            <motion.div
-              whileHover={{ rotate: -8, scale: 1.08 }}
-              whileTap={{ scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-              className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6b38d4] to-[#8b5cf6] flex items-center justify-center shadow-sm"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white" fillOpacity="0.9" />
-                <path d="M2 17L12 22L22 17" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M2 12L12 17L22 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </motion.div>
-            <span className="font-display font-extrabold text-[18px] tracking-tight text-[#0a0a0f]">
-              Designo
-            </span>
-          </div>
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+          >
+            <Logo size={30} wordmarkClassName="text-[19px]" />
+          </motion.div>
 
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
