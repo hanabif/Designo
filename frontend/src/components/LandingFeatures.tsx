@@ -11,6 +11,11 @@ import {
   QuestionBankMock,
   RoadmapMock,
 } from './features/FeatureMocks';
+import liveAiInterviewShot from '../assets/screenshots/live-ai-interview.png';
+import evaluationReportsShot from '../assets/screenshots/evaluation-reports.png';
+import diagramStudioShot from '../assets/screenshots/diagram-studio.png';
+import questionBankShot from '../assets/screenshots/question-bank.png';
+import adaptiveRoadmapShot from '../assets/screenshots/adaptive-roadmap.png';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -26,15 +31,16 @@ interface Feature {
   bullets: string[];
   ctaLabel: string;
   ctaTo: string;
+  /** Real app screenshot bundled from src/assets/screenshots. */
+  shot: string;
   Mock: React.FC;
 }
 
 /**
  * The five feature demos. Each tab shows a copy column on the left and the
- * feature's screen on the right. The built-in SVG mock is the default visual;
- * dropping a real screenshot at  frontend/public/screenshots/features/<id>.png
- * automatically replaces it (no code changes) — the <img> layers on top and
- * hides itself on 404.
+ * feature's real app screenshot on the right (bundled from
+ * src/assets/screenshots), with the palette-matched SVG mock layered behind
+ * as a fallback while the image loads.
  */
 const FEATURES: Feature[] = [
   {
@@ -48,20 +54,8 @@ const FEATURES: Feature[] = [
     bullets: ['Four-stage loop: requirements → design → deep dive → retro', 'Follow-ups adapt to every answer you give', 'Score ticker updates while you talk'],
     ctaLabel: 'Start a session',
     ctaTo: '/interview',
+    shot: liveAiInterviewShot,
     Mock: LiveInterviewMock,
-  },
-  {
-    id: 'question-bank',
-    icon: Library,
-    tabTitle: 'Question Bank',
-    tabBlurb: 'Tiered scenario library',
-    eyebrow: 'QUESTION BANK',
-    heading: 'A library that levels with you.',
-    body: 'Tiered system-design scenarios — from URL Shorteners to Global CDNs — filterable by difficulty, tag and company track.',
-    bullets: ['Beginner → Staff difficulty tiers', 'Filter by tag, track and interview format', 'One click launches a tuned live session'],
-    ctaLabel: 'Browse questions',
-    ctaTo: '/questions',
-    Mock: QuestionBankMock,
   },
   {
     id: 'evaluation-reports',
@@ -74,6 +68,7 @@ const FEATURES: Feature[] = [
     bullets: ['Weighted rubric across four dimensions', 'Strengths and fix-first improvements', 'Hire-signal rating per session'],
     ctaLabel: 'See a report',
     ctaTo: '/report',
+    shot: evaluationReportsShot,
     Mock: EvaluationReportMock,
   },
   {
@@ -87,7 +82,22 @@ const FEATURES: Feature[] = [
     bullets: ['AI-generated Mermaid & SVG output', 'SPF and concurrency bottleneck detection', 'Export to Mermaid, SVG or PNG'],
     ctaLabel: 'Open the studio',
     ctaTo: '/diagrams',
+    shot: diagramStudioShot,
     Mock: DiagramStudioMock,
+  },
+  {
+    id: 'question-bank',
+    icon: Library,
+    tabTitle: 'Question Bank',
+    tabBlurb: 'Tiered scenario library',
+    eyebrow: 'QUESTION BANK',
+    heading: 'A library that levels with you.',
+    body: 'Tiered system-design scenarios — from URL Shorteners to Global CDNs — filterable by difficulty, tag and company track.',
+    bullets: ['Beginner → Staff difficulty tiers', 'Filter by tag, track and interview format', 'One click launches a tuned live session'],
+    ctaLabel: 'Browse questions',
+    ctaTo: '/questions',
+    shot: questionBankShot,
+    Mock: QuestionBankMock,
   },
   {
     id: 'adaptive-roadmap',
@@ -100,6 +110,7 @@ const FEATURES: Feature[] = [
     bullets: ['Gap-targeted concept sequence', 'Progress tracked per concept', 'Re-sorts after every evaluation'],
     ctaLabel: 'View roadmap',
     ctaTo: '/roadmap',
+    shot: adaptiveRoadmapShot,
     Mock: RoadmapMock,
   },
 ];
@@ -129,7 +140,6 @@ export const LandingFeatures: React.FC = () => {
   const [active, setActive] = useState(0);
   const [hovering, setHovering] = useState(false);
   const [inView, setInView] = useState(false);
-  const [failedShots, setFailedShots] = useState<Record<string, boolean>>({});
 
   const reduceMotion = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -387,15 +397,12 @@ export const LandingFeatures: React.FC = () => {
                     className={`absolute inset-0 ${isActive ? '' : 'invisible opacity-0'}`}
                   >
                     <Mock />
-                    {!failedShots[feature.id] && (
-                      <img
-                        src={`/screenshots/features/${feature.id}.png`}
-                        alt={`${feature.tabTitle} screenshot`}
-                        loading="lazy"
-                        onError={() => setFailedShots((prev) => ({ ...prev, [feature.id]: true }))}
-                        className="absolute inset-0 h-full w-full object-cover object-top"
-                      />
-                    )}
+                    <img
+                      src={feature.shot}
+                      alt={`${feature.tabTitle} screenshot`}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover object-top"
+                    />
                   </div>
                 );
               })}

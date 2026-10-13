@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Sparkles, Flame, ArrowRight, Award, Clock, TrendingUp, ChevronRight, Layers } from 'lucide-react';
+import { Play, ArrowRight, Award, Clock, TrendingUp, ChevronRight, Layers } from 'lucide-react';
 import type { User } from '../types';
 import { Button, Card, Badge } from './ui';
 import { api } from '../services/api';
@@ -36,7 +36,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [interviewCount, setInterviewCount] = useState(0);
   const [averageScore, setAverageScore] = useState<number | null>(null);
   const [practiceTime, setPracticeTime] = useState('0 min');
-  const [practiceTracked, setPracticeTracked] = useState(false);
+  const [_practiceTracked, setPracticeTracked] = useState(false);
   const [recommendedTopics, setRecommendedTopics] = useState<Array<{ title: string; progress: number; est: string; category: string }>>([]);
   const [topCompetency, setTopCompetency] = useState<{ name: string; score: number } | null>(null);
   const [loadError, setLoadError] = useState('');

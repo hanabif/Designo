@@ -70,7 +70,7 @@ const prefersReducedMotion = () =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 
-/* ── Mock-UI visuals inside the dark card panels ── */
+/* ── Mock-UI visuals inside the card panels ── */
 
 const TargetVisual: React.FC = () => (
   <div className="flex h-full w-full flex-col items-center justify-center gap-2.5">
@@ -155,7 +155,7 @@ const LoopVisual: React.FC = () => (
     </div>
     <div
       data-visual-piece
-      className="max-w-[84%] self-end rounded-2xl rounded-br-sm bg-[#6b38d4] px-3 py-1.5 text-[11px] leading-snug text-white shadow-[0_8px_20px_-8px_rgba(107,56,212,0.9)]"
+      className="max-w-[84%] self-end rounded-2xl rounded-br-sm bg-[#6b38d4] px-3 py-1.5 text-[11px] leading-snug text-white shadow-[0_8px_20px_-8px_rgba(107,56,212,0.45)]"
     >
       Requirements first — 10k rps per region
     </div>
@@ -317,7 +317,7 @@ const StepCard: React.FC<{ step: Step }> = ({ step }) => {
         onPointerLeave={handlePointerLeave}
       >
         <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#e5e1ea] bg-white shadow-[0_2px_8px_-2px_rgba(10,10,15,0.06)] transition-[border-color,box-shadow] duration-300 hover:border-[#cbc3d7] hover:shadow-[0_22px_50px_-16px_rgba(107,56,212,0.3)]">
-          {/* Dark mock-UI panel */}
+          {/* Soft lavender mock panel */}
           <div className="relative h-48 shrink-0 overflow-hidden border-b border-[#e5e1ea] bg-gradient-to-br from-[#f7f4ff] via-[#f2eefe] to-[#e8e0fb] sm:h-56">
             {/* Dot-grid texture */}
             <div

@@ -10,7 +10,6 @@ import {
   Map as MapIcon,
   Play,
   RefreshCw,
-  Sparkles,
   Target,
 } from 'lucide-react';
 import { Button, Badge, Card } from './ui';
