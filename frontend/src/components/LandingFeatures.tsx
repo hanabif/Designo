@@ -262,10 +262,7 @@ export const LandingFeatures: React.FC = () => {
     >
       {/* Section header */}
       <div data-feat-reveal className="mb-10 text-center max-w-2xl mx-auto">
-        <span className="mb-4 inline-flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b38d4]">
-          <span className="h-2 w-2 bg-[#6b38d4]" />
-          Everything included
-        </span>
+        
         <h2 className="font-display font-bold text-3xl sm:text-4xl lg:text-[44px] leading-[1.08] text-[#0a0a0f]">
           The whole interview loop, one workspace
         </h2>

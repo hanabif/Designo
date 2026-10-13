@@ -498,9 +498,7 @@ export const LandingHowItWorks: React.FC = () => {
             </React.Fragment>
           ))}
         </h2>
-        <div data-hw-badge className="mt-5">
-          <Badge variant="primary">Signup → offer</Badge>
-        </div>
+        
         <p data-hw-sub className="mt-4 font-sans text-[#5e5e6e]">
           Designo mirrors the real loop: set your target, practise under pressure, then fix
           exactly what the evaluation flags.

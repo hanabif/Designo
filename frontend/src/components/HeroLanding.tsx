@@ -215,13 +215,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
               >
                 Watch Simulation
               </Button>
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={onExploreQuestions}
-              >
-                Explore Library
-              </Button>
+              
             </div>
             
           </div>
