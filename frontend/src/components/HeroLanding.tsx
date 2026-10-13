@@ -11,6 +11,7 @@ import { motion } from 'motion/react';
 import { Logo } from './Logo';
 import { LandingHowItWorks } from './LandingHowItWorks';
 import { LandingFeatures } from './LandingFeatures';
+import GradientCTA from './GradientCTA';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -24,14 +25,12 @@ interface HeroLandingProps {
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartInterview: propOnStartInterview,
   onExploreQuestions: propOnExploreQuestions,
-  onSelectPricing: propOnSelectPricing,
   onOpenAuth,
 }) => {
   const navigate = useNavigate();
   const { scrollTo } = useLenisScroll();
   const onStartInterview = propOnStartInterview || (() => navigate('/dashboard'));
   const onExploreQuestions = propOnExploreQuestions || (() => navigate('/questions'));
-  const onSelectPricing = propOnSelectPricing || (() => navigate('/billing'));
 
   // Transparent at the top so the GridRise background blends through the
   // header; a soft frosted surface only kicks in once the user scrolls past
@@ -384,42 +383,49 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
       <LandingFeatures />
 
-      {/* CTA Banner */}
+      {/* CTA Banner — animated gradient card (Feral UI gradient engine) */}
       <section id="start" className="max-w-7xl mx-auto px-6 md:px-12 mt-16 scroll-mt-24">
-        <div data-cta className="rounded-3xl bg-gradient-to-r from-[#0a0a0f] via-[#1a1528] to-[#0a0a0f] text-white p-8 md:p-14 flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
-          <div className="max-w-xl">
-            <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white mb-3">
-              Ready to crush your next System Design loop?
-            </h2>
-            <p className="font-sans text-sm md:text-base text-neutral-300">
-              Start a realistic mock interview right now. No credit card required.
-            </p>
-          </div>
-          <div className="flex items-center gap-4 shrink-0">
-            <motion.div
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 24 }}
-            >
-              <Button
-                variant="primary"
-                size="lg"
-                className="shadow-lg"
-                iconRight={<ArrowRight size={16} />}
-                onClick={onStartInterview}
+        <div
+          data-cta
+          className="relative rounded-3xl overflow-hidden shadow-xl isolate min-h-[320px] md:min-h-[380px] flex items-center"
+        >
+          {/* "Midnight bloom" animated FLOW gradient backdrop */}
+          <GradientCTA
+            className="pointer-events-none"
+            speed={36}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', aspectRatio: 'auto' }}
+          />
+          {/* Legibility scrim — keeps copy readable over the moving gradient */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(100deg,rgba(8,6,20,0.66)_0%,rgba(8,6,20,0.34)_46%,rgba(8,6,20,0)_78%)]"
+          />
+          <div className="relative z-10 p-8 md:p-14 w-full">
+            <div className="max-w-xl">
+              <h2 className="font-display font-extrabold text-3xl sm:text-4xl text-white mb-3 drop-shadow-[0_2px_14px_rgba(0,0,0,0.35)]">
+                Ready to crush your next System Design loop?
+              </h2>
+              <p className="font-sans text-sm md:text-base text-white/85">
+                Start a realistic mock interview right now. No credit card required.
+              </p>
+            </div>
+            <div className="flex items-center gap-4 mt-7">
+              <motion.div
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 24 }}
               >
-                Launch Mock Interview
-              </Button>
-            </motion.div>
-            <motion.div
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 24 }}
-            >
-              <Button variant="outline" size="lg" onClick={onSelectPricing}>
-                View Plans
-              </Button>
-            </motion.div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="shadow-[0_10px_30px_-8px_rgba(8,6,20,0.55)]"
+                  iconRight={<ArrowRight size={16} />}
+                  onClick={onStartInterview}
+                >
+                  Get Started
+                </Button>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
