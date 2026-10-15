@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, ArrowRight, Award, Clock, TrendingUp, ChevronRight, Layers } from 'lucide-react';
+import { Play, ArrowRight, Award, Clock, ChevronRight, Layers } from 'lucide-react';
 import type { User } from '../types';
 import { Button, Card, Badge } from './ui';
 import { api } from '../services/api';
@@ -38,15 +38,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const [practiceTime, setPracticeTime] = useState('0 min');
   const [_practiceTracked, setPracticeTracked] = useState(false);
   const [recommendedTopics, setRecommendedTopics] = useState<Array<{ title: string; progress: number; est: string; category: string }>>([]);
-  const [topCompetency, setTopCompetency] = useState<{ name: string; score: number } | null>(null);
   const [loadError, setLoadError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  // Split "32 min" / "<1 min" into a big value and a small unit. Formats like
+  // "1h 12m" (already compact) are rendered as-is.
+  const practiceTimeMatch = practiceTime.match(/^(\d+|<1)\s*([a-z]+)$/i);
+  const practiceTimeValue = practiceTimeMatch ? practiceTimeMatch[1] : practiceTime;
+  const practiceTimeUnit = practiceTimeMatch ? practiceTimeMatch[2] : '';
   useEffect(() => {
     Promise.all([api.getInterviewHistory(), api.getAnalyticsDashboard(), api.getRecommendations()]).then(([history, analytics, recommendations]) => {
       setInterviewCount(analytics.interviewMetrics?.totalInterviews ?? history.length);
       setAverageScore(analytics.performanceMetrics?.averageScore ?? null);
-      const scoredAreas = Object.entries(analytics.categoryMetrics || {}).filter((entry): entry is [string, number] => typeof entry[1] === 'number').sort((a, b) => b[1] - a[1]);
-      if (scoredAreas.length) setTopCompetency({ name: scoredAreas[0][0], score: scoredAreas[0][1] });
       setRecommendedTopics((recommendations.learningRoadmap || []).slice(0, 3).map((item: any) => ({ title: item.topic, progress: 0, est: item.priority || 'Recommended', category: item.priority || 'Focus area' })));
       const totalPracticeSeconds = getTotalPracticeSeconds();
       setPracticeTime(formatDuration(totalPracticeSeconds));
@@ -93,9 +95,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         </div>
       </div>
 
-      {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10" aria-busy={isLoading}>
-        {isLoading ? Array.from({ length: 4 }, (_, index) => (
+      {/* 3 Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10" aria-busy={isLoading}>
+        {isLoading ? Array.from({ length: 3 }, (_, index) => (
           <Card key={`stat-skeleton-${index}`} padding="md" className="min-h-[142px]">
             <div className="mb-4 flex items-center justify-between">
               <SkeletonBlock className="h-3 w-28" />
@@ -130,19 +132,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <span>Practice Time</span>
             <Clock size={16} className="text-[#6b38d4]" />
           </div>
-          <div className="font-display font-extrabold text-5xl text-[#0a0a0f]">{practiceTime}</div>
+          <div className="flex items-baseline gap-1.5 font-display font-extrabold text-5xl text-[#0a0a0f]">
+            <span>{practiceTimeValue}</span>
+            {practiceTimeUnit && <span className="text-xl font-bold text-[#5e5e6e]">{practiceTimeUnit}</span>}
+          </div>
       
-        </Card>
-
-        <Card padding="md">
-          <div className="flex items-center justify-between text-xs text-[#5e5e6e] font-mono uppercase mb-2">
-            <span>Top Competency</span>
-            <TrendingUp size={16} className="text-[#10b981]" />
-          </div>
-          <div className="font-display font-extrabold text-xl text-[#0a0a0f] truncate">{topCompetency?.name ?? '—'}</div>
-          <div className="text-xs text-[#5e5e6e] mt-2">
-            {topCompetency ? `${topCompetency.score}% average score` : 'Complete an interview to see your strongest area.'}
-          </div>
         </Card>
         </>}
       </div>

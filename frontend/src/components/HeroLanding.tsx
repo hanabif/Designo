@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Play, Check, Cpu } from 'lucide-react';
-import { Button, Badge } from './ui';
+import { ArrowRight, Play, Cpu, LayoutGrid, BookOpen, Terminal, BarChart3, Map, CreditCard, Settings, Bell, Award, Clock, ChevronRight, PanelLeft } from 'lucide-react';
+import { Button } from './ui';
 import { useLenisScroll } from '../hooks/useLenisScroll';
 import GridRise from './GridRise';
 import gsap from 'gsap';
@@ -15,6 +15,18 @@ import GradientCTA from './GradientCTA';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
+/** Sidebar navigation shown in the hero's live-dashboard mock. */
+const DEMO_NAV: Array<{ label: string; icon: React.ElementType; active?: boolean }> = [
+  { label: 'Dashboard', icon: LayoutGrid, active: true },
+  { label: 'Questions', icon: BookOpen },
+  { label: 'Simulator', icon: Terminal },
+  { label: 'Diagram Studio', icon: Cpu },
+  { label: 'Analytics', icon: BarChart3 },
+  { label: 'Roadmap', icon: Map },
+  { label: 'Billing', icon: CreditCard },
+  { label: 'Profile & Settings', icon: Settings },
+];
+
 interface HeroLandingProps {
   onStartInterview?: () => void;
   onExploreQuestions?: () => void;
@@ -24,13 +36,11 @@ interface HeroLandingProps {
 
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartInterview: propOnStartInterview,
-  onExploreQuestions: propOnExploreQuestions,
   onOpenAuth,
 }) => {
   const navigate = useNavigate();
   const { scrollTo } = useLenisScroll();
   const onStartInterview = propOnStartInterview || (() => navigate('/dashboard'));
-  const onExploreQuestions = propOnExploreQuestions || (() => navigate('/questions'));
 
   // Transparent at the top so the GridRise background blends through the
   // header; a soft frosted surface only kicks in once the user scrolls past
@@ -130,10 +140,31 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
         className="pointer-events-none absolute inset-x-0 top-0 h-[680px] z-0 overflow-hidden"
       >
         <GridRise
-          className="w-full h-full"
-          brightness={0.62}
-          accentColor={[0.42, 0.22, 0.83]}
-          riseStrength={1.15}
+          className="h-full w-full"
+          color="#ffffff"
+          relief={0}
+          accent="#de7dfa"
+          background="#f4f2f8"
+          accentStrength={0.85}
+          cellSize={0.06}
+          gap={0.08}
+          rounding={0.1}
+          amplitude={0.05}
+          lift={0.06}
+          liftRadius={0.6}
+          speed={0.6}
+          zoom={4}
+          orbit={45}
+          distance={1.5}
+          altitude={1}
+          haze={1}
+          samples={2}
+          dpr={2}
+          maxFps={60}
+          drift={0.28}
+          ease={0.1}
+          interactive
+          paused={false}
         />
         {/* fade-out at the bottom so the grid blends into the page */}
         <div className="absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-[#faf9fe] via-[#faf9fe]/70 to-transparent" />
@@ -187,7 +218,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-12 md:pt-16 pb-16">
 
         {/* Editorial Headline Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-20 md:mb-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-28 md:mb-40">
           <div className="lg:col-span-8">
 
             <h1 className="font-display font-extrabold text-[44px] sm:text-[68px] lg:text-[80px] leading-[0.96] tracking-[-0.035em] text-[#0a0a0f]">
@@ -228,142 +259,151 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
           <div className="relative mx-auto max-w-6xl">
             <div className="mb-6 flex flex-wrap items-end justify-between gap-3 px-1 sm:mb-8">
               <div>
-                <div className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6b38d4]">Inside a live session</div>
-                <h2 className="font-display text-xl font-bold tracking-tight text-[#0a0a0f] sm:text-2xl">Think out loud. Design with confidence.</h2>
+                <div className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6b38d4]">Inside your workspace</div>
+                <h2 className="font-display text-xl font-bold tracking-tight text-[#0a0a0f] sm:text-2xl">Every session scored. Every gap, queued for drills.</h2>
               </div>
-              <span className="font-mono text-[11px] text-[#5e5e6e]">A realistic interview, from prompt to evaluation</span>
+              <span className="font-mono text-[11px] text-[#5e5e6e]">Dashboard, history and next steps in one view</span>
             </div>
 
-        {/* Live interview workspace */}
-        <div id="simulation" data-hero-card className="relative w-full rounded-2xl md:rounded-[1.75rem] bg-white text-[#0a0a0f] p-3 md:p-4 shadow-[0_24px_70px_-20px_rgba(67,42,117,0.28)] border border-white/90 scroll-mt-24">
-          {/* Header Bar */}
-          <div className="flex flex-wrap items-center justify-between px-4 py-3 rounded-xl bg-[#f7f5fa] border border-[#e5e1ea] mb-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-full bg-red-400 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-amber-400 inline-block" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+        {/* Live dashboard workspace */}
+        <div id="simulation" data-hero-card className="relative w-full overflow-hidden rounded-2xl md:rounded-[1.75rem] bg-white text-[#0a0a0f] shadow-[0_24px_70px_-20px_rgba(67,42,117,0.28)] border border-white/90 scroll-mt-24">
+          <div className="flex">
+            {/* Sidebar */}
+            <aside className="hidden w-56 shrink-0 flex-col border-r border-[#e5e1ea] bg-white p-4 lg:flex">
+              <div className="mb-7 flex items-center justify-between">
+                <Logo size={22} wordmarkClassName="text-[17px]" />
+                <span className="flex h-6 w-6 items-center justify-center rounded-md border border-[#e5e1ea] text-[#8e8ea0]">
+                  <PanelLeft size={12} />
+                </span>
               </div>
-              <span className="font-mono text-xs text-[#0a0a0f] font-medium pl-2 border-l border-[#dcd7e5]">
-                DESIGNO / INTERVIEW ROOM <span className="text-[#8e8ea0]">·</span> Distributed Cache Invalidation
-              </span>
-            </div>
-            <div className="flex items-center gap-3 sm:gap-4">
-              <Badge variant="success" icon={<span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />}>
-                EVALUATOR ACTIVE
-              </Badge>
-              <Badge variant="primary">
-                STAGE 4 OF 9
-              </Badge>
-              <span className="hidden rounded-full border border-[#e5e1ea] bg-white px-3 py-1 font-mono text-[10px] text-[#5e5e6e] sm:inline-flex">32:18 remaining</span>
-            </div>
-          </div>
-
-          {/* 2-Column Live Interactive Simulation */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[440px]">
-            {/* Left: AI & Candidate Chat */}
-            <div className="lg:col-span-5 p-5 rounded-xl bg-[#faf9fe] border border-[#e5e1ea] flex flex-col justify-between">
-              <div className="space-y-4">
-                {/* AI Question */}
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#ede9fe] border border-[#8b5cf6]/30 flex items-center justify-center shrink-0 text-[#6b38d4] font-bold text-xs">
-                    AI
+              <div className="mb-2 px-3 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8e8ea0]">
+                Workspace
+              </div>
+              <nav className="space-y-1">
+                {DEMO_NAV.map(({ label, icon: Icon, active }) => (
+                  <div
+                    key={label}
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium ${
+                      active ? 'bg-[#ede9fe] text-[#6b38d4]' : 'text-[#5e5e6e]'
+                    }`}
+                  >
+                    <Icon size={15} className={active ? 'text-[#6b38d4]' : 'text-[#8e8ea0]'} />
+                    {label}
                   </div>
-                  <div data-sim-reveal className="rounded-2xl rounded-tl-sm p-4 bg-white border border-[#e5e1ea] shadow-xs">
-                    <div className="flex items-center justify-between mb-1.5 font-mono text-[10px] text-[#6b38d4] font-semibold tracking-wider">
-                      <span>ARCHITECT AI</span>
-                      <span className="text-[#8e8ea0] font-normal">14:02:18</span>
-                    </div>
-                    <p className="font-sans text-xs md:text-[13px] leading-relaxed text-[#0a0a0f]">
-                      "Under a sudden spike of 250k write QPS, your cache-aside strategy risks severe thundering herd if keys expire concurrently. How do you redesign invalidation without introducing write tail-latency?"
-                    </p>
-                  </div>
+                ))}
+              </nav>
+              <div className="mt-auto space-y-3 pt-5">
+                <div className="border-t border-[#e5e1ea]" />
+                <div className="flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-medium text-[#5e5e6e]">
+                  <Bell size={15} className="text-[#8e8ea0]" />
+                  Notifications
+                  <span className="ml-auto h-2 w-2 rounded-full bg-[#6b38d4]" />
                 </div>
-
-                {/* Candidate Answer */}
-                <div className="flex items-start gap-3 justify-end">
-                  <div data-sim-reveal className="rounded-2xl rounded-tr-sm p-4 bg-[#f3f0ff] border border-[#8b5cf6]/20 shadow-xs max-w-[92%]">
-                    <div className="flex items-center justify-between mb-1.5 font-mono text-[10px] gap-4">
-                      <span className="text-[#5e5e6e] font-medium">YOU (L6 TRACK)</span>
-                      <span className="text-emerald-600 font-semibold">+18pts Score Impact</span>
-                    </div>
-                    <p className="font-sans text-xs md:text-[13px] leading-relaxed text-[#0a0a0f]">
-                      "Shift to an asynchronous CDC pipeline using Debezium over Postgres WAL into Kafka, paired with distributed Redis probabilistic leases (XFetch algorithm). This bounds p99 write latency strictly to database commit (~3.8ms)."
-                    </p>
-                    <div className="mt-3 pt-2 border-t border-[#8b5cf6]/20 flex items-center justify-between font-mono text-[11px] text-[#5e5e6e]">
-                      <span>WAL Latency: ~3.8ms</span>
-                      <span className="text-[#6b38d4] font-medium">Stampede Risk: &lt;0.02%</span>
-                    </div>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-white border border-[#e5e1ea] flex items-center justify-center shrink-0 font-bold text-xs text-[#0a0a0f]">
-                    ME
-                  </div>
-                </div>
-
-                {/* Live Metric */}
-                <div data-sim-reveal className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Check size={16} className="text-emerald-600" />
-                    <span className="text-xs text-[#0a0a0f]">
-                      <strong>Vector:</strong> Fault Tolerance &amp; Concurrency
-                    </span>
-                  </div>
-                  <span className="font-mono text-xs font-semibold text-emerald-700">SIGNAL: STRONG (94%)</span>
+                <div className="flex items-center justify-center gap-2 rounded-full bg-[#0a0a0f] py-2.5 text-[13px] font-medium text-white">
+                  <Play size={12} fill="currentColor" />
+                  Mock Interview
                 </div>
               </div>
+            </aside>
 
-              {/* Status footer */}
-              <div className="mt-4 pt-3 border-t border-[#e5e1ea] flex items-center gap-2 font-mono text-xs text-[#5e5e6e]">
-                <span className="text-[#6b38d4] font-bold">&gt;</span>
-                <span>Synthesizing fallback queue strategy...</span>
-                <span className="w-2 h-4 bg-[#6b38d4] animate-pulse ml-auto" />
-              </div>
-            </div>
-
-            {/* Right: Architecture Diagram Mock */}
-            <div className="lg:col-span-7 p-5 rounded-xl bg-[#faf9fe] border border-[#e5e1ea] flex flex-col justify-between relative overflow-hidden">
-              <div className="flex items-center justify-between mb-4 border-b border-[#e5e1ea] pb-3">
-                <div className="flex items-center gap-2">
-                  <Cpu size={16} className="text-[#6b38d4]" />
-                  <span className="font-mono text-xs font-semibold text-[#0a0a0f]">
-                    LIVE TOPOLOGY GRAPH // CDC &amp; REDIS CLUSTER
+            {/* Main dashboard surface */}
+            <div className="min-w-0 flex-1 bg-[#faf9fe] p-5 sm:p-7">
+              <div className="flex flex-wrap items-start justify-between gap-4 border-b border-[#e5e1ea] pb-5">
+                <div data-sim-reveal>
+                  <h3 className="font-display text-2xl font-extrabold tracking-[-0.02em] text-[#0a0a0f] sm:text-[32px] sm:leading-[1.08]">
+                    Welcome back
+                  </h3>
+                  <p className="mt-2 text-xs text-[#5e5e6e] sm:text-[13px]">
+                    Your dashboard reflects your saved interview sessions and feedback.
+                  </p>
+                </div>
+                <div data-sim-reveal className="flex items-center gap-2.5">
+                  <span className="rounded-full border border-[#dcd7e5] bg-white px-4 py-2.5 text-[13px] font-medium text-[#0a0a0f]">
+                    Browse Library
+                  </span>
+                  <span className="flex items-center gap-2 rounded-full bg-[#0a0a0f] px-4 py-2.5 text-[13px] font-medium text-white">
+                    <Play size={12} fill="currentColor" />
+                    Launch Mock Interview
                   </span>
                 </div>
-                <Badge variant="success">
-                  HEALTH: 99.999%
-                </Badge>
               </div>
 
-              {/* Diagram Flow Visual */}
-              <div data-sim-reveal className="grid grid-cols-3 gap-3 my-auto py-4">
-                <div className="p-4 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
-                  <div className="font-mono text-[10px] text-[#8e8ea0] uppercase">Ingestion</div>
-                  <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Postgres 16</div>
-                  <div className="font-mono text-[11px] text-[#6b38d4] mt-2">Write Ahead Log</div>
-                  <div className="mt-2 text-[10px] bg-[#f4f1fb] text-[#5e5e6e] py-0.5 rounded">p99 ~3.8ms</div>
+              {/* Stat cards */}
+              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div data-sim-reveal className="rounded-2xl border border-[#e5e1ea] bg-white p-5">
+                  <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-[#5e5e6e]">
+                    <span>Interviews Completed</span>
+                    <Award size={16} className="text-[#6b38d4]" />
+                  </div>
+                  <div className="font-display text-5xl font-extrabold leading-none text-[#0a0a0f]">4</div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-[#ede9fe]/40 border border-[#8b5cf6]/30 shadow-xs text-center relative">
-                  <div className="font-mono text-[10px] text-[#6b38d4] uppercase font-semibold">Streaming</div>
-                  <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Kafka Cluster</div>
-                  <div className="font-mono text-[11px] text-[#5e5e6e] mt-2">Debezium CDC</div>
-                  <div className="mt-2 text-[10px] bg-emerald-50 text-emerald-700 py-0.5 rounded font-medium">Zero Drop</div>
+                <div data-sim-reveal className="rounded-2xl border border-[#e5e1ea] bg-white p-5">
+                  <div className="mb-3 font-mono text-[11px] uppercase tracking-wider text-[#5e5e6e]">Average Score</div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="font-display text-5xl font-extrabold leading-none text-[#0a0a0f]">
+                      80<span className="text-lg font-normal text-[#8e8ea0]">/100</span>
+                    </div>
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-[#ede9fe] border-t-[#6b38d4] font-display text-xs font-bold text-[#6b38d4]">
+                      80%
+                    </div>
+                  </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white border border-[#e5e1ea] shadow-xs text-center">
-                  <div className="font-mono text-[10px] text-[#8e8ea0] uppercase">Cache Layer</div>
-                  <div className="font-semibold text-sm text-[#0a0a0f] mt-1">Redis Clustered</div>
-                  <div className="font-mono text-[11px] text-[#6b38d4] mt-2">XFetch Leases</div>
-                  <div className="mt-2 text-[10px] bg-[#f4f1fb] text-[#5e5e6e] py-0.5 rounded">Hit Rate 98.6%</div>
+                <div data-sim-reveal className="rounded-2xl border border-[#e5e1ea] bg-white p-5">
+                  <div className="mb-3 flex items-center justify-between font-mono text-[11px] uppercase tracking-wider text-[#5e5e6e]">
+                    <span>Practice Time</span>
+                    <Clock size={16} className="text-[#6b38d4]" />
+                  </div>
+                  <div className="flex items-baseline gap-1.5 font-display text-5xl font-extrabold leading-none text-[#0a0a0f]">
+                    <span>32</span>
+                    <span className="text-xl font-bold text-[#5e5e6e]">min</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bottom Metrics Bar */}
-              <div data-sim-reveal className="pt-3 border-t border-[#e5e1ea] flex items-center justify-between text-xs font-mono text-[#5e5e6e]">
-                <span>Throughput: <strong>250,000 QPS</strong></span>
-                <span>Active Shards: <strong>32</strong></span>
-                <span>Tail Latency: <strong className="text-emerald-600">4.1ms</strong></span>
+              {/* Recent interviews + recommended drills */}
+              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <div data-sim-reveal className="rounded-2xl border border-[#e5e1ea] bg-white p-5 lg:col-span-2">
+                  <h4 className="font-display text-lg font-bold tracking-tight text-[#0a0a0f]">Recent Mock Interviews</h4>
+                  <p className="mt-1 text-xs text-[#5e5e6e]">Turn-by-turn evaluations from your latest sessions</p>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-[#e5e1ea] pt-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-display text-sm font-bold text-[#0a0a0f]">Event Streaming Platform</span>
+                        <span className="rounded-full bg-[#ede9fe] px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-[#6b38d4]">General Track</span>
+                      </div>
+                      <div className="mt-1.5 font-mono text-[11px] text-[#8e8ea0]">10/10/2026 · 4 min · STAFF</div>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="rounded-full border border-[#8b5cf6]/25 bg-[#f3f0ff] px-3 py-1 font-mono text-[10px] uppercase tracking-wider text-[#6b38d4]">In Progress</span>
+                      <span className="flex items-center gap-1.5 rounded-full bg-[#6b38d4] px-4 py-1.5 text-xs font-medium text-white">
+                        <Play size={11} fill="currentColor" />
+                        Resume
+                      </span>
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#dcd7e5] text-[#5e5e6e]">
+                        <ChevronRight size={14} />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div data-sim-reveal className="rounded-2xl border border-[#e5e1ea] bg-white p-5">
+                  <h4 className="font-display text-lg font-bold tracking-tight text-[#0a0a0f]">Recommended Next Drills</h4>
+                  <p className="mt-1 text-xs leading-relaxed text-[#5e5e6e]">Targeted exercises derived from your missed trade-offs in recent mock loops.</p>
+                  <div className="mt-4 rounded-xl border border-[#e5e1ea] bg-[#faf9fe] p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <span className="text-[13px] font-semibold leading-snug text-[#0a0a0f]">Cloud Cost Optimization &amp; Frugal Architectures</span>
+                      <span className="shrink-0 rounded-full bg-[#ede9fe] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[#6b38d4]">High</span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="rounded bg-[#ede9fe] px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-[#6b38d4]">High</span>
+                      <span className="font-mono text-[10px] uppercase tracking-wider text-[#8e8ea0]">Priority</span>
+                    </div>
+                  </div>
+                </div>
               </div>
+
             </div>
           </div>
         </div>

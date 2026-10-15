@@ -4,7 +4,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
 import { motion, useMotionTemplate, useSpring } from 'motion/react';
 import { ArrowRight, Check, MessagesSquare, Target, UserRound } from 'lucide-react';
-import { Badge } from './ui';
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
