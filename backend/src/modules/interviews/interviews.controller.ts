@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard.js';
 import { InterviewsService } from './interviews.service.js';
 import { StartInterviewDto } from './dto/start-interview.dto.js';
 import { InterviewMessageDto } from './dto/interview-message.dto.js';
 
 @Controller('interviews')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AppAuthGuard)
 export class InterviewsController {
   constructor(private readonly interviewsService: InterviewsService) {}
 
