@@ -28,6 +28,17 @@ export function saveAuthTokens(accessToken: string, refreshToken?: string) {
   if (refreshToken) localStorage.setItem('designo_refresh_token', refreshToken);
 }
 
+/**
+ * Clerk mode: the session token getter (from `useAuth().getToken()`) replaces
+ * the localStorage access token. When unset (legacy mode, or no Clerk key),
+ * everything behaves exactly as before.
+ */
+let tokenGetter: (() => Promise<string | null>) | null = null;
+
+export function setApiTokenGetter(getter: (() => Promise<string | null>) | null) {
+  tokenGetter = getter;
+}
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -88,7 +99,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers as Record<string, string>),
   };
 
-  const token = getAuthToken();
+  let token: string | null = null;
+  if (tokenGetter) {
+    try {
+      token = await tokenGetter();
+    } catch {
+      token = null;
+    }
+  }
+  if (!token) token = getAuthToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

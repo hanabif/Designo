@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
@@ -18,6 +18,7 @@ import { AdminPanelView } from './components/AdminPanelView';
 import { NotFoundView } from './components/NotFoundView';
 import { ProfileSettingsView } from './components/ProfileSettingsView';
 import { api, ApiError, getAuthToken, removeAuthToken } from './services/api';
+import { isClerkEnabled, ClerkSessionSync, clerkSignOutOnce } from './lib/clerk';
 import type { User, Question } from './types';
 
 export function App() {
@@ -35,6 +36,8 @@ export function App() {
   const location = useLocation();
 
   useEffect(() => {
+    // Clerk mode: session restore is handled by ClerkSessionSync below.
+    if (isClerkEnabled) return;
     // Nothing to restore without an access token.
     if (!getAuthToken()) return;
     api
@@ -64,12 +67,20 @@ export function App() {
   }, [isSetupModalOpen, questions.length, questionsLoading, questionsRequestStarted]);
 
   const handleLogout = () => {
+    if (isClerkEnabled) {
+      clerkSignOutOnce();
+      setUser(null);
+      navigate('/');
+      return;
+    }
     const refreshToken = localStorage.getItem('designo_refresh_token');
     if (refreshToken) void api.logout(refreshToken).catch(() => undefined);
     removeAuthToken();
     setUser(null);
     navigate('/');
   };
+
+  const handleClerkUser = useCallback((clerkUser: User | null) => setUser(clerkUser), []);
 
   const handleBeginInterview = async (questionId: string, difficulty: string, companyTrack: string) => {
     setAppError('');
@@ -84,6 +95,7 @@ export function App() {
 
   return (
     <div className={`min-h-screen bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4] ${location.pathname === '/' ? 'flex flex-col' : 'flex flex-col md:flex-row'}`}>
+      {isClerkEnabled && <ClerkSessionSync onUser={handleClerkUser} />}
       {location.pathname !== '/' && (
         <Navbar
           user={user}

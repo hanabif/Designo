@@ -1,5 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { Observable } from 'rxjs';
 import { PrismaService } from '../../database/prisma.service.js';
 import { ClerkAuthGuard } from './clerk-auth.guard.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
@@ -26,7 +27,7 @@ export class AppAuthGuard implements CanActivate {
     this.clerkGuard = new ClerkAuthGuard(prisma, configService);
   }
 
-  canActivate(context: ExecutionContext): Promise<boolean> | boolean {
+  canActivate(context: ExecutionContext): Observable<boolean> | Promise<boolean> | boolean {
     if (this.provider === 'clerk') {
       return this.clerkGuard.canActivate(context);
     }

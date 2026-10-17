@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api, saveAuthTokens } from '../services/api';
 import { Modal, Button } from './ui';
 import { LogoMark } from './Logo';
+import { isClerkEnabled, ClerkAuthForm } from '../lib/clerk';
 import type { User } from '../types';
 
 interface AuthModalProps {
@@ -69,6 +70,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} maxWidth="md">
+      {/* Clerk mode: managed auth UI inside the Designo modal chrome. The
+          App-level ClerkSessionSync picks the profile up once signed in. */}
+      {isClerkEnabled ? (
+        <div className="pb-2">
+          <ClerkAuthForm
+            mode={mode === 'login' ? 'login' : 'signup'}
+            onSignedIn={() => {
+              onClose();
+            }}
+          />
+        </div>
+      ) : (
+      <>
       {/* Social auth */}
       {mode !== 'reset' && (
         <div className="space-y-2.5 mb-6">
@@ -199,6 +213,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           </span>
         )}
       </div>
+      </>
+      )}
     </Modal>
   );
 };
