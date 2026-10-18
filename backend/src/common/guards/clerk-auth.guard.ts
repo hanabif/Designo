@@ -38,9 +38,18 @@ export class ClerkAuthGuard implements CanActivate {
 
     let payload: { sub?: unknown };
     try {
-      payload = (await verifyToken(token, { secretKey: this.secretKey })) as { sub?: unknown };
-    } catch {
-      throw new UnauthorizedException('Invalid Clerk session token');
+      payload = (await verifyToken(token, {
+        secretKey: this.secretKey,
+        // Tolerate modest clock skew between this machine and Clerk's
+        // (dev machines/VMs often drift a few minutes and Clerk tokens carry
+        // an nbf ~issue time; without this a slow local clock 401s every call).
+        clockSkewInMs: 5 * 60 * 1000,
+      })) as { sub?: unknown };
+    } catch (error) {
+      // Surface the verifier's actual reason (jose/Clerk messages contain no
+      // secrets) — "Invalid Clerk session token" alone is undiagnosable.
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new UnauthorizedException(`Invalid Clerk session token: ${reason}`);
     }
 
     const clerkId = typeof payload.sub === 'string' ? payload.sub : undefined;

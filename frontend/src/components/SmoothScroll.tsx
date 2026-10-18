@@ -46,8 +46,17 @@ function ScrollManager() {
   useEffect(() => {
     if (!lenis) return;
 
-    if (location.hash) {
-      const targetElement = document.querySelector(location.hash);
+    // Only treat REAL anchor hashes (#section) as selectors. Non-anchor
+    // hashes — e.g. Clerk's sign-in flow routes like `#/factor-one` — are not
+    // valid CSS selectors and would make querySelector throw (which unmounts
+    // the whole React tree). Guard with a shape check + try/catch.
+    if (location.hash && /^#[A-Za-z][\w-]*$/.test(location.hash)) {
+      let targetElement: Element | null = null;
+      try {
+        targetElement = document.querySelector(location.hash);
+      } catch {
+        targetElement = null;
+      }
       if (targetElement) {
         lenis.scrollTo(location.hash, {
           offset: -80,

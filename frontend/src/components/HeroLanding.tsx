@@ -32,11 +32,14 @@ interface HeroLandingProps {
   onExploreQuestions?: () => void;
   onSelectPricing?: () => void;
   onOpenAuth?: () => void;
+  /** Signed-in user — the header swaps "Sign In" for "Dashboard". */
+  user?: import('../types').User | null;
 }
 
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartInterview: propOnStartInterview,
   onOpenAuth,
+  user,
 }) => {
   const navigate = useNavigate();
   const { scrollTo } = useLenisScroll();
@@ -196,12 +199,21 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={onOpenAuth}
-              className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
-            >
-              Sign In
-            </button>
+            {user ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
+              >
+                Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
+              >
+                Sign In
+              </button>
+            )}
             <Button
               variant="dark"
               size="sm"

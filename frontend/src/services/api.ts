@@ -101,13 +101,17 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   let token: string | null = null;
   if (tokenGetter) {
+    // Clerk mode: ONLY the live session token is acceptable. Falling back to
+    // localStorage here would send the stale pre-migration JWT, which the
+    // backend rightly rejects as "Invalid Clerk session token".
     try {
       token = await tokenGetter();
     } catch {
       token = null;
     }
+  } else {
+    token = getAuthToken();
   }
-  if (!token) token = getAuthToken();
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }

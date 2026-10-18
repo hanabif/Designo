@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { ClerkProvider, SignIn, SignUp, UserButton, useAuth, useClerk, useUser } from '@clerk/react';
-import { api, setApiTokenGetter } from '../services/api';
+import { api, setApiTokenGetter, removeAuthToken } from '../services/api';
 import type { User } from '../types';
 
 /**
@@ -16,19 +16,73 @@ import type { User } from '../types';
 const publishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 export const isClerkEnabled = Boolean(publishableKey);
 
+// ── Session status (safe to consume anywhere, Clerk on or off) ─────────────
+export interface ClerkStatus {
+  /** True when Clerk is configured for this build. */
+  enabled: boolean;
+  /** True while Clerk is still resolving the initial session. */
+  loading: boolean;
+  /** True when a valid (non-expired) session exists. */
+  signedIn: boolean;
+}
+
+const clerkStatusCtx = createContext<ClerkStatus>({ enabled: false, loading: false, signedIn: false });
+export const useClerkStatus = () => useContext(clerkStatusCtx);
+
+/**
+ * "This browser has had a Clerk session before" marker. A missing/expired
+ * session with this flag set = the user was logged out (expired), so we can
+ * prompt for login immediately instead of showing the marketing landing.
+ */
+const SESSION_SEEN_KEY = 'designo_clerk_session_seen';
+export const hadClerkSession = () => {
+  try {
+    return localStorage.getItem(SESSION_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const StatusBridge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isLoaded, isSignedIn } = useAuth();
+  const prevSignedIn = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      if (isSignedIn) {
+        localStorage.setItem(SESSION_SEEN_KEY, '1');
+      } else if (prevSignedIn.current === true) {
+        // Explicit sign-out in this tab — don't treat future visits as expiry.
+        localStorage.removeItem(SESSION_SEEN_KEY);
+      }
+    } catch {
+      // Storage unavailable — expiry detection degrades to "never seen".
+    }
+    prevSignedIn.current = isSignedIn;
+  }, [isLoaded, isSignedIn]);
+
+  const value = useMemo<ClerkStatus>(
+    () => ({ enabled: true, loading: !isLoaded, signedIn: Boolean(isSignedIn) }),
+    [isLoaded, isSignedIn],
+  );
+  return <clerkStatusCtx.Provider value={value}>{children}</clerkStatusCtx.Provider>;
+};
+
 /** Wraps the app in ClerkProvider when configured; a no-op otherwise. */
 export const AppClerkProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   if (!isClerkEnabled) return <>{children}</>;
   return (
     <ClerkProvider publishableKey={publishableKey} afterSignOutUrl="/">
-      {children}
+      <StatusBridge>{children}</StatusBridge>
     </ClerkProvider>
   );
 };
 
 /** Sign out registered for the Navbar/App logout handlers (Clerk mode only). */
 let clerkSignOut: (() => Promise<void>) | null = null;
-export const clerkSignOutOnce = () => void clerkSignOut?.();
+/** Resolves once Clerk's sign-out has fully completed (no-op when disabled). */
+export const clerkSignOutOnce = () => clerkSignOut?.() ?? Promise.resolve();
 
 const mapClerkUserToAppUser = (u: { id: string; fullName?: string | null; firstName?: string | null; lastName?: string | null; primaryEmailAddress?: { emailAddress: string } | null; emailAddresses?: Array<{ emailAddress: string }> }): User => {
   const fullName = u.fullName || [u.firstName, u.lastName].filter(Boolean).join(' ');
@@ -50,6 +104,9 @@ const ClerkAuthBridge: React.FC = () => {
   // Every API call now authenticates with the live Clerk session token.
   useEffect(() => {
     setApiTokenGetter(() => getToken());
+    // Purge any pre-migration localStorage tokens so they can never be sent
+    // alongside (or instead of) the Clerk session token.
+    removeAuthToken();
   }, [getToken]);
 
   useEffect(() => {
@@ -108,12 +165,17 @@ export const ClerkSessionSync: React.FC<{ onUser: (user: User | null) => void }>
 export const ClerkAuthForm: React.FC<{ mode: 'signup' | 'login'; onSignedIn?: () => void }> = ({ mode, onSignedIn }) => {
   const { isSignedIn } = useAuth();
   useEffect(() => {
-    if (isSignedIn) onSignedIn?.();
+    if (!isSignedIn) return;
+    // Strip Clerk's flow hash (e.g. #/factor-one) so the app URL stays clean.
+    if (window.location.hash.startsWith('#/')) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+    onSignedIn?.();
   }, [isSignedIn, onSignedIn]);
   return mode === 'signup' ? (
-    <SignUp forceRedirectUrl="/" fallbackRedirectUrl="/" />
+    <SignUp routing="hash" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
   ) : (
-    <SignIn forceRedirectUrl="/" fallbackRedirectUrl="/" />
+    <SignIn routing="hash" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
   );
 };
 
