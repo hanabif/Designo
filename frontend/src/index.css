@@ -330,3 +330,31 @@ h1, h2, h3, h4, h5, .display-mega, .display-h1, .display-h2 {
     animation: none;
   }
 }
+
+/* ── Clerk auth card: fit the Designo modal (no double chrome) ─────────────
+   Clerk's stock card ships a fixed ~400px shell with its own padding, border
+   and shadow. Stacked on the modal's own padding, sign-in/sign-up overflowed
+   the panel and forced scrolling on both axes. Force the SHELL to be a fluid,
+   transparent passthrough — the appearance prop still styles the controls
+   inside (buttons, inputs, labels). ──────────────────────────────────────── */
+.clerk-auth-fit .cl-root-card,
+.clerk-auth-fit .cl-card,
+.clerk-auth-fit .cl-card-box,
+.clerk-auth-fit .cl-main {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Tighten Clerk's generous header/footer rhythm so the whole flow fits one
+   screen without scrolling. */
+.clerk-auth-fit .cl-header {
+  margin-bottom: 0.75rem;
+}
+.clerk-auth-fit .cl-footer-action {
+  margin-top: 0.75rem;
+}

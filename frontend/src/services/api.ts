@@ -163,6 +163,15 @@ export const api = {
 
   // Questions
   getQuestions: () => request<Question[]>('/questions'),
+  /**
+   * Generate (or reuse) a bank question for a topic — used by the question
+   * bank's "no match for this gap" flow. Returns `{ question, generated }`.
+   */
+  generateQuestion: (topic: string, difficulty?: string) =>
+    request<{ question: Question; generated: boolean }>('/questions/generate', {
+      method: 'POST',
+      body: JSON.stringify(difficulty ? { topic, difficulty } : { topic }),
+    }),
 
   // Interviews
   startInterview: (data: { questionId: string; difficulty: string; companyTrack: string }) =>

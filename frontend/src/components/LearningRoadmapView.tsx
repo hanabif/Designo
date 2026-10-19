@@ -263,7 +263,20 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
     writeCompletedModules([...next]);
   };
 
-  const practiceGap = () => navigate('/questions');
+  /**
+   * Search/generate on the KEYWORD of the gap, not the raw title — e.g.
+   * "Improve COST fundamentals (Current score: 45)" → "COST fundamentals".
+   */
+  const topicKeywords = (title: string): string =>
+    title
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/^(improve|focus on|work on|strengthen|practice|reduce)\s+/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  /** Jump to the question bank pre-filtered by this gap's keywords. */
+  const practiceGap = (module: RoadmapModule) =>
+    navigate(`/questions?q=${encodeURIComponent(topicKeywords(module.title))}`);
   const openAuth = () => {
     if (onOpenAuth) onOpenAuth();
     else navigate('/');
@@ -531,7 +544,7 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
                               size="sm"
                               className="self-end sm:self-auto"
                               iconRight={<ArrowRight size={13} />}
-                              onClick={practiceGap}
+                              onClick={() => practiceGap(m)}
                             >
                               {isCurrent ? 'Practice This Gap' : 'Start Module'}
                             </Button>

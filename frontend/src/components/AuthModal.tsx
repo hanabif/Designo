@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { api, saveAuthTokens } from '../services/api';
 import { Modal, Button } from './ui';
 import { LogoMark } from './Logo';
@@ -69,11 +70,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} maxWidth="md">
-      {/* Clerk mode: managed auth UI inside the Designo modal chrome. The
-          App-level ClerkSessionSync picks the profile up once signed in. */}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isClerkEnabled ? undefined : modalTitle}
+      showCloseButton={!isClerkEnabled}
+      maxWidth="md"
+    >
+      {/* Clerk mode: managed auth UI inside the Designo modal chrome. Clerk
+          renders its own header, so our duplicate title row is dropped and a
+          floating close button takes its place (saves the vertical space that
+          used to force scrolling). The App-level ClerkSessionSync picks the
+          profile up once signed in. */}
       {isClerkEnabled ? (
-        <div className="pb-2">
+        <div className="clerk-auth-fit relative pb-1">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="absolute -top-2 right-0 p-1.5 text-[#8e8ea0] hover:text-[#0a0a0f] rounded-full hover:bg-[#faf9fc] transition-colors"
+          >
+            <X size={18} />
+          </button>
           <ClerkAuthForm
             mode={mode === 'login' ? 'login' : 'signup'}
             onSignedIn={() => {

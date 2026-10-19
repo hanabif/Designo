@@ -5,6 +5,7 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { QuestionsService } from './questions.service.js';
 import { CreateQuestionDto } from './dto/create-question.dto.js';
+import { GenerateQuestionDto } from './dto/generate-question.dto.js';
 import { UpdateQuestionDto } from './dto/update-question.dto.js';
 
 @Controller('questions')
@@ -21,6 +22,17 @@ export class QuestionsController {
   @Get()
   findAll() {
     return this.questionsService.findAll();
+  }
+
+  /**
+   * Generate (or reuse) a practice question for a roadmap gap topic.
+   * Any signed-in role — same policy as POST /questions.
+   */
+  @UseGuards(AppAuthGuard, RolesGuard)
+  @Roles(Role.FREE, Role.PRO, Role.ENTERPRISE, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('generate')
+  generate(@Body() generateQuestionDto: GenerateQuestionDto) {
+    return this.questionsService.generate(generateQuestionDto);
   }
 
   @Get(':id')

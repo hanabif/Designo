@@ -161,6 +161,30 @@ export const ClerkSessionSync: React.FC<{ onUser: (user: User | null) => void }>
   return <ClerkAuthBridge />;
 };
 
+/**
+ * Layout-first Clerk theming: Clerk's stock card is a fixed ~400px with its
+ * own padding + header, which overflowed our ~400px modal content area (the
+ * double header + width forced scrolling on both axes). Force the card to
+ * fluidly fill the modal and drop the redundant chrome; the few Designo-style
+ * touches (rounded inputs/buttons) keep it on-brand.
+ */
+const clerkAuthAppearance = {
+  elements: {
+    rootCard: 'w-full! max-w-full! border-none! shadow-none! bg-transparent! p-0!',
+    card: 'w-full! max-w-full! border-none! shadow-none! bg-transparent! p-0!',
+    main: 'w-full! max-w-full! p-0!',
+    headerTitle: 'font-display text-xl font-bold tracking-tight text-[#0a0a0f]',
+    headerSubtitle: 'text-xs text-[#5e5e6e]',
+    formFieldInput:
+      'rounded-xl border-[#e5e1ea] bg-[#faf9fc] text-sm text-[#0a0a0f] focus:border-[#6b38d4]',
+    formFieldLabel: 'text-[11px] font-mono font-semibold uppercase text-[#5e5e6e]',
+    formButtonPrimary:
+      'rounded-full bg-[#0a0a0f] text-sm font-semibold hover:bg-neutral-800 shadow-none',
+    socialButtonsBlockButton: 'rounded-xl border-[#e5e1ea] bg-[#faf9fc] text-xs font-semibold',
+    footerActionLink: 'text-[#6b38d4] font-semibold text-xs',
+  },
+} as const;
+
 /** Renders Clerk <SignIn>/<SignUp> inside the existing Designo modal chrome. */
 export const ClerkAuthForm: React.FC<{ mode: 'signup' | 'login'; onSignedIn?: () => void }> = ({ mode, onSignedIn }) => {
   const { isSignedIn } = useAuth();
@@ -173,9 +197,19 @@ export const ClerkAuthForm: React.FC<{ mode: 'signup' | 'login'; onSignedIn?: ()
     onSignedIn?.();
   }, [isSignedIn, onSignedIn]);
   return mode === 'signup' ? (
-    <SignUp routing="hash" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
+    <SignUp
+      routing="hash"
+      forceRedirectUrl="/dashboard"
+      fallbackRedirectUrl="/dashboard"
+      appearance={clerkAuthAppearance}
+    />
   ) : (
-    <SignIn routing="hash" forceRedirectUrl="/dashboard" fallbackRedirectUrl="/dashboard" />
+    <SignIn
+      routing="hash"
+      forceRedirectUrl="/dashboard"
+      fallbackRedirectUrl="/dashboard"
+      appearance={clerkAuthAppearance}
+    />
   );
 };
 
