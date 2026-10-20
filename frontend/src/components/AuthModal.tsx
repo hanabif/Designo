@@ -57,14 +57,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   };
 
   const modalTitle = (
-    <div className="flex items-center gap-2.5">
-      <LogoMark size={26} className="shrink-0" />
+    <div className="flex w-full flex-col items-center gap-3 text-center">
+      <LogoMark size={38} className="shrink-0" />
       <div>
-        <h2 className="font-display font-bold text-xl text-[#0a0a0f]">
-          {mode === 'signup' && 'Create your account'}
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-[#111111] sm:text-3xl">
+          {mode === 'signup' && 'Welcome to Designo'}
           {mode === 'login' && 'Welcome back'}
-          {mode === 'reset' && 'Reset password'}
+          {mode === 'reset' && 'Reset your password'}
         </h2>
+        <p className="mt-2 text-sm leading-relaxed text-[#777782]">
+          {mode === 'signup' && 'Create your account and start practicing system design.'}
+          {mode === 'login' && 'Sign in to continue your practice.'}
+          {mode === 'reset' && 'We’ll send a reset link to your email.'}
+        </p>
       </div>
     </div>
   );
@@ -75,32 +80,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       onClose={onClose}
       title={isClerkEnabled ? undefined : modalTitle}
       showCloseButton={!isClerkEnabled}
-      maxWidth="md"
+      maxWidth="2xl"
+      className={isClerkEnabled ? 'clerk-modal-shell' : 'auth-modal max-h-[calc(100dvh-2rem)]'}
     >
-      {/* Clerk mode: managed auth UI inside the Designo modal chrome. Clerk
-          renders its own header, so our duplicate title row is dropped and a
-          floating close button takes its place (saves the vertical space that
-          used to force scrolling). The App-level ClerkSessionSync picks the
-          profile up once signed in. */}
+      {/* Clerk renders as its own card over the shared backdrop. */}
       {isClerkEnabled ? (
-        <div className="clerk-auth-fit relative pb-1">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close dialog"
-            className="absolute -top-2 right-0 p-1.5 text-[#8e8ea0] hover:text-[#0a0a0f] rounded-full hover:bg-[#faf9fc] transition-colors"
-          >
-            <X size={18} />
-          </button>
-          <ClerkAuthForm
-            mode={mode === 'login' ? 'login' : 'signup'}
-            onSignedIn={() => {
-              onClose();
-            }}
-          />
+        <div className="clerk-auth-fit relative" data-lenis-prevent>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close dialog"
+              className="absolute right-4 top-4 p-1.5 text-[#8e8ea0] hover:text-[#0a0a0f] rounded-full hover:bg-[#faf9fc] transition-colors"
+            >
+              <X size={18} />
+            </button>
+            <ClerkAuthForm
+              mode={mode === 'login' ? 'login' : 'signup'}
+              onSignedIn={() => {
+                onClose();
+              }}
+            />
         </div>
       ) : (
-      <>
+      <div className="auth-form-fit">
       {/* Social auth */}
       {mode !== 'reset' && (
         <div className="space-y-2.5 mb-6">
@@ -231,7 +233,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           </span>
         )}
       </div>
-      </>
+      </div>
       )}
     </Modal>
   );
