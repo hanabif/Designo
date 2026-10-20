@@ -46,9 +46,8 @@ function ScrollManager() {
   useEffect(() => {
     if (!lenis) return;
 
-    // Only treat REAL anchor hashes (#section) as selectors. Non-anchor
-    // hashes — e.g. Clerk's sign-in flow routes like `#/factor-one` — are not
-    // valid CSS selectors and would make querySelector throw (which unmounts
+    // Only treat REAL anchor hashes (#section) as selectors. Other hashes
+    // are not valid CSS selectors and would make querySelector throw (which unmounts
     // the whole React tree). Guard with a shape check + try/catch.
     if (location.hash && /^#[A-Za-z][\w-]*$/.test(location.hash)) {
       let targetElement: Element | null = null;

@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Button, Badge, Card } from './ui';
 import { api, ApiError, getAuthToken } from '../services/api';
-import { useClerkStatus } from '../lib/clerk';
 import type { User } from '../types';
 import { readCompletedModules, writeCompletedModules } from '../lib/roadmapProgress';
 
@@ -157,22 +156,9 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Session detection must work in BOTH auth modes: in Clerk mode the legacy
-  // localStorage token is purged, so gating on getAuthToken() alone would
-  // show "Sign in to open your roadmap" to signed-in users.
-  const clerkStatus = useClerkStatus();
-
-  const [loading, setLoading] = useState(() =>
-    clerkStatus.enabled
-      ? clerkStatus.loading || clerkStatus.signedIn // wait for resolution / data fetch
-      : Boolean(getAuthToken()),
-  );
+  const [loading, setLoading] = useState(() => Boolean(getAuthToken()));
   const [loadError, setLoadError] = useState('');
-  const [unauthorized, setUnauthorized] = useState(() =>
-    clerkStatus.enabled
-      ? !clerkStatus.loading && !clerkStatus.signedIn
-      : !getAuthToken(),
-  );
+  const [unauthorized, setUnauthorized] = useState(() => !getAuthToken());
   const [reloadKey, setReloadKey] = useState(0);
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [roadmapItems, setRoadmapItems] = useState<unknown>(null);
@@ -192,17 +178,7 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
   }, [syncState]);
 
   useEffect(() => {
-    // Resolve the session first: Clerk mode waits for the session to load and
-    // only shows the sign-in card for a genuinely signed-out visitor. Legacy
-    // mode keeps the original localStorage-token gate.
-    if (clerkStatus.enabled) {
-      if (clerkStatus.loading) return;
-      if (!clerkStatus.signedIn) {
-        setLoading(false);
-        setUnauthorized(true);
-        return;
-      }
-    } else if (!getAuthToken()) {
+    if (!getAuthToken()) {
       // Anonymous visitor already renders the sign-in card from the initial
       // state above, so skip the doomed 401.
       return;
@@ -235,11 +211,11 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
     return () => {
       active = false;
     };
-  }, [user?.id, reloadKey, clerkStatus.enabled, clerkStatus.loading, clerkStatus.signedIn]);
+  }, [user?.id, reloadKey]);
 
   /** Reset the fetch state from an event handler, then refetch. */
   const retry = () => {
-    const hasSession = clerkStatus.enabled ? clerkStatus.signedIn : Boolean(getAuthToken());
+    const hasSession = Boolean(getAuthToken());
     setLoadError('');
     setUnauthorized(!hasSession);
     setLoading(hasSession);

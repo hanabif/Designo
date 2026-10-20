@@ -4,8 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
-  // rawBody is required by the Clerk webhook controller (signature verification).
-  const app = await NestFactory.create(AppModule, { rawBody: true });
+  const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
   app.useGlobalPipes(

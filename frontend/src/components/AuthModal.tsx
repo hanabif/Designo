@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
 import { api, saveAuthTokens } from '../services/api';
 import { Modal, Button } from './ui';
 import { LogoMark } from './Logo';
-import { isClerkEnabled, ClerkAuthForm } from '../lib/clerk';
 import type { User } from '../types';
 
 interface AuthModalProps {
@@ -78,30 +76,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isClerkEnabled ? undefined : modalTitle}
-      showCloseButton={!isClerkEnabled}
+      title={modalTitle}
+      showCloseButton
       maxWidth="2xl"
-      className={isClerkEnabled ? 'clerk-modal-shell' : 'auth-modal max-h-[calc(100dvh-2rem)]'}
+      className="auth-modal max-h-[calc(100dvh-2rem)]"
     >
-      {/* Clerk renders as its own card over the shared backdrop. */}
-      {isClerkEnabled ? (
-        <div className="clerk-auth-fit relative" data-lenis-prevent>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close dialog"
-              className="absolute right-4 top-4 p-1.5 text-[#8e8ea0] hover:text-[#0a0a0f] rounded-full hover:bg-[#faf9fc] transition-colors"
-            >
-              <X size={18} />
-            </button>
-            <ClerkAuthForm
-              mode={mode === 'login' ? 'login' : 'signup'}
-              onSignedIn={() => {
-                onClose();
-              }}
-            />
-        </div>
-      ) : (
       <div className="auth-form-fit">
       {/* Social auth */}
       {mode !== 'reset' && (
@@ -234,7 +213,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         )}
       </div>
       </div>
-      )}
     </Modal>
   );
 };

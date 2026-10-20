@@ -385,7 +385,3 @@ h1, h2, h3, h4, h5, .display-mega, .display-h1, .display-h2 {
   }
 }
 
-.clerk-modal-shell {
-  width: min(100%, 28rem);
-  max-width: 28rem;
-}

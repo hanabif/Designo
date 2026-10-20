@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { AuthModal } from './components/AuthModal';
@@ -18,7 +18,6 @@ import { AdminPanelView } from './components/AdminPanelView';
 import { NotFoundView } from './components/NotFoundView';
 import { ProfileSettingsView } from './components/ProfileSettingsView';
 import { api, ApiError, getAuthToken, removeAuthToken } from './services/api';
-import { isClerkEnabled, ClerkSessionSync, clerkSignOutOnce, useClerkStatus, hadClerkSession } from './lib/clerk';
 import type { User, Question } from './types';
 
 export function App() {
@@ -34,18 +33,11 @@ export function App() {
   const [appError, setAppError] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-  const clerkStatus = useClerkStatus();
   // Legacy (local) session restore is async — don't flash the landing page
   // while it resolves.
   const [legacyChecked, setLegacyChecked] = useState(false);
-  const autoPromptedRef = useRef(false);
 
   useEffect(() => {
-    // Clerk mode: session restore is handled by ClerkSessionSync below.
-    if (isClerkEnabled) {
-      setLegacyChecked(true);
-      return;
-    }
     // Nothing to restore without an access token.
     if (!getAuthToken()) {
       setLegacyChecked(true);
@@ -66,18 +58,6 @@ export function App() {
       .finally(() => setLegacyChecked(true));
   }, []);
 
-  // Expired-session UX: this browser had a session before but is now signed
-  // out → ask for login immediately (once per page load). After credentials,
-  // the sign-in flow redirects straight to the dashboard.
-  useEffect(() => {
-    if (!isClerkEnabled || clerkStatus.loading || clerkStatus.signedIn) return;
-    if (autoPromptedRef.current) return;
-    if (!hadClerkSession() || location.pathname !== '/') return;
-    autoPromptedRef.current = true;
-    setAuthInitialMode('login');
-    setIsAuthOpen(true);
-  }, [clerkStatus.loading, clerkStatus.signedIn, location.pathname]);
-
   useEffect(() => {
     if (!isSetupModalOpen) { setQuestionsRequestStarted(false); return; }
     if (questions.length || questionsLoading || questionsRequestStarted) return;
@@ -91,13 +71,6 @@ export function App() {
   }, [isSetupModalOpen, questions.length, questionsLoading, questionsRequestStarted]);
 
   const handleLogout = () => {
-    if (isClerkEnabled) {
-      setUser(null);
-      // Navigate only AFTER sign-out completes — otherwise the '/' route
-      // still sees a live session and would bounce us back to /dashboard.
-      void clerkSignOutOnce().finally(() => navigate('/'));
-      return;
-    }
     const refreshToken = localStorage.getItem('designo_refresh_token');
     if (refreshToken) void api.logout(refreshToken).catch(() => undefined);
     removeAuthToken();
@@ -105,10 +78,8 @@ export function App() {
     navigate('/');
   };
 
-  const handleClerkUser = useCallback((clerkUser: User | null) => setUser(clerkUser), []);
-
   /**
-   * Central auth entry: if a session already exists (Clerk or legacy), don't
+   * Central auth entry: if a session already exists, don't
    * open a sign-in modal — go straight to the dashboard. This is what made
    * "Sign In" appear to do nothing after a completed sign-in/reset flow.
    */
@@ -147,7 +118,6 @@ export function App() {
 
   return (
     <div className={`min-h-screen bg-[#faf9fe] text-[#0a0a0f] selection:bg-[#ede9fe] selection:text-[#6b38d4] ${location.pathname === '/' ? 'flex flex-col' : 'flex flex-col md:flex-row'}`}>
-      {isClerkEnabled && <ClerkSessionSync onUser={handleClerkUser} />}
       {location.pathname !== '/' && (
         <Navbar
           user={user}
@@ -165,13 +135,7 @@ export function App() {
               it goes straight to /dashboard. While the session resolves we
               render nothing (no landing flash). */}
           <Route path="/" element={
-            clerkStatus.enabled ? (
-              clerkStatus.loading ? null : clerkStatus.signedIn ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                landingHero
-              )
-            ) : !legacyChecked ? null : user ? (
+            !legacyChecked ? null : user ? (
               <Navigate to="/dashboard" replace />
             ) : (
               landingHero
