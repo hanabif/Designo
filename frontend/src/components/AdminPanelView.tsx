@@ -25,18 +25,18 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 min-h-[560px]">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-12 md:gap-8 md:min-h-[560px]">
         {/* Admin Sidebar Nav (3 cols) */}
-        <Card padding="md" className="md:col-span-3 flex flex-col justify-between">
-          <div className="space-y-1.5">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#8e8ea0] mb-3 px-2">
-              Admin Operations
+        <Card padding="md" className="min-w-0 md:col-span-3 md:flex md:flex-col md:justify-between">
+          <div className="flex gap-1.5 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
+            <div className="hidden text-[11px] font-mono font-bold uppercase tracking-wider text-[#8e8ea0] md:mb-3 md:block md:px-2">
+              <span className="hidden md:inline">Admin Operations</span>
             </div>
 
             <button
               onClick={() => setActiveTab('users')}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`w-auto shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer md:w-full ${
                 activeTab === 'users'
                   ? 'bg-[#ede9fe] text-[#6b38d4]'
                   : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
@@ -47,7 +47,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
 
             <button
               onClick={() => setActiveTab('questions')}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`w-auto shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer md:w-full ${
                 activeTab === 'questions'
                   ? 'bg-[#ede9fe] text-[#6b38d4]'
                   : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
@@ -58,7 +58,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
 
             <button
               onClick={() => setActiveTab('subscriptions')}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`w-auto shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer md:w-full ${
                 activeTab === 'subscriptions'
                   ? 'bg-[#ede9fe] text-[#6b38d4]'
                   : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
@@ -69,7 +69,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
 
             <button
               onClick={() => setActiveTab('audit')}
-              className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              className={`w-auto shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer md:w-full ${
                 activeTab === 'audit'
                   ? 'bg-[#ede9fe] text-[#6b38d4]'
                   : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
@@ -79,13 +79,13 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
             </button>
 
             {isSuperAdmin && (
-              <div className="pt-4 mt-4 border-t border-[#e5e1ea]">
+              <div className="shrink-0 border-l border-[#e5e1ea] pl-1 md:mt-4 md:border-l-0 md:border-t md:pl-0 md:pt-4">
                 <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-600 mb-2 px-2">
                   Super Admin
                 </div>
                 <button
                   onClick={() => setActiveTab('ai_config')}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                  className={`w-auto shrink-0 flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer md:w-full ${
                     activeTab === 'ai_config'
                       ? 'bg-amber-50 text-amber-700'
                       : 'text-[#5e5e6e] hover:bg-[#faf9fc]'
@@ -99,9 +99,9 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
         </Card>
 
         {/* Main Content (9 cols) */}
-        <div className="md:col-span-9 space-y-6">
+        <div className="min-w-0 space-y-6 md:col-span-9">
           {/* Top Bar */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center sm:gap-4">
             <div className="relative flex-1 max-w-sm">
               <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8e8ea0]" />
               <input
@@ -113,6 +113,7 @@ export const AdminPanelView: React.FC<AdminPanelViewProps> = ({ user: _user }) =
             <Button
               variant="dark"
               size="sm"
+              className="w-full sm:w-auto"
               iconLeft={<UserPlus size={14} />}
             >
               Invite Admin

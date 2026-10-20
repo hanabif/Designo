@@ -63,7 +63,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-10 pb-8 border-b border-[#e5e1ea]">
         <div>
@@ -76,10 +76,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
           <Button
             variant="outline"
             size="md"
+            className="w-full sm:w-auto"
             onClick={() => onNavigateTab('questions')}
           >
             Browse Library
@@ -87,6 +88,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <Button
             variant="dark"
             size="md"
+            className="w-full sm:w-auto"
             iconLeft={<Play size={14} fill="currentColor" />}
             onClick={onOpenSetupModal}
           >

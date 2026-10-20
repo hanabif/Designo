@@ -76,6 +76,36 @@
   padding: 0;
 }
 
+html {
+  min-width: 320px;
+  overflow-x: clip;
+}
+
+body,
+#root {
+  min-width: 320px;
+  min-height: 100vh;
+  width: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -282,6 +312,24 @@ h1, h2, h3, h4, h5, .display-mega, .display-h1, .display-h2 {
   padding: 0 24px;
 }
 
+@media (max-width: 639px) {
+  .container {
+    padding-inline: 16px;
+  }
+
+  .display-mega {
+    font-size: clamp(34px, 10vw, 48px);
+  }
+
+  .display-h1 {
+    font-size: clamp(30px, 8vw, 38px);
+  }
+
+  .display-h2 {
+    font-size: clamp(24px, 6vw, 28px);
+  }
+}
+
 .section-padding {
   padding: 64px 0;
 }
@@ -328,5 +376,11 @@ h1, h2, h3, h4, h5, .display-mega, .display-h1, .display-h2 {
   .hw-float,
   .hw-typing-dot {
     animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .section-padding {
+    padding-block: 44px;
   }
 }

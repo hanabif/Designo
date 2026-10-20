@@ -24,13 +24,13 @@ export const AnalyticsDashboardView: React.FC = () => {
   const chartPoints = chartData.map((item, index) => `${chartData.length < 2 ? 250 : index * (500 / (chartData.length - 1))},${165 - Math.max(0, Math.min(100, item.overallScore ?? 0)) * 1.5}`).join(' ');
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       {/* Title */}
       <div className="mb-8 pb-6 border-b border-[#e5e1ea]">
         <Badge variant="primary" icon={<BarChart3 size={13} />} className="mb-2">
           PERFORMANCE INTELLIGENCE &amp; RADAR
         </Badge>
-        <h1 className="font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
+        <h1 className="break-words font-display font-bold text-3xl sm:text-4xl text-[#0a0a0f]">
           Readiness &amp; Score Analytics
         </h1>
         <p className="text-sm text-[#5e5e6e] mt-1">

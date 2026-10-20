@@ -119,14 +119,14 @@ export const DiagramStudioView: React.FC = () => {
     : [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="mx-auto w-full min-w-0 max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       {/* Header & Mode Switcher */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#e5e1ea]">
         <div>
           <Badge variant="primary" icon={<Cpu size={13} />} className="mb-2">
             DIAGRAM ENGINE // MERMAID &amp; SVG SYNTHESIZER
           </Badge>
-          <h1 className="font-display font-bold text-3xl text-[#0a0a0f]">
+          <h1 className="break-words font-display font-bold text-3xl text-[#0a0a0f]">
             {mode === 'generator' ? 'Architecture Diagram Generator' : 'Architecture Audit & SPOF Review'}
           </h1>
           <p className="text-xs text-[#5e5e6e] mt-1">
@@ -137,10 +137,10 @@ export const DiagramStudioView: React.FC = () => {
         </div>
 
         {/* Tab Pills */}
-        <div className="flex items-center p-1 rounded-full bg-[#f4f1fb] border border-[#e5e1ea]">
+        <div className="flex max-w-full items-center overflow-x-auto p-1 rounded-full bg-[#f4f1fb] border border-[#e5e1ea]">
           <button
             onClick={() => setMode('generator')}
-            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               mode === 'generator'
                 ? 'bg-[#0a0a0f] text-white shadow-xs'
                 : 'text-[#5e5e6e] hover:text-[#0a0a0f]'
@@ -150,7 +150,7 @@ export const DiagramStudioView: React.FC = () => {
           </button>
           <button
             onClick={() => setMode('review')}
-            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+            className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               mode === 'review'
                 ? 'bg-[#0a0a0f] text-white shadow-xs'
                 : 'text-[#5e5e6e] hover:text-[#0a0a0f]'
@@ -243,7 +243,7 @@ export const DiagramStudioView: React.FC = () => {
           {/* Right Canvas (8 cols) — doubles as the fullscreen overlay */}
           <Card
             padding="md"
-            className={`flex flex-col justify-between ${
+            className={`min-w-0 flex flex-col justify-between ${
               isFullscreen
                 ? 'fixed inset-2 z-[60] min-h-0 overflow-auto shadow-[0_20px_60px_rgba(10,10,15,0.4)]'
                 : 'lg:col-span-8 min-h-[500px]'
