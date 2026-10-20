@@ -6,6 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
 import { Logo, LogoWordmark } from './Logo';
+import { isClerkEnabled, ClerkUserButton } from '../lib/clerk';
 import type { User } from '../types';
 import { Button } from './ui';
 
@@ -60,7 +61,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenAuth, onOpenNotifica
   });
 
   return <>
-    <aside className={`hidden md:flex sticky top-0 h-screen shrink-0 flex-col border-r border-[#e5e1ea] bg-white/90 px-2 py-6 backdrop-blur-xl transition-[width] duration-300 ease-in-out ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
+    <aside className={`hidden md:flex sticky top-0 h-screen shrink-0 flex-col overflow-hidden border-r border-[#e5e1ea] bg-white/90 px-2 py-6 backdrop-blur-xl transition-[width] duration-300 ease-in-out ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
       <div className="mb-8 flex items-center justify-between">
       <Link to="/dashboard" title={sidebarCollapsed ? 'Designo' : undefined} className="flex min-w-0 items-center gap-3 px-1 text-decoration-none">
         <Logo size={28} wordmark={false} />
@@ -70,11 +71,17 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenAuth, onOpenNotifica
       {sidebarCollapsed && <button onClick={() => setSidebarCollapsed(false)} aria-label="Expand sidebar" title="Expand sidebar" className="rounded-lg p-1 text-[#8e8ea0] transition-colors hover:bg-[#f4f1fb] hover:text-[#6b38d4]"><PanelLeftOpen size={15} /></button>}
       </div>
       {!sidebarCollapsed && <div className="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#8e8ea0]">Workspace</div>}
-      <nav className="flex flex-col gap-1">{links()}</nav>
-      <div className="mt-auto space-y-3 border-t border-[#e5e1ea] pt-4">
+      {/* Nav takes the leftover height and scrolls internally on short
+          viewports, so the footer (account button) can never be cropped. */}
+      <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto pr-1" data-lenis-prevent>{links()}</nav>
+      <div className="mt-auto shrink-0 space-y-3 border-t border-[#e5e1ea] pt-4">
         <button onClick={onOpenNotifications} title={sidebarCollapsed ? 'Notifications' : undefined} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#5e5e6e] hover:bg-[#f4f1fb] hover:text-[#0a0a0f] ${sidebarCollapsed ? 'justify-center' : ''}`} aria-label="View notifications"><Bell size={17} className="shrink-0" />{!sidebarCollapsed && <><span>Notifications</span><span className="ml-auto h-2 w-2 rounded-full bg-[#6b38d4]" /></>}</button>
         {sidebarCollapsed ? <button onClick={onOpenSetupModal} title="Mock Interview" aria-label="Mock Interview" className="flex w-full justify-center rounded-xl bg-[#0a0a0f] p-3 text-white hover:bg-neutral-800"><Play size={14} fill="currentColor" /></button> : <Button variant="dark" size="sm" fullWidth iconLeft={<Play size={13} fill="currentColor" />} onClick={onOpenSetupModal}>Mock Interview</Button>}
-        {user ? <div ref={accountMenuRef} className={`relative flex items-center gap-2 rounded-xl bg-[#faf9fe] p-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+        {user ? isClerkEnabled ? (
+          <div className="flex items-center rounded-xl bg-[#faf9fe] p-1.5" title="Account options">
+            <ClerkUserButton />
+          </div>
+        ) : <div ref={accountMenuRef} className={`relative flex items-center gap-2 rounded-xl bg-[#faf9fe] p-2 ${sidebarCollapsed ? 'justify-center' : ''}`}>
           <button
             onClick={() => setAccountMenuOpen((open) => !open)}
             className="flex min-w-0 flex-1 items-center gap-2 text-left"

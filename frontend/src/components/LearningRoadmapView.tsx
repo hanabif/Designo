@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button, Badge, Card } from './ui';
 import { api, ApiError, getAuthToken } from '../services/api';
+import { useClerkStatus } from '../lib/clerk';
 import type { User } from '../types';
 import { readCompletedModules, writeCompletedModules } from '../lib/roadmapProgress';
 
@@ -156,9 +157,22 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [loading, setLoading] = useState(() => Boolean(getAuthToken()));
+  // Session detection must work in BOTH auth modes: in Clerk mode the legacy
+  // localStorage token is purged, so gating on getAuthToken() alone would
+  // show "Sign in to open your roadmap" to signed-in users.
+  const clerkStatus = useClerkStatus();
+
+  const [loading, setLoading] = useState(() =>
+    clerkStatus.enabled
+      ? clerkStatus.loading || clerkStatus.signedIn // wait for resolution / data fetch
+      : Boolean(getAuthToken()),
+  );
   const [loadError, setLoadError] = useState('');
-  const [unauthorized, setUnauthorized] = useState(() => !getAuthToken());
+  const [unauthorized, setUnauthorized] = useState(() =>
+    clerkStatus.enabled
+      ? !clerkStatus.loading && !clerkStatus.signedIn
+      : !getAuthToken(),
+  );
   const [reloadKey, setReloadKey] = useState(0);
   const [weakAreas, setWeakAreas] = useState<string[]>([]);
   const [roadmapItems, setRoadmapItems] = useState<unknown>(null);
@@ -178,11 +192,25 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
   }, [syncState]);
 
   useEffect(() => {
-    // JWT-guarded endpoint: an anonymous visitor already renders the sign-in
-    // card from the lazily-initialised state above, so skip the doomed 401.
-    if (!getAuthToken()) return;
+    // Resolve the session first: Clerk mode waits for the session to load and
+    // only shows the sign-in card for a genuinely signed-out visitor. Legacy
+    // mode keeps the original localStorage-token gate.
+    if (clerkStatus.enabled) {
+      if (clerkStatus.loading) return;
+      if (!clerkStatus.signedIn) {
+        setLoading(false);
+        setUnauthorized(true);
+        return;
+      }
+    } else if (!getAuthToken()) {
+      // Anonymous visitor already renders the sign-in card from the initial
+      // state above, so skip the doomed 401.
+      return;
+    }
 
     let active = true;
+    setUnauthorized(false);
+    setLoading(true);
 
     api
       .getRecommendations()
@@ -207,11 +235,11 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
     return () => {
       active = false;
     };
-  }, [user?.id, reloadKey]);
+  }, [user?.id, reloadKey, clerkStatus.enabled, clerkStatus.loading, clerkStatus.signedIn]);
 
   /** Reset the fetch state from an event handler, then refetch. */
   const retry = () => {
-    const hasSession = Boolean(getAuthToken());
+    const hasSession = clerkStatus.enabled ? clerkStatus.signedIn : Boolean(getAuthToken());
     setLoadError('');
     setUnauthorized(!hasSession);
     setLoading(hasSession);
@@ -235,7 +263,20 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
     writeCompletedModules([...next]);
   };
 
-  const practiceGap = () => navigate('/questions');
+  /**
+   * Search/generate on the KEYWORD of the gap, not the raw title — e.g.
+   * "Improve COST fundamentals (Current score: 45)" → "COST fundamentals".
+   */
+  const topicKeywords = (title: string): string =>
+    title
+      .replace(/\([^)]*\)/g, ' ')
+      .replace(/^(improve|focus on|work on|strengthen|practice|reduce)\s+/i, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  /** Jump to the question bank pre-filtered by this gap's keywords. */
+  const practiceGap = (module: RoadmapModule) =>
+    navigate(`/questions?q=${encodeURIComponent(topicKeywords(module.title))}`);
   const openAuth = () => {
     if (onOpenAuth) onOpenAuth();
     else navigate('/');
@@ -503,7 +544,7 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
                               size="sm"
                               className="self-end sm:self-auto"
                               iconRight={<ArrowRight size={13} />}
-                              onClick={practiceGap}
+                              onClick={() => practiceGap(m)}
                             >
                               {isCurrent ? 'Practice This Gap' : 'Start Module'}
                             </Button>

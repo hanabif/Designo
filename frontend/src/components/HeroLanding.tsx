@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Play, Cpu, LayoutGrid, BookOpen, Terminal, BarChart3, Map, CreditCard, Settings, Bell, Award, Clock, ChevronRight, PanelLeft } from 'lucide-react';
 import { Button } from './ui';
-import { useLenisScroll } from '../hooks/useLenisScroll';
 import GridRise from './GridRise';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -32,14 +31,16 @@ interface HeroLandingProps {
   onExploreQuestions?: () => void;
   onSelectPricing?: () => void;
   onOpenAuth?: () => void;
+  /** Signed-in user — the header swaps "Sign In" for "Dashboard". */
+  user?: import('../types').User | null;
 }
 
 export const HeroLanding: React.FC<HeroLandingProps> = ({
   onStartInterview: propOnStartInterview,
   onOpenAuth,
+  user,
 }) => {
   const navigate = useNavigate();
-  const { scrollTo } = useLenisScroll();
   const onStartInterview = propOnStartInterview || (() => navigate('/dashboard'));
 
   // Transparent at the top so the GridRise background blends through the
@@ -196,12 +197,21 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
 
           {/* CTA buttons */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={onOpenAuth}
-              className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
-            >
-              Sign In
-            </button>
+            {user ? (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
+              >
+                Dashboard
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="font-sans text-sm font-medium text-[#5e5e6e] hover:text-[#0a0a0f] transition-colors px-4 py-2 rounded-lg hover:bg-[#f0edf8]"
+              >
+                Sign In
+              </button>
+            )}
             <Button
               variant="dark"
               size="sm"
@@ -218,37 +228,21 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       <section className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 pt-12 md:pt-16 pb-16">
 
         {/* Editorial Headline Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-28 md:mb-40">
-          <div className="lg:col-span-8">
-
-            <h1 className="font-display font-extrabold text-[44px] sm:text-[68px] lg:text-[80px] leading-[0.96] tracking-[-0.035em] text-[#0a0a0f]">
-              <span data-hero-line className="block">Practice</span>
-              <span data-hero-line className="block italic font-light text-[#6b38d4]">System Design</span>
-              <span data-hero-line className="block">with AI.</span>
-            </h1>
-          </div>
-
-          <div className="lg:col-span-4 flex flex-col justify-end space-y-6 pb-2">
-            <div data-hero-aside className="flex flex-wrap items-center gap-3 pt-2">
-              <Button
-                variant="dark"
-                size="lg"
-                iconRight={<ArrowRight size={16} />}
-                onClick={onStartInterview}
-              >
-                Start Free Practice
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                iconLeft={<Play size={16} className="text-[#6b38d4]" fill="currentColor" />}
-                onClick={() => scrollTo('#simulation', { offset: -80 })}
-              >
-                Watch Simulation
-              </Button>
-              
-            </div>
-            
+        <div className="mb-20 max-w-5xl md:mb-28">
+          <h1 className="font-display font-extrabold text-[44px] sm:text-[68px] lg:text-[80px] leading-[0.96] tracking-[-0.035em] text-[#0a0a0f]">
+            <span data-hero-line className="block">Practice</span>
+            <span data-hero-line className="block italic font-light text-[#6b38d4]">System Design</span>
+            <span data-hero-line className="block">with AI.</span>
+          </h1>
+          <div data-hero-aside className="mt-8">
+            <Button
+              variant="dark"
+              size="lg"
+              iconRight={<ArrowRight size={16} />}
+              onClick={onStartInterview}
+            >
+              Start Free Practice
+            </Button>
           </div>
         </div>
 

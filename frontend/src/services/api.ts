@@ -28,6 +28,17 @@ export function saveAuthTokens(accessToken: string, refreshToken?: string) {
   if (refreshToken) localStorage.setItem('designo_refresh_token', refreshToken);
 }
 
+/**
+ * Clerk mode: the session token getter (from `useAuth().getToken()`) replaces
+ * the localStorage access token. When unset (legacy mode, or no Clerk key),
+ * everything behaves exactly as before.
+ */
+let tokenGetter: (() => Promise<string | null>) | null = null;
+
+export function setApiTokenGetter(getter: (() => Promise<string | null>) | null) {
+  tokenGetter = getter;
+}
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -88,7 +99,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers as Record<string, string>),
   };
 
-  const token = getAuthToken();
+  let token: string | null = null;
+  if (tokenGetter) {
+    // Clerk mode: ONLY the live session token is acceptable. Falling back to
+    // localStorage here would send the stale pre-migration JWT, which the
+    // backend rightly rejects as "Invalid Clerk session token".
+    try {
+      token = await tokenGetter();
+    } catch {
+      token = null;
+    }
+  } else {
+    token = getAuthToken();
+  }
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
@@ -140,6 +163,15 @@ export const api = {
 
   // Questions
   getQuestions: () => request<Question[]>('/questions'),
+  /**
+   * Generate (or reuse) a bank question for a topic — used by the question
+   * bank's "no match for this gap" flow. Returns `{ question, generated }`.
+   */
+  generateQuestion: (topic: string, difficulty?: string) =>
+    request<{ question: Question; generated: boolean }>('/questions/generate', {
+      method: 'POST',
+      body: JSON.stringify(difficulty ? { topic, difficulty } : { topic }),
+    }),
 
   // Interviews
   startInterview: (data: { questionId: string; difficulty: string; companyTrack: string }) =>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Play, Search, Lock, Clock } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { BookOpen, Play, Search, Lock, Clock, Sparkles } from 'lucide-react';
 import { api } from '../services/api';
 import type { Question } from '../types';
 import { Button, Card, Badge } from './ui';
@@ -16,10 +17,22 @@ interface DisplayQuestion extends Question {
 }
 
 export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQuestion }) => {
+  // Roadmap "Practice This Gap" lands here with ?q=<topic> — pre-fill the
+  // search so the bank opens filtered to the gap being practised.
+  const [searchParams] = useSearchParams();
   const [questions, setQuestions] = useState<DisplayQuestion[]>([]);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') ?? '');
+
+  useEffect(() => {
+    const q = searchParams.get('q');
+    if (q !== null) setSearchQuery(q);
+  }, [searchParams]);
   const [loadError, setLoadError] = useState('');
+  /** Topic/category chip filter derived from the bank's tags (FR-03 tags). */
+  const [tagFilter, setTagFilter] = useState<string>('ALL');
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState('');
 
   useEffect(() => {
     api
@@ -32,15 +45,64 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
   }, []);
 
   const difficultyTiers = ['ALL', 'Beginner', 'Intermediate', 'Advanced', 'Staff'];
+
+  // Topic categories derived from question tags — the second axis of
+  // diversity alongside FR-03's difficulty tiers.
+  const tagCounts = new Map<string, number>();
+  questions.forEach((q) =>
+    (q.tags ?? []).forEach((raw) => {
+      const tag = raw.trim().toLowerCase();
+      if (tag) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1);
+    }),
+  );
+  const topTags = [...tagCounts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([tag]) => tag);
+
+  const query = searchQuery.trim().toLowerCase();
   const filtered = questions.filter((q) => {
     const matchesDifficulty =
       difficultyFilter === 'ALL' || q.difficulty.toUpperCase() === difficultyFilter.toUpperCase();
     const desc = q.description || q.summary || '';
     const matchesSearch =
-      q.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      desc.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesDifficulty && matchesSearch;
+      !query ||
+      q.title.toLowerCase().includes(query) ||
+      desc.toLowerCase().includes(query) ||
+      (q.tags ?? []).some((tag) => tag.toLowerCase().includes(query));
+    const matchesTag =
+      tagFilter === 'ALL' || (q.tags ?? []).some((tag) => tag.trim().toLowerCase() === tagFilter);
+    return matchesDifficulty && matchesSearch && matchesTag;
   });
+
+  /**
+   * No match for the searched gap → create one on demand (dedupes server-side,
+   * reuses the shared bank when a matching question already exists).
+   */
+  const generateForTopic = async () => {
+    const topic = searchQuery.trim();
+    if (!topic || generating) return;
+    setGenerating(true);
+    setGenerateError('');
+    try {
+      const res = await api.generateQuestion(
+        topic,
+        difficultyFilter !== 'ALL' ? difficultyFilter.toUpperCase() : undefined,
+      );
+      const created: DisplayQuestion = {
+        ...res.question,
+        description: res.question.description ?? '',
+      };
+      setQuestions((prev) => [created, ...prev.filter((q) => q.id !== created.id)]);
+      // Guarantee the result is visible under the current filters.
+      setTagFilter('ALL');
+      if (!res.generated) setDifficultyFilter('ALL');
+    } catch (error) {
+      setGenerateError(error instanceof Error ? error.message : 'Could not generate a question.');
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   const getDifficultyVariant = (diff: string): 'success' | 'warning' | 'primary' | 'neutral' => {
     switch (diff.toLowerCase()) {
@@ -55,6 +117,20 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
       default:
         return 'neutral';
     }
+  };
+
+  /** Deterministic colour per tag so categories read at a glance. */
+  const tagStyle = (tag: string, idx: number): string => {
+    const palette = [
+      'bg-[#ede9fe] text-[#6b38d4]',
+      'bg-[#dbeafe] text-[#1d4ed8]',
+      'bg-[#d1fae5] text-[#047857]',
+      'bg-[#fef3c7] text-[#b45309]',
+      'bg-[#fce7f3] text-[#be185d]',
+    ];
+    let hash = idx;
+    for (let i = 0; i < tag.length; i++) hash = (hash * 31 + tag.charCodeAt(i)) >>> 0;
+    return palette[hash % palette.length];
   };
 
   return (
@@ -105,12 +181,75 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
           </div>
         </div>
 
+        {/* Topic categories derived from tags */}
+        {topTags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 border-t border-[#e5e1ea] pt-3">
+            <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.15em] text-[#8e8ea0]">
+              Topics
+            </span>
+            <button
+              onClick={() => setTagFilter('ALL')}
+              className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition-all cursor-pointer ${
+                tagFilter === 'ALL'
+                  ? 'bg-[#6b38d4] text-white shadow-xs'
+                  : 'bg-[#faf9fc] text-[#5e5e6e] border border-[#e5e1ea] hover:bg-white'
+              }`}
+            >
+              All
+            </button>
+            {topTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setTagFilter(tag === tagFilter ? 'ALL' : tag)}
+                className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition-all cursor-pointer ${
+                  tagFilter === tag
+                    ? 'bg-[#6b38d4] text-white shadow-xs'
+                    : 'bg-[#faf9fc] text-[#5e5e6e] border border-[#e5e1ea] hover:bg-white'
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
+
       {loadError && <p role="alert" className="mb-4 text-sm text-red-700">Question library unavailable: {loadError}</p>}
       </Card>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.length === 0 && !loadError && <p className="col-span-full rounded-xl border border-[#e5e1ea] bg-white p-6 text-sm text-[#5e5e6e]">No questions are available yet. Please try again later.</p>}
+        {filtered.length === 0 && !loadError && (
+          <div className="col-span-full rounded-xl border border-[#e5e1ea] bg-white p-8 text-center">
+            <p className="text-sm text-[#5e5e6e]">
+              {query ? (
+                <>
+                  No questions match <span className="font-semibold text-[#0a0a0f]">“{searchQuery.trim()}”</span> yet.
+                </>
+              ) : (
+                'No questions are available yet. Please try again later.'
+              )}
+            </p>
+            {generateError && (
+              <p role="alert" className="mt-3 text-xs text-red-600">{generateError}</p>
+            )}
+            {query && (
+              <div className="mt-5">
+                <Button
+                  variant="dark"
+                  size="sm"
+                  iconLeft={<Sparkles size={14} />}
+                  onClick={generateForTopic}
+                  disabled={generating}
+                >
+                  {generating ? 'Generating…' : 'Generate a question for this topic'}
+                </Button>
+                <p className="mt-2.5 text-xs text-[#8e8ea0]">
+                  Writes one into the bank, tailored to this gap — ready for a mock loop.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
         {filtered.map((item) => (
           <Card
             key={item.id}
@@ -140,17 +279,17 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
               <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-2 group-hover:text-[#6b38d4] transition-colors">
                 {item.title}
               </h3>
-              <p className="text-xs text-[#5e5e6e] leading-relaxed mb-4">
+              <p className="mb-4 line-clamp-3 text-xs leading-relaxed text-[#5e5e6e]">
                 {item.description || item.summary}
               </p>
 
-              {/* Tags */}
+              {/* Tags (colour-coded by tag) */}
               {item.tags && item.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mb-6">
                   {item.tags.map((t: string, idx: number) => (
                     <span
                       key={idx}
-                      className="px-2 py-0.5 rounded bg-[#f4f1fb] text-[10px] font-mono text-[#5e5e6e]"
+                      className={`px-2 py-0.5 rounded text-[10px] font-mono ${tagStyle(t, idx)}`}
                     >
                       {t}
                     </span>

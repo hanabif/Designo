@@ -1,10 +1,10 @@
 import { Controller, Get, Patch, Delete, Body, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard.js';
 import { UsersService } from './users.service.js';
 import { UpdateProfileDto } from './dto/update-profile.dto.js';
 
 @Controller('users')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AppAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 

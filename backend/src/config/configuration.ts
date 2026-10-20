@@ -35,4 +35,14 @@ export default () => ({
     accessExpires: process.env.JWT_ACCESS_EXPIRES ?? '15m',
     refreshExpires: process.env.JWT_REFRESH_EXPIRES ?? '7d',
   },
+  // Clerk migration: 'local' keeps the legacy Passport JWT path; 'clerk'
+  // verifies Clerk session tokens and resolves the Prisma user by clerkId.
+  auth: {
+    provider: (process.env.AUTH_PROVIDER ?? 'local').toLowerCase() === 'clerk' ? 'clerk' : 'local',
+  },
+  clerk: {
+    secretKey: process.env.CLERK_SECRET_KEY?.trim() || undefined,
+    publishableKey: process.env.CLERK_PUBLISHABLE_KEY?.trim() || undefined,
+    webhookSecret: process.env.CLERK_WEBHOOK_SECRET?.trim() || undefined,
+  },
 });

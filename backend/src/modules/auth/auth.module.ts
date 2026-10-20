@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { ClerkWebhookController } from './clerk-webhook.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 
 @Global()
@@ -21,7 +22,7 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
       }),
     }),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, ClerkWebhookController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule],
 })

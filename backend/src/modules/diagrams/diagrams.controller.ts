@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard.js';
 import { DiagramsService } from './diagrams.service.js';
 import { GenerateDiagramDto } from './dto/generate-diagram.dto.js';
 import { ReviewDiagramDto } from './dto/review-diagram.dto.js';
 
 @Controller('diagrams')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AppAuthGuard)
 export class DiagramsController {
   constructor(private readonly diagramsService: DiagramsService) {}
 
