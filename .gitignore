@@ -43,3 +43,4 @@ coverage/
 # Fontshare on install via `npm run fonts:zodiak` (see frontend/scripts/).
 # The @font-face CSS stays tracked; only the binaries are ignored.
 frontend/src/fonts/zodiak/
+.neon
