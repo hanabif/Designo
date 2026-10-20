@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 import { api, saveAuthTokens } from '../services/api';
 import { Modal, Button } from './ui';
 import { LogoMark } from './Logo';
+import { isClerkEnabled, ClerkAuthForm } from '../lib/clerk';
 import type { User } from '../types';
 
 interface AuthModalProps {
@@ -55,20 +57,52 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   };
 
   const modalTitle = (
-    <div className="flex items-center gap-2.5">
-      <LogoMark size={26} className="shrink-0" />
+    <div className="flex w-full flex-col items-center gap-3 text-center">
+      <LogoMark size={38} className="shrink-0" />
       <div>
-        <h2 className="font-display font-bold text-xl text-[#0a0a0f]">
-          {mode === 'signup' && 'Create your account'}
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-[#111111] sm:text-3xl">
+          {mode === 'signup' && 'Welcome to Designo'}
           {mode === 'login' && 'Welcome back'}
-          {mode === 'reset' && 'Reset password'}
+          {mode === 'reset' && 'Reset your password'}
         </h2>
+        <p className="mt-2 text-sm leading-relaxed text-[#777782]">
+          {mode === 'signup' && 'Create your account and start practicing system design.'}
+          {mode === 'login' && 'Sign in to continue your practice.'}
+          {mode === 'reset' && 'We’ll send a reset link to your email.'}
+        </p>
       </div>
     </div>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={modalTitle} maxWidth="md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={isClerkEnabled ? undefined : modalTitle}
+      showCloseButton={!isClerkEnabled}
+      maxWidth="2xl"
+      className={isClerkEnabled ? 'clerk-modal-shell' : 'auth-modal max-h-[calc(100dvh-2rem)]'}
+    >
+      {/* Clerk renders as its own card over the shared backdrop. */}
+      {isClerkEnabled ? (
+        <div className="clerk-auth-fit relative" data-lenis-prevent>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close dialog"
+              className="absolute right-4 top-4 p-1.5 text-[#8e8ea0] hover:text-[#0a0a0f] rounded-full hover:bg-[#faf9fc] transition-colors"
+            >
+              <X size={18} />
+            </button>
+            <ClerkAuthForm
+              mode={mode === 'login' ? 'login' : 'signup'}
+              onSignedIn={() => {
+                onClose();
+              }}
+            />
+        </div>
+      ) : (
+      <div className="auth-form-fit">
       {/* Social auth */}
       {mode !== 'reset' && (
         <div className="space-y-2.5 mb-6">
@@ -199,6 +233,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           </span>
         )}
       </div>
+      </div>
+      )}
     </Modal>
   );
 };

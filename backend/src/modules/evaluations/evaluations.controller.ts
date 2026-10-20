@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Param, Post, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard.js';
 import { EvaluationsService } from './evaluations.service.js';
 import { GenerateEvaluationDto } from './dto/generate-evaluation.dto.js';
 
 @Controller('evaluations')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AppAuthGuard)
 export class EvaluationsController {
   constructor(private readonly evaluations: EvaluationsService) {}
 

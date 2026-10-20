@@ -1,17 +1,18 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard.js';
 import { Role } from '@prisma/client';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { QuestionsService } from './questions.service.js';
 import { CreateQuestionDto } from './dto/create-question.dto.js';
+import { GenerateQuestionDto } from './dto/generate-question.dto.js';
 import { UpdateQuestionDto } from './dto/update-question.dto.js';
 
 @Controller('questions')
 export class QuestionsController {
   constructor(private readonly questionsService: QuestionsService) {}
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AppAuthGuard, RolesGuard)
   @Roles(Role.FREE, Role.PRO, Role.ENTERPRISE, Role.ADMIN, Role.SUPER_ADMIN)
   @Post()
   create(@Body() createQuestionDto: CreateQuestionDto) {
@@ -23,19 +24,30 @@ export class QuestionsController {
     return this.questionsService.findAll();
   }
 
+  /**
+   * Generate (or reuse) a practice question for a roadmap gap topic.
+   * Any signed-in role — same policy as POST /questions.
+   */
+  @UseGuards(AppAuthGuard, RolesGuard)
+  @Roles(Role.FREE, Role.PRO, Role.ENTERPRISE, Role.ADMIN, Role.SUPER_ADMIN)
+  @Post('generate')
+  generate(@Body() generateQuestionDto: GenerateQuestionDto) {
+    return this.questionsService.generate(generateQuestionDto);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.questionsService.findOne(id);
   }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AppAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateQuestionDto: UpdateQuestionDto) {
     return this.questionsService.update(id, updateQuestionDto);
   }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AppAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Delete(':id')
   remove(@Param('id') id: string) {

@@ -44,6 +44,62 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
   const strengths: string[] = report?.strengths || [];
   const areasToImprove: string[] = report?.weaknesses || report?.recommendations || [];
 
+  /**
+   * Honest summary derived STRICTLY from this report's numbers.
+   * The previous copy was hardcoded praise ("Staff-level command…") which
+   * read as fiction for low-signal sessions — e.g. a loop with no answers.
+   */
+  const summary = (() => {
+    const score = typeof overallScore === 'number' ? overallScore : 0;
+    const weakest = [...categoryBreakdown]
+      .sort((a, b) => a.score - b.score)
+      .filter((cat) => cat.score < 70)
+      .slice(0, 2)
+      .map((cat) => cat.name);
+    const weakText = weakest.length ? ` Lowest areas: ${weakest.join(' and ')}.` : '';
+
+    if (report?.status === 'FAILED') {
+      return {
+        headline: 'Evaluation failed',
+        text: 'The evaluator could not score this session — replay it and re-run the evaluation to get a real report.',
+      };
+    }
+    if (report?.status !== 'COMPLETED') {
+      return {
+        headline: 'Evaluation in progress',
+        text: 'Scoring is still running. This summary updates as soon as the evaluator finishes.',
+      };
+    }
+    if (strengths.length === 0 || score < 40) {
+      return {
+        headline: 'This loop does not reflect your ability yet',
+        text: `The report scored ${score}/100 with ${strengths.length} strength${strengths.length === 1 ? '' : 's'} because little or no reasoning was submitted — there is nothing here to praise. Re-run the session and talk through each stage; the evaluator grades exactly what you say.${weakText}`,
+      };
+    }
+    if (score >= 85) {
+      return {
+        headline: 'Ready for Tier-1 Staff Loop',
+        text: `${score}/100 with ${strengths.length} demonstrated strength${strengths.length === 1 ? '' : 's'} across the weighted rubric.${weakText}`,
+      };
+    }
+    if (score >= 75) {
+      return {
+        headline: 'Hire-level, with gaps to close',
+        text: `${score}/100 across ${categoryBreakdown.length} weighted categories, ${areasToImprove.length} item${areasToImprove.length === 1 ? '' : 's'} flagged for practice.${weakText}`,
+      };
+    }
+    if (score >= 50) {
+      return {
+        headline: 'Developing — core gaps remain',
+        text: `${score}/100. ${areasToImprove.length} trade-off gap${areasToImprove.length === 1 ? '' : 's'} surfaced in this loop.${weakText}`,
+      };
+    }
+    return {
+      headline: 'Needs significant practice',
+      text: `${score}/100. Focus the fundamentals before the next loop — ${areasToImprove.length} gap${areasToImprove.length === 1 ? '' : 's'} flagged.${weakText}`,
+    };
+  })();
+
   // Hand the weaknesses straight to the roadmap so "Sync Gaps to Roadmap"
   // actually imports them — LearningRoadmapView reads this router state.
   const onNavigateRoadmap =
@@ -104,14 +160,28 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
           </div>
 
           <div>
-            <Badge variant="success" icon={<CheckCircle2 size={13} />} className="mb-2">
+            <Badge
+              variant={
+                report?.status === 'FAILED'
+                  ? 'danger'
+                  : report?.status !== 'COMPLETED'
+                    ? 'primary'
+                    : overallScore >= 75
+                      ? 'success'
+                      : overallScore >= 50
+                        ? 'warning'
+                        : 'danger'
+              }
+              icon={<CheckCircle2 size={13} />}
+              className="mb-2"
+            >
               {performanceLabel}
             </Badge>
             <h2 className="font-display font-bold text-2xl text-[#0a0a0f]">
-              Ready for Tier-1 Staff Loop
+              {summary.headline}
             </h2>
             <p className="text-xs sm:text-sm text-[#5e5e6e] mt-1 max-w-lg leading-relaxed">
-              Your architectural reasoning demonstrates Staff-level command over concurrency and data pipelines. Minor gaps in partition failure tolerance can be closed with 2 targeted drills.
+              {summary.text}
             </p>
           </div>
         </div>
@@ -145,7 +215,9 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-xs font-bold text-[#0a0a0f]">{cat.score}%</span>
-                  <Badge variant="primary">
+                  <Badge
+                    variant={cat.score >= 85 ? 'success' : cat.score >= 70 ? 'primary' : 'danger'}
+                  >
                     {cat.status}
                   </Badge>
                 </div>

@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
+import { AppAuthGuard } from '../../common/guards/app-auth.guard.js';
 import { BillingService } from './billing.service.js';
 
 @Controller('billing')
-@UseGuards(JwtAuthGuard)
+@UseGuards(AppAuthGuard)
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
 
