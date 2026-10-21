@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -129,7 +128,7 @@ const AUTOPLAY_SECONDS = 6.5;
  *   via the lenis→ScrollTrigger bridge, so entrance reveals and the ambient
  *   blob parallax land smoothly.
  */
-export const LandingFeatures: React.FC = () => {
+export const LandingFeatures: React.FC<{ onFeatureAction: (to: string) => void }> = ({ onFeatureAction }) => {
   const rootRef = useRef<HTMLElement>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const panelRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -359,13 +358,14 @@ export const LandingFeatures: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <Link
-                to={feature.ctaTo}
+              <button
+                type="button"
+                onClick={() => onFeatureAction(feature.ctaTo)}
                 className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#0a0a0f] px-5 py-2.5 font-sans text-[13px] font-semibold text-white transition-colors hover:bg-[#1f1f29]"
               >
                 {feature.ctaLabel}
                 <ArrowRight size={14} />
-              </Link>
+              </button>
             </div>
           ))}
         </div>

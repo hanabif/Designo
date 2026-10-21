@@ -409,7 +409,7 @@ export const HeroLanding: React.FC<HeroLandingProps> = ({
       {/* ── How it works + full feature breakdown ── */}
       <LandingHowItWorks />
 
-      <LandingFeatures />
+      <LandingFeatures onFeatureAction={(to) => user ? navigate(to) : onOpenAuth?.()} />
 
       {/* CTA Banner — animated gradient card (Feral UI gradient engine) */}
       <section id="start" className="max-w-7xl mx-auto px-6 md:px-12 mt-16 scroll-mt-24">
