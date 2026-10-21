@@ -554,21 +554,6 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
                 This session has ended — you're viewing the full transcript. Start a new interview from the dashboard to practice again.
               </p>
             )}
-            <div className={`flex items-center gap-2 mb-2 ${interviewStatus !== 'IN_PROGRESS' ? 'hidden' : ''}`}>
-              <button
-                onClick={() => setInputMessage((prev) => prev + "How does our p99 SLA respond if partition count scales 4x?")}
-                className="text-[11px] font-mono text-[#5e5e6e] bg-[#faf9fc] hover:bg-[#ede9fe] hover:text-[#6b38d4] px-2.5 py-1 rounded-full border border-[#e5e1ea] transition-colors"
-              >
-                + Clarify SLA Limits
-              </button>
-              <button
-                onClick={() => setInputMessage((prev) => prev + "I propose deploying a dual-region active-active cluster with quorum replication.")}
-                className="text-[11px] font-mono text-[#5e5e6e] bg-[#faf9fc] hover:bg-[#ede9fe] hover:text-[#6b38d4] px-2.5 py-1 rounded-full border border-[#e5e1ea] transition-colors"
-              >
-                + Propose Active-Active Cluster
-              </button>
-            </div>
-
             <div className="flex items-end gap-2">
               <textarea
                 value={inputMessage}
