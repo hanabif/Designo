@@ -208,24 +208,6 @@ export const DiagramStudioView: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-mono text-xs uppercase text-[#5e5e6e] font-semibold mb-2">
-                  Inject Components
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {['Envoy Proxy', 'Kafka Cluster', 'Redis GeoSet', 'Postgres 16', 'ScyllaDB', 'S3 Origin'].map(
-                    (comp) => (
-                      <button
-                        key={comp}
-                        onClick={() => setPrompt((prev) => `${prev}, include ${comp}`)}
-                        className="px-2.5 py-1 rounded-full bg-[#f4f1fb] hover:bg-[#ede9fe] text-[10px] font-mono text-[#5e5e6e] hover:text-[#6b38d4] border border-[#e5e1ea] transition-colors cursor-pointer"
-                      >
-                        + {comp}
-                      </button>
-                    )
-                  )}
-                </div>
-              </div>
             </div>
 
             <Button
