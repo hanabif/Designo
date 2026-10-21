@@ -1,10 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectQueue } from '@nestjs/bullmq';
 import { EvaluationStatus, InterviewStatus } from '@prisma/client';
-import type { Queue } from 'bullmq';
 import { PrismaService } from '../../database/prisma.service.js';
 import { EvaluationProvider } from './evaluation.provider.js';
-import { EVALUATION_JOB, EVALUATION_QUEUE } from './evaluation.types.js';
 
 @Injectable()
 export class EvaluationsService {
@@ -13,7 +10,6 @@ export class EvaluationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly provider: EvaluationProvider,
-    @InjectQueue(EVALUATION_QUEUE) private readonly queue: Queue,
   ) {}
 
   async request(userId: string, interviewId: string) {
@@ -35,47 +31,29 @@ export class EvaluationsService {
 
     if (report.status === EvaluationStatus.COMPLETED) return report;
 
+    await this.prisma.evaluationReport.update({
+      where: { id: report.id },
+      data: { status: EvaluationStatus.PROCESSING, failureReason: null },
+    });
     try {
-      await this.queue.add(
-        EVALUATION_JOB,
-        { evaluationId: report.id },
-        {
-          jobId: `evaluation:${report.id}`,
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 1000 },
-          removeOnComplete: 100,
-          removeOnFail: 100,
-        },
-      );
-    } catch (err: any) {
-      this.logger.warn(
-        `Redis evaluation queue unavailable (${err?.message ?? err}). Running direct evaluation fallback.`,
-      );
-
-      // Direct fallback processing if Redis queue is offline
-      try {
-        await this.prisma.evaluationReport.update({
-          where: { id: report.id },
-          data: { status: EvaluationStatus.PROCESSING },
-        });
-
-        const result = await this.provider.evaluate({
-          question: interview.question,
-          messages: interview.messages.map(({ role, content, stage }) => ({ role, content, stage })),
-        });
-
-        const updated = await this.prisma.evaluationReport.update({
-          where: { id: report.id },
-          data: { ...result, status: EvaluationStatus.COMPLETED, generatedAt: new Date() },
-        });
-
-        return updated;
-      } catch (evalErr: any) {
-        this.logger.error(`Direct evaluation fallback failed: ${evalErr?.message ?? evalErr}`);
-      }
+      const result = await this.provider.evaluate({
+        question: interview.question,
+        messages: interview.messages.map(({ role, content, stage }) => ({ role, content, stage })),
+      });
+      await this.prisma.evaluationReport.update({
+        where: { id: report.id },
+        data: { ...result, status: EvaluationStatus.COMPLETED, generatedAt: new Date() },
+      });
+      return this.get(userId, report.id);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Unknown evaluation error';
+      this.logger.error(`Evaluation failed for ${report.id}: ${reason}`);
+      await this.prisma.evaluationReport.update({
+        where: { id: report.id },
+        data: { status: EvaluationStatus.FAILED, failureReason: reason },
+      });
+      return this.get(userId, report.id);
     }
-
-    return report;
   }
 
   async get(userId: string, evaluationId: string) {
@@ -87,7 +65,4 @@ export class EvaluationsService {
     return report;
   }
 
-  async requestForCompletedInterview(userId: string, interviewId: string) {
-    return this.request(userId, interviewId);
-  }
 }

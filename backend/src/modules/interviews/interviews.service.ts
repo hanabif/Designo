@@ -3,7 +3,6 @@ import { InterviewStage, InterviewStatus, MessageRole } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AiService } from '../ai/ai.service.js';
 import { AiUseCase } from '../ai/interfaces/ai-provider.interface.js';
-import { EvaluationsService } from '../evaluations/evaluations.service.js';
 import { InterviewMessageDto } from './dto/interview-message.dto.js';
 import { StartInterviewDto } from './dto/start-interview.dto.js';
 
@@ -23,7 +22,6 @@ const STAGE_SEQUENCE: InterviewStage[] = [
 export class InterviewsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly evaluations: EvaluationsService,
     private readonly ai: AiService,
   ) {}
 
@@ -184,7 +182,6 @@ export class InterviewsService {
       data: { status: InterviewStatus.COMPLETED },
     });
 
-    await this.evaluations.requestForCompletedInterview(userId, interviewId);
     return completed;
   }
 }
