@@ -13,7 +13,6 @@ import { EvaluationReportView } from './components/EvaluationReportView';
 import { DiagramStudioView } from './components/DiagramStudioView';
 import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
 import { LearningRoadmapView } from './components/LearningRoadmapView';
-import { BillingView } from './components/BillingView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { NotFoundView } from './components/NotFoundView';
 import { ProfileSettingsView } from './components/ProfileSettingsView';
@@ -111,7 +110,6 @@ export function App() {
         else navigate('/dashboard');
       }}
       onExploreQuestions={() => navigate('/questions')}
-      onSelectPricing={() => navigate('/billing')}
       onOpenAuth={() => handleOpenAuth('login')}
     />
   );
@@ -185,7 +183,7 @@ export function App() {
             }
           />
 
-          <Route path="/billing" element={<BillingView user={user} />} />
+          <Route path="/billing" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="/admin" element={<AdminPanelView user={user} />} />
 

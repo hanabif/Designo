@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { BookOpen, Play, Search, Lock, Clock, Sparkles } from 'lucide-react';
 import { api } from '../services/api';
 import type { Question } from '../types';
-import { Button, Card, Badge } from './ui';
+import { Button, Card, Badge, Skeleton } from './ui';
 
 interface QuestionBankViewProps {
   onSelectQuestion: (questionId: string, difficulty: string, companyTrack: string) => void;
@@ -21,6 +21,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
   // search so the bank opens filtered to the gap being practised.
   const [searchParams] = useSearchParams();
   const [questions, setQuestions] = useState<DisplayQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>(() => searchParams.get('q') ?? '');
 
@@ -41,7 +42,8 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
         if (data && data.length > 0) setQuestions(data);
         else setQuestions([]);
       })
-      .catch((error: Error) => { setQuestions([]); setLoadError(error.message); });
+      .catch((error: Error) => { setQuestions([]); setLoadError(error.message); })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const difficultyTiers = ['ALL', 'Beginner', 'Intermediate', 'Advanced', 'Staff'];
@@ -218,7 +220,15 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.length === 0 && !loadError && (
+        {isLoading && Array.from({ length: 6 }, (_, index) => (
+          <Card key={`question-skeleton-${index}`} padding="md" className="min-h-[260px]">
+            <div className="mb-4 flex justify-between"><Skeleton className="h-5 w-24 rounded-full" /><Skeleton className="h-5 w-20 rounded-full" /></div>
+            <Skeleton className="mb-3 h-5 w-3/4" />
+            <Skeleton className="mb-2 h-3 w-full" /><Skeleton className="mb-2 h-3 w-5/6" /><Skeleton className="mb-6 h-3 w-2/3" />
+            <div className="flex justify-between border-t border-[#e5e1ea] pt-4"><Skeleton className="h-4 w-16" /><Skeleton className="h-8 w-28 rounded-xl" /></div>
+          </Card>
+        ))}
+        {!isLoading && filtered.length === 0 && !loadError && (
           <div className="col-span-full rounded-xl border border-[#e5e1ea] bg-white p-8 text-center">
             <p className="text-sm text-[#5e5e6e]">
               {query ? (
@@ -250,7 +260,7 @@ export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ onSelectQues
             )}
           </div>
         )}
-        {filtered.map((item) => (
+        {!isLoading && filtered.map((item) => (
           <Card
             key={item.id}
             padding="md"

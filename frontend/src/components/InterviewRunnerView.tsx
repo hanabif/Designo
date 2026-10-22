@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Clock, Send, ChevronRight } from 'lucide-react';
 import { api } from '../services/api';
+import { Skeleton } from './ui';
 import { LogoMark } from './Logo';
 import { addPracticeSeconds, getPracticeSeconds, formatDuration } from '../lib/practiceTime';
 
@@ -391,8 +392,11 @@ export const InterviewRunnerView: React.FC<InterviewRunnerViewProps> = ({
       {/* Main Chat Area (full width) */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {isLoadingSession && (
-          <div className="flex-1 flex items-center justify-center font-mono text-xs text-[#5e5e6e]">
-            {interviewId ? 'Restoring your session…' : 'Loading your interview sessions…'}
+          <div className="flex-1 p-4 sm:p-6" aria-busy="true" aria-label="Loading interview session">
+            <div className="mx-auto max-w-3xl space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e5e1ea] pb-4"><Skeleton className="h-6 w-56" /><Skeleton className="h-8 w-24 rounded-xl" /></div>
+              {Array.from({ length: 3 }, (_, index) => <div key={`session-skeleton-${index}`} className="rounded-xl border border-[#e5e1ea] bg-white p-4"><Skeleton className="mb-3 h-4 w-2/3" /><Skeleton className="h-3 w-1/3" /></div>)}
+            </div>
           </div>
         )}
 

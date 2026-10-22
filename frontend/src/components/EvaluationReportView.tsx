@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Download, Play, CheckCircle2, AlertCircle, Award, ArrowRight } from 'lucide-react';
-import { Button, Card, Badge } from './ui';
+import { Button, Card, Badge, Skeleton } from './ui';
 import { api } from '../services/api';
 
 interface EvaluationReportViewProps {
@@ -17,6 +17,7 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
   const { evaluationId } = useParams();
   const [report, setReport] = useState<any>(null);
   const [reportError, setReportError] = useState('');
+  const [isLoading, setIsLoading] = useState(Boolean(evaluationId));
   // Replay the exact conversation this report evaluated. Fall back to the bare
   // /interview route, which lists every session so the user can pick one.
   const onReplay = propOnReplay || (() => {
@@ -29,9 +30,9 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
     const load = async () => {
       try {
         const result = await api.getEvaluation(evaluationId);
-        if (active) setReport(result);
+        if (active) { setReport(result); setIsLoading(false); }
         if (active && result.status !== 'COMPLETED' && result.status !== 'FAILED') window.setTimeout(load, 2000);
-      } catch (error) { if (active) setReportError(error instanceof Error ? error.message : 'Report unavailable.'); }
+      } catch (error) { if (active) { setReportError(error instanceof Error ? error.message : 'Report unavailable.'); setIsLoading(false); } }
     };
     void load();
     return () => { active = false; };
@@ -43,6 +44,14 @@ export const EvaluationReportView: React.FC<EvaluationReportViewProps> = ({
   ].map(([name, key]) => ({ name, weight: '—', score: report[key] ?? 0, status: (report[key] ?? 0) >= 85 ? 'Strong' : (report[key] ?? 0) >= 70 ? 'Developing' : 'Needs Practice' })) : [];
   const strengths: string[] = report?.strengths || [];
   const areasToImprove: string[] = report?.weaknesses || report?.recommendations || [];
+
+  if (isLoading && evaluationId) return (
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-10 sm:px-6 lg:px-8" aria-busy="true" aria-label="Loading evaluation report">
+      <div className="mb-8 border-b border-[#e5e1ea] pb-6"><Skeleton className="mb-3 h-5 w-40 rounded-full" /><Skeleton className="mb-3 h-9 w-2/3" /><Skeleton className="h-3 w-1/2" /></div>
+      <Card padding="lg"><div className="grid gap-8 md:grid-cols-3"><Skeleton className="h-36 w-36 rounded-full" /><div className="space-y-4 md:col-span-2"><Skeleton className="h-7 w-1/2" /><Skeleton className="h-4 w-full" /><Skeleton className="h-4 w-5/6" /></div></div></Card>
+      <div className="grid gap-6 md:grid-cols-2">{Array.from({ length: 4 }, (_, i) => <Card key={i} padding="md"><Skeleton className="mb-4 h-5 w-2/3" /><Skeleton className="h-20 w-full" /></Card>)}</div>
+    </div>
+  );
 
   /**
    * Honest summary derived STRICTLY from this report's numbers.

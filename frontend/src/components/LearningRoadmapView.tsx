@@ -12,7 +12,7 @@ import {
   RefreshCw,
   Target,
 } from 'lucide-react';
-import { Button, Badge, Card } from './ui';
+import { Button, Badge, Card, Skeleton } from './ui';
 import { api, ApiError, getAuthToken } from '../services/api';
 import type { User } from '../types';
 import { readCompletedModules, writeCompletedModules } from '../lib/roadmapProgress';
@@ -278,9 +278,8 @@ export const LearningRoadmapView: React.FC<LearningRoadmapViewProps> = ({ user, 
 
       {/* Loading */}
       {loading && (
-        <div className="flex flex-col items-center justify-center gap-3 py-24">
-          <div className="w-8 h-8 border-2 border-[#6b38d4] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-[#5e5e6e]">Building your roadmap from recent evaluations…</p>
+        <div className="space-y-4" aria-busy="true" aria-label="Loading learning roadmap">
+          {Array.from({ length: 4 }, (_, index) => <Card key={`roadmap-skeleton-${index}`} padding="md"><div className="flex items-start gap-4"><Skeleton className="h-10 w-10 shrink-0 rounded-xl" /><div className="flex-1 space-y-3"><Skeleton className="h-5 w-2/3" /><Skeleton className="h-3 w-full" /><Skeleton className="h-2 w-1/2 rounded-full" /></div><Skeleton className="h-8 w-24 rounded-xl" /></div></Card>)}
         </div>
       )}
 

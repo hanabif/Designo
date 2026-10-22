@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  Terminal, BookOpen, BarChart3, Map, Cpu, Bell, CreditCard,
+  Terminal, BookOpen, BarChart3, Map, Cpu, Bell,
   LayoutDashboard, User as UserIcon, LogOut, Play, Sparkles, Menu, X, Settings,
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
@@ -48,7 +48,6 @@ export const Navbar: React.FC<NavbarProps> = ({ user, onOpenAuth, onOpenNotifica
     { path: '/diagrams', label: 'Diagram Studio', icon: Cpu },
     { path: '/analytics', label: 'Analytics', icon: BarChart3 },
     { path: '/roadmap', label: 'Roadmap', icon: Map },
-    { path: '/billing', label: 'Billing', icon: CreditCard },
     { path: '/profile', label: 'Profile & Settings', icon: Settings },
   ];
   const isActive = (path: string) => path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(path + '/');

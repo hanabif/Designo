@@ -167,8 +167,6 @@ export const api = {
   getAnalyticsDashboard: () => request<any>('/analytics/dashboard'),
   getAnalyticsProgress: () => request<any>('/analytics/progress'),
   getRecommendations: () => request<any>('/recommendations'),
-  getBillingHistory: () => request<any>('/billing/history'),
-  checkout: (plan: string) => request<any>('/billing/checkout', { method: 'POST', body: JSON.stringify({ plan }) }),
   logout: (refreshToken: string) => request<any>('/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) }),
 
   // Diagrams

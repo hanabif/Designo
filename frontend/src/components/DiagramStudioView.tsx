@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Sparkles, Download, ZoomIn, ZoomOut, Layers, Cpu, Code, Terminal, Maximize2, Minimize2 } from 'lucide-react';
-import { Button, Card, Badge } from './ui';
+import { Button, Card, Badge, Skeleton } from './ui';
 import { api } from '../services/api';
 import { MermaidDiagram } from './MermaidDiagram';
 import { mermaidToAscii } from '../lib/mermaidAscii';
@@ -25,6 +25,7 @@ export const DiagramStudioView: React.FC = () => {
   const [diagram, setDiagram] = useState<any>(null);
   const [review, setReview] = useState<any>(null);
   const [requestError, setRequestError] = useState('');
+  const [isLoadingSavedDiagram, setIsLoadingSavedDiagram] = useState(true);
   // Canvas state: rendered SVG vs ASCII art vs raw Mermaid source, plus
   // toolbar zoom and a fullscreen overlay.
   const [viewMode, setViewMode] = useState<'rendered' | 'ascii' | 'source'>('rendered');
@@ -82,7 +83,7 @@ export const DiagramStudioView: React.FC = () => {
     URL.revokeObjectURL(url);
   };
   useEffect(() => {
-    api.getDiagrams().then((items) => { if (items.length) setDiagram(items[0]); }).catch((error: Error) => setRequestError(error.message));
+    api.getDiagrams().then((items) => { if (items.length) setDiagram(items[0]); }).catch((error: Error) => setRequestError(error.message)).finally(() => setIsLoadingSavedDiagram(false));
   }, []);
   const generateDiagram = async () => {
     setIsGenerating(true);
@@ -322,7 +323,9 @@ export const DiagramStudioView: React.FC = () => {
                   isFullscreen ? 'flex-1 min-h-0' : 'my-auto max-h-[420px]'
                 }`}
               >
-                {diagram?.diagramCode ? (
+                {isLoadingSavedDiagram ? (
+                  <div className="w-full space-y-5 p-6" aria-label="Loading saved diagram" aria-busy="true"><Skeleton className="h-8 w-2/3" /><Skeleton className="h-48 w-full" /><div className="grid grid-cols-3 gap-4"><Skeleton className="h-16" /><Skeleton className="h-16" /><Skeleton className="h-16" /></div></div>
+                ) : diagram?.diagramCode ? (
                   <MermaidDiagram code={diagram.diagramCode} zoom={zoom} />
                 ) : (
                   <p className="py-10 text-center text-xs text-[#8e8ea0]">

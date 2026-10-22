@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { TrendingUp, BarChart3 } from 'lucide-react';
-import { Card, Badge } from './ui';
+import { Card, Badge, Skeleton } from './ui';
 import { api } from '../services/api';
 
 export const AnalyticsDashboardView: React.FC = () => {
   const [dashboard, setDashboard] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
   const [loadError, setLoadError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
-    Promise.all([api.getAnalyticsDashboard(), api.getAnalyticsProgress()]).then(([data, timeline]) => { setDashboard(data); setProgress(timeline); }).catch((error: Error) => setLoadError(error.message));
+    Promise.all([api.getAnalyticsDashboard(), api.getAnalyticsProgress()]).then(([data, timeline]) => { setDashboard(data); setProgress(timeline); }).catch((error: Error) => setLoadError(error.message)).finally(() => setIsLoading(false));
   }, []);
   const metrics = dashboard?.interviewMetrics;
   const performance = dashboard?.performanceMetrics;
@@ -41,7 +42,9 @@ export const AnalyticsDashboardView: React.FC = () => {
 
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-        {kpis.map((kpi, idx) => (
+        {isLoading ? Array.from({ length: 4 }, (_, idx) => (
+          <Card key={`kpi-skeleton-${idx}`} padding="md" className="min-h-[130px]"><Skeleton className="mb-3 h-3 w-28" /><Skeleton className="mb-3 h-8 w-20" /><Skeleton className="h-3 w-32" /></Card>
+        )) : kpis.map((kpi, idx) => (
           <Card key={idx} padding="md">
             <div className="text-xs text-[#5e5e6e] font-mono uppercase mb-2">{kpi.title}</div>
             <div className="font-display font-black text-3xl text-[#0a0a0f] mb-2">{kpi.value}</div>
@@ -69,7 +72,7 @@ export const AnalyticsDashboardView: React.FC = () => {
 
           {/* SVG Score Progression Graphic */}
           <div className="h-56 relative w-full pt-4">
-            {chartData.length ? <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none"><polyline points={chartPoints} fill="none" stroke="#6b38d4" strokeWidth="3.5" />{chartData.map((item, index) => <circle key={item.interviewId} cx={chartData.length < 2 ? 250 : index * (500 / (chartData.length - 1))} cy={165 - Math.max(0, Math.min(100, item.overallScore ?? 0)) * 1.5} r="4" fill="#6b38d4" />)}</svg> : <div className="flex h-full items-center justify-center text-sm text-[#8e8ea0]">Score history appears after your first completed evaluation.</div>}
+            {isLoading ? <Skeleton className="h-full w-full" /> : chartData.length ? <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none"><polyline points={chartPoints} fill="none" stroke="#6b38d4" strokeWidth="3.5" />{chartData.map((item, index) => <circle key={item.interviewId} cx={chartData.length < 2 ? 250 : index * (500 / (chartData.length - 1))} cy={165 - Math.max(0, Math.min(100, item.overallScore ?? 0)) * 1.5} r="4" fill="#6b38d4" />)}</svg> : <div className="flex h-full items-center justify-center text-sm text-[#8e8ea0]">Score history appears after your first completed evaluation.</div>}
             <div className="flex justify-between text-[11px] font-mono text-[#8e8ea0] mt-2">
               <span>{chartData[0] ? new Date(chartData[0].completedAt).toLocaleDateString() : 'No data'}</span>
               <span>{chartData.length ? `${chartData.length} evaluation${chartData.length === 1 ? '' : 's'}` : ''}</span>
@@ -83,7 +86,8 @@ export const AnalyticsDashboardView: React.FC = () => {
           <h3 className="font-display font-bold text-lg text-[#0a0a0f] mb-1">Competency Radar</h3>
           <p className="text-xs text-[#5e5e6e] mb-6">Normalized performance across 6 system design vectors</p>
 
-          <div className="space-y-4">
+          <div className="space-y-4" aria-busy={isLoading}>
+            {isLoading && Array.from({ length: 5 }, (_, idx) => <div key={`radar-skeleton-${idx}`}><Skeleton className="mb-2 h-3 w-2/3" /><Skeleton className="h-2 w-full rounded-full" /></div>)}
             {radarCategories.map((c, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between text-xs mb-1">
@@ -110,7 +114,7 @@ export const AnalyticsDashboardView: React.FC = () => {
           Evaluation Category Scores
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {radarCategories.map((comp, idx) => (
+          {isLoading ? <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">{Array.from({ length: 4 }, (_, idx) => <div key={`category-skeleton-${idx}`} className="rounded-xl border border-[#e5e1ea] p-4"><Skeleton className="mb-4 h-4 w-3/4" /><Skeleton className="mb-3 h-7 w-16" /><Skeleton className="h-3 w-full" /></div>)}</div> : radarCategories.map((comp, idx) => (
             <div key={idx} className="p-4 rounded-xl bg-[#faf9fc] border border-[#e5e1ea]">
               <div className="flex items-center justify-between mb-2">
                 <span className="font-semibold text-xs text-[#0a0a0f]">{comp.name}</span>
@@ -122,7 +126,7 @@ export const AnalyticsDashboardView: React.FC = () => {
               <div className="text-[11px] text-[#5e5e6e] mt-1">Average from completed evaluations</div>
             </div>
           ))}
-          {!radarCategories.length && <p className="text-sm text-[#5e5e6e]">Complete an interview to generate category score analytics.</p>}
+          {!isLoading && !radarCategories.length && <p className="text-sm text-[#5e5e6e]">Complete an interview to generate category score analytics.</p>}
         </div>
       </Card>
     </div>
