@@ -15,7 +15,6 @@ import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
 import { LearningRoadmapView } from './components/LearningRoadmapView';
 import { AdminPanelView } from './components/AdminPanelView';
 import { NotFoundView } from './components/NotFoundView';
-import { ProfileSettingsView } from './components/ProfileSettingsView';
 import { api, ApiError, getAuthToken, removeAuthToken } from './services/api';
 import type { User, Question } from './types';
 
@@ -155,7 +154,7 @@ export function App() {
             onSkip={() => navigate('/dashboard')}
           />} />
 
-          <Route path="/profile" element={<ProfileSettingsView user={user} onSave={(updated) => setUser(updated)} />} />
+          <Route path="/profile" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="/dashboard" element={<DashboardView user={user} onOpenSetupModal={() => setIsSetupModalOpen(true)} />} />
 

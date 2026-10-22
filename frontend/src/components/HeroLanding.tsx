@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Play, Cpu, LayoutGrid, BookOpen, Terminal, BarChart3, Map, Settings, Bell, Award, Clock, ChevronRight, PanelLeft } from 'lucide-react';
+import { ArrowRight, Play, Cpu, LayoutGrid, BookOpen, Terminal, BarChart3, Map, Bell, Award, Clock, ChevronRight, PanelLeft } from 'lucide-react';
 import { Button } from './ui';
 import GridRise from './GridRise';
 import gsap from 'gsap';
@@ -22,7 +22,6 @@ const DEMO_NAV: Array<{ label: string; icon: React.ElementType; active?: boolean
   { label: 'Diagram Studio', icon: Cpu },
   { label: 'Analytics', icon: BarChart3 },
   { label: 'Roadmap', icon: Map },
-  { label: 'Profile & Settings', icon: Settings },
 ];
 
 interface HeroLandingProps {
